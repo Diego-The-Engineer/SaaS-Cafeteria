@@ -32,14 +32,14 @@ El sistema sigue un modelo desacoplado de alto rendimiento:
 
 ### Backend
 1. Asegúrate de tener un archivo `.env` configurado:
-   ```bash
-   MONGO_URI=mongodb+srv://<usuario>:<password>@cluster.mongodb.net/...
-   DB_NAME=cafeteria_db
+```
+MONGO_URI=mongodb+srv://<usuario>:<password>@cluster.mongodb.net/...
+DB_NAME=cafeteria_db
 
 ```
 
 2. Inicia el contenedor con iSula:
-```bash
+```
 isula run -d --network host --name api_cafeteria \
   -v /opt/cafeteria:/app \
   --env-file /opt/cafeteria/.env \
