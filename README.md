@@ -1,4 +1,8 @@
 # Cafeteria POS MVP: High-Performance Asynchronous System
+<a href="https://www.python.org/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" width="40" height="40" alt="Python"/></a>
+<a href="https://fastapi.tiangolo.com/" target="_blank"><img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png" width="40" height="40" alt="FastAPI"/></a>
+<a href="https://www.mongodb.com/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg" width="40" height="40" alt="MongoDB"/></a>
+<a href="https://tailwindcss.com/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg" width="40" height="40" alt="Tailwind"/></a>
 
 Sistema de Punto de Venta (POS) de alto rendimiento, diseñado con una arquitectura asíncrona y escalable. Este proyecto implementa una solución completa desde la persistencia de datos hasta una interfaz de usuario fluida, optimizada para entornos de contenedores industriales.
 
