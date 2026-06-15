@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafetería - Terminal de Cobro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8 font-sans">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800">Punto de Venta <span class="text-sm font-normal text-gray-500">v1.0 (MVP)</span></h1>
+            <div id="status" class="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-semibold">Conectando a la API...</div>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+
+            <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold mb-4 text-gray-700">Menú Disponible</h2>
+                <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                </div>
+            </div>
+
+            <div class="w-full lg:w-96 bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                <h2 class="text-xl font-bold mb-4 text-gray-700">Ticket Actual</h2>
+
+                <div class="flex-1 overflow-y-auto mb-4 border-b border-gray-100 pb-4">
+                    <ul id="lista-carrito" class="space-y-3">
+                        <li class="text-gray-400 text-sm text-center mt-10">El ticket está vacío</li>
+                    </ul>
+                </div>
+
+                <div class="mt-auto">
+                    <div class="flex justify-between text-lg font-bold text-gray-800 mb-6">
+                        <span>Total a Cobrar:</span>
+                        <span id="total-vista">$0.00 MXN</span>
+                    </div>
+                    <button onclick="cobrarPedido()" id="btn-cobrar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50">
+                        Procesar Cobro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let menuProductos = [];
+        let carrito = [];
+
+        async function cargarMenu() {
+            const statusDiv = document.getElementById('status');
+            try {
+                const respuesta = await fetch('/api/sus_productos?disponible=true');
+                if (!respuesta.ok) throw new Error("Error en la API");
+
+                menuProductos = await respuesta.json();
+
+                statusDiv.textContent = 'Conexión exitosa';
+                statusDiv.className = 'px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold';
+                renderizarMenu();
+            } catch (error) {
+                statusDiv.textContent = 'Error de Conexión';
+                statusDiv.className = 'px-4 py-2 bg-red-100 text-red-800 rounded-lg text-sm font-semibold';
+                document.getElementById('menu-grid').innerHTML = '<p class="text-red-500">No se pudo cargar el menú.</p>';
+            }
+        }
+
+        function renderizarMenu() {
+            const contenedor = document.getElementById('menu-grid');
+            contenedor.innerHTML = '';
+
+            if(menuProductos.length === 0) {
+                contenedor.innerHTML = '<p class="text-gray-500">No hay productos.</p>';
+                return;
+            }
+
+            menuProductos.forEach(prod => {
+                const btn = document.createElement('button');
+                btn.className = 'p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left flex justify-between items-center';
+                btn.onclick = () => agregarAlCarrito(prod);
+                btn.innerHTML = `
+                    <span class="font-semibold text-gray-800">${prod.nombre}</span>
+                    <span class="text-blue-600 font-bold">$${prod.precio_unitario}</span>
+                `;
+                contenedor.appendChild(btn);
+            });
+        }
+
+        function agregarAlCarrito(producto) {
+            const itemExistente = carrito.find(i => i.producto_id === producto.id);
+            if (itemExistente) {
+                itemExistente.cantidad++;
+            } else {
+                carrito.push({ producto_id: producto.id, nombre: producto.nombre, precio: producto.precio_unitario, cantidad: 1 });
+            }
+            renderizarCarrito();
+        }
+
+        function ajustarCantidad(index) {
+            if (carrito[index].cantidad > 1) {
+                carrito[index].cantidad--;
+            } else {
+                carrito.splice(index, 1);
+            }
+            renderizarCarrito();
+        }
+
+        function renderizarCarrito() {
+            const lista = document.getElementById('lista-carrito');
+            const totalVista = document.getElementById('total-vista');
+            const btnCobrar = document.getElementById('btn-cobrar');
+
+            lista.innerHTML = '';
+            let totalCalculado = 0;
+
+            if (carrito.length === 0) {
+                lista.innerHTML = '<li class="text-gray-400 text-sm text-center mt-10">El ticket está vacío</li>';
+                totalVista.textContent = '$0.00 MXN';
+                btnCobrar.disabled = true;
+                return;
+            }
+
+            btnCobrar.disabled = false;
+
+            carrito.forEach((item, index) => {
+                const subtotal = item.precio * item.cantidad;
+                totalCalculado += subtotal;
+
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center text-sm';
+                li.innerHTML = `
+                    <span class="text-gray-700">
+                        <span class="font-bold border border-gray-300 rounded px-1 mr-1">${item.cantidad}x</span> 
+                        ${item.nombre}
+                    </span>
+                    <div class="flex items-center">
+                        <span class="font-bold text-gray-800 mr-3">$${subtotal.toFixed(2)}</span>
+                        <button onclick="ajustarCantidad(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-1 bg-red-50 rounded">X</button>
+                    </div>
+                `;
+                lista.appendChild(li);
+            });
+
+            totalVista.textContent = `$${totalCalculado.toFixed(2)} MXN`;
+        }
+
+        async function cobrarPedido() {
+            const btnCobrar = document.getElementById('btn-cobrar');
+            btnCobrar.disabled = true;
+            btnCobrar.textContent = 'Procesando...';
+
+            const payload = {
+                items: carrito.map(item => ({
+                    producto_id: item.producto_id,
+                    cantidad: item.cantidad
+                }))
+            };
+
+            try {
+                const respuesta = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!respuesta.ok) throw new Error("Error al cobrar");
+
+                const ticketReal = await respuesta.json();
+                alert("Cobro Exitoso!");
+
+                carrito = [];
+                renderizarCarrito();
+                btnCobrar.textContent = 'Procesar Cobro';
+
+            } catch (error) {
+                alert("Error al procesar el pago.");
+                btnCobrar.disabled = false;
+                btnCobrar.textContent = 'Procesar Cobro';
+            }
+        }
+
+        window.onload = cargarMenu;
+    </script>
+</body>
+</html>
