@@ -5,6 +5,7 @@
 <a href="https://tailwindcss.com/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg" width="100" height="60" alt="Tailwind"/></a>
 <a href= "https://nginx.org/" target="_blank"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/1280px-Nginx_logo.svg.png?_=20170311021525" width="100" height="60" alt="Nginx"/></a>
 <a href= "https://openEuler.org/" target="_blank"> <img src="https://images.seeklogo.com/logo-png/49/1/openeuler-logo-png_seeklogo-491447.png" width="100" height="60" alt="openEuler"/></a>
+
 Sistema de Punto de Venta (POS) de alto rendimiento, diseñado con una arquitectura asíncrona y escalable. Este proyecto implementa una solución completa desde la persistencia de datos hasta una interfaz de usuario fluida, optimizada para entornos de contenedores industriales.
 
 ## Arquitectura Técnica
