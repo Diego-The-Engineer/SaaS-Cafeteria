@@ -4,3 +4,6 @@ motor
 pydantic
 pydantic-settings
 python-dotenv
+pyjwt
+pwdlib[argon2]
+python-multipart
