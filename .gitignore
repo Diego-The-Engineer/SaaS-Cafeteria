@@ -1,5 +1,8 @@
 __pycache__/
+__pycache__/
 *.pyc
 .venv/
 .DS_Store
 .env
+.env
+mongo_data
