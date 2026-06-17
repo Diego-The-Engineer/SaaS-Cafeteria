@@ -9,10 +9,10 @@ from pwdlib import PasswordHash
 from pydantic import BaseModel
 from dotenv import load_dotenv
 load_dotenv()
-SECRET_KEY = os.getenv( "e37c5f524093c5ad78608f19ae80b981ff5f06d8a5cf25a974efed6013c170c7")
+SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
 	raise RunTimeError(
-		"SECRET_KEY no encontrada"
+		"SECRET_KEY": " no encontrada"
 	)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
