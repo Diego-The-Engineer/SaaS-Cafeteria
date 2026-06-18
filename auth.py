@@ -12,14 +12,14 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
 	raise RunTimeError(
-		"SECRET_KEY": " no encontrada"
+		"SECRET_KEY: no encontrada"
 	)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 fake_users_db = {
-    "johndoe": {
+    "admin": {
         "username": "admin",
         "full_name": "admin",
         "email": "admin@example.com",

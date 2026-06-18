@@ -16,9 +16,25 @@ from auth import (
     User,
     get_current_active_user
 )
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="Cafeteria")
+origins = [
+    "http://localhost:8010",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 HASH_ADMIN = get_password_hash("adminCafe123")
-app = FastAPI(title="Cafeteria")
 @app.get("/")
 def root_func():
         return {"Message": "Bienvenido"}

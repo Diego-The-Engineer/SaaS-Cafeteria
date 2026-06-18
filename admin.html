@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control - Cafetería</title>
+    <style>
+        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #ecf0f1; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    
+        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+        
+        input, button, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { cursor: pointer; font-weight: bold; transition: 0.3s; border: none; color: white; }
+        .btn-save { background: var(--success); }
+        .btn-save:hover { background: #219150; }
+        .btn-delete { background: var(--danger); padding: 5px 10px; width: auto; font-size: 12px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: var(--primary); }
+
+        #admin-panel { display: none; }
+        .status-pill { padding: 4px 8px; border-radius: 20px; font-size: 11px; color: white; }
+        .on { background: var(--success); }
+        .off { background: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-section" class="card" style="max-width: 400px; margin: 100px auto;">
+        <h2 style="text-align: center;">Cafetería admin</h2>
+        <input type="text" id="username" placeholder="Usuario (johndoe)">
+        <input type="password" id="password" placeholder="Contraseña (secret)">
+        <button class="btn-save" onclick="hacerLogin()">Entrar al Panel</button>
+        <p id="login-error" style="color: red; text-align: center;"></p>
+    </div>
+
+    <div id="admin-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Dashboard Cafetería</h1>
+            <button onclick="cerrarSesion()" style="width: auto; background: #7f8c8d;">Cerrar Sesión</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Añadir Producto</h3>
+                <input type="text" id="prod-nombre" placeholder="Nombre (ej. Pay de Limón)">
+                <input type="number" id="prod-precio" placeholder="Precio (ej. 45.00)">
+                <label><input type="checkbox" id="prod-disponible" checked> ¿Está disponible?</label>
+                <button class="btn-save" onclick="guardarProducto()">Guardar en el Menú</button>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between;">
+                    <h3>Inventario Actual</h3>
+                    <button onclick="cargarProductos()" style="width: auto; background: var(--primary);"> Actualizar</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-productos">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://192.168.56.101:8010";
+
+    // Verificar sesión al cargar
+    window.onload = () => {
+        if (localStorage.getItem("token")) mostrarPanel();
+    };
+
+    function mostrarPanel() {
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("admin-panel").style.display = "block";
+        cargarProductos();
+    }
+
+    async function hacerLogin() {
+        const formData = new URLSearchParams();
+        formData.append("username", document.getElementById("username").value);
+        formData.append("password", document.getElementById("password").value);
+
+        const res = await fetch(`${API_URL}/token`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem("token", data.access_token);
+            mostrarPanel();
+        } else {
+            document.getElementById("login-error").innerText = "Error: Usuario o clave inválida";
+        }
+    }
+
+    // --- CARGAR PRODUCTOS ---
+    async function cargarProductos() {
+        const res = await fetch(`${API_URL}/sus_productos`);
+        const productos = await res.json();
+        const tabla = document.getElementById("tabla-productos");
+        tabla.innerHTML = "";
+
+        productos.forEach(p => {
+            tabla.innerHTML += `
+                <tr>
+                    <td>${p.nombre}</td>
+                    <td>$${p.precio_unitario}</td>
+                    <td><span class="status-pill ${p.disponible ? 'on' : 'off'}">${p.disponible ? 'Disponible' : 'Agotado'}</span></td>
+                    <td>
+                        <button class="btn-delete" onclick="eliminarProducto('${p.id}')">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // --- GUARDAR PRODUCTO ---
+    async function guardarProducto() {
+        const token = localStorage.getItem("token");
+        const nuevo = {
+            nombre: document.getElementById("prod-nombre").value,
+            precio_unitario: parseFloat(document.getElementById("prod-precio").value),
+            disponible: document.getElementById("prod-disponible").checked
+        };
+
+        const res = await fetch(`${API_URL}/productos`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(nuevo)
+        });
+
+        if (res.ok) {
+            alert("Producto guardado!");
+            cargarProductos();
+            document.getElementById("prod-nombre").value = "";
+            document.getElementById("prod-precio").value = "";
+        } else {
+            alert("No tienes permiso o el token expiró");
+        }
+    }
+
+    // --- ELIMINAR PRODUCTO ---
+    async function eliminarProducto(id) {
+        if (!confirm("¿Seguro que quieres eliminar este producto?")) return;
+        
+        const token = localStorage.getItem("token");
+        // Nota: Usamos tu ruta /pedidos/{id} que configuraste para borrar productos
+        const res = await fetch(`${API_URL}/pedidos/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            cargarProductos();
+        } else {
+            alert("Error al eliminar. Verifica tu sesión.");
+        }
+    }
+
+    function cerrarSesion() {
+        localStorage.removeItem("token");
+        location.reload();
+    }
+</script>
+</body>
+</html>
