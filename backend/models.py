@@ -5,9 +5,10 @@ from typing import List, Optional
 from datetime import datetime
 
 class Model_producto(BaseModel):
-        nombre: str = Field(..., example="Latte")
-        precio_unitario: float = Field(..., example=30.5)
-        disponible: bool = Field(..., example=True)
+    nombre: str = Field(..., example="Latte")
+    precio_unitario: float = Field(..., example=30.5)
+    disponible: bool = Field(..., example=True)
+    cantidad: int = 0
 
 class Response_producto(Model_producto):
         id: str

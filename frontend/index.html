@@ -2,185 +2,323 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafetería - Terminal de Cobro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Punto de Venta - Cafetería</title>
+    <style>
+        :root {
+            --primary: #2962ff;
+            --bg-color: #f4f7f6;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 30px;
+            color: var(--text-dark);
+        }
+
+        /* =========================================
+           PANTALLA DE CARGA (CAFÉ ANIMADO EN CSS)
+           ========================================= */
+        .pantalla-carga {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--bg-color);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .contenedor-taza { position: relative; margin-bottom: 40px; }
+
+        .taza {
+            width: 80px; height: 70px; background-color: var(--primary);
+            border-radius: 5px 5px 40px 40px; position: relative;
+            animation: flotar 2s infinite ease-in-out;
+            box-shadow: 0 10px 15px rgba(41, 98, 255, 0.2);
+        }
+
+        .taza::after {
+            content: ''; position: absolute; right: -22px; top: 10px;
+            width: 30px; height: 35px; border: 6px solid var(--primary);
+            border-left: none; border-radius: 0 20px 20px 0;
+        }
+
+        .humo-container {
+            position: absolute; top: -45px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: 8px;
+        }
+
+        .humo {
+            width: 6px; height: 25px; background-color: #bdc3c7;
+            border-radius: 10px; animation: subir 1.5s infinite; opacity: 0;
+        }
+
+        .humo:nth-child(2) { animation-delay: 0.4s; }
+        .humo:nth-child(3) { animation-delay: 0.8s; }
+
+        @keyframes subir {
+            0% { transform: translateY(10px) scale(1); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-20px) scale(1.5); opacity: 0; filter: blur(2px); }
+        }
+
+        @keyframes flotar {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* =========================================
+           UI PRINCIPAL
+           ========================================= */
+        .header {
+            display: flex; justify-content: space-between; align-items: baseline;
+            margin-bottom: 30px; max-width: 1200px; margin-left: auto; margin-right: auto;
+        }
+
+        .header h1 { margin: 0; font-size: 28px; }
+        .header span { font-size: 14px; color: var(--text-muted); margin-left: 10px; }
+
+        .grid-container {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 25px;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        h2 { margin-top: 0; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;}
+
+        /* --- MENÚ --- */
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;
+        }
+
+        .producto-item {
+            border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.2s;
+        }
+
+        .producto-item:hover {
+            border-color: var(--primary); background-color: #f8faff;
+            transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .prod-nombre { font-weight: 600; }
+        .prod-precio { color: var(--primary); font-weight: bold; }
+
+        /* --- TICKET --- */
+        .ticket-lista { min-height: 150px; margin-bottom: 20px; font-size: 14px; }
+
+        .ticket-item {
+            display: flex; justify-content: space-between; margin-bottom: 10px;
+            padding-bottom: 5px; border-bottom: 1px dashed #eee;
+        }
+
+        .total-container {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 18px; font-weight: bold; margin-bottom: 20px;
+        }
+
+        .btn-cobrar {
+            width: 100%; background-color: var(--primary); color: white;
+            border: none; padding: 15px; border-radius: 8px; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+
+        .btn-cobrar:hover { background-color: #1e4cd9; }
+        .btn-cobrar:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+        /* =========================================
+           RESPONSIVIDAD (MÓVILES Y TABLETS)
+           ========================================= */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            
+            .grid-container {
+                grid-template-columns: 1fr; /* Una sola columna */
+                gap: 15px;
+            }
+
+            .header {
+                flex-direction: column; align-items: center; text-align: center; gap: 10px; margin-bottom: 20px;
+            }
+
+            .card { padding: 15px; }
+
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+
+            .taza { transform: scale(0.8); } /* Ajustar loader */
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-8 font-sans">
+<body>
 
-    <div class="max-w-6xl mx-auto">
-        <header class="mb-8 flex justify-between items-center">
-            <h1 class="text-3xl font-bold text-gray-800">Punto de Venta <span class="text-sm font-normal text-gray-500">v1.0 (MVP)</span></h1>
-            <div id="status" class="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-semibold">Conectando a la API...</div>
-        </header>
+    <div id="pantalla-carga" class="pantalla-carga">
+        <div class="contenedor-taza">
+            <div class="humo-container">
+                <div class="humo"></div><div class="humo"></div><div class="humo"></div>
+            </div>
+            <div class="taza"></div>
+        </div>
+        <h3 style="color: #2c3e50; margin-top: 10px;">Preparando tu cafetería...</h3>
+    </div>
 
-        <div class="flex flex-col lg:flex-row gap-8">
+    <div class="header">
+        <div>
+            <h1>Punto de Venta <span>v1.0 (MVP)</span></h1>
+        </div>
+    </div>
 
-            <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-xl font-bold mb-4 text-gray-700">Menú Disponible</h2>
-                <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                </div>
+    <div class="grid-container">
+        <div class="card">
+            <h2>Menú Disponible</h2>
+            <div id="contenedor-menu" class="menu-grid"></div>
+        </div>
+
+        <div class="card">
+            <h2>Ticket Actual</h2>
+            <div id="ticket-lista" class="ticket-lista">
+                <p style="color: #7f8c8d; text-align: center; margin-top: 50px;">El ticket está vacío</p>
+            </div>
+            
+            <div class="total-container">
+                <span>Total a Cobrar:</span>
+                <span id="ticket-total">$0.00 MXN</span>
             </div>
 
-            <div class="w-full lg:w-96 bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-                <h2 class="text-xl font-bold mb-4 text-gray-700">Ticket Actual</h2>
-
-                <div class="flex-1 overflow-y-auto mb-4 border-b border-gray-100 pb-4">
-                    <ul id="lista-carrito" class="space-y-3">
-                        <li class="text-gray-400 text-sm text-center mt-10">El ticket está vacío</li>
-                    </ul>
-                </div>
-
-                <div class="mt-auto">
-                    <div class="flex justify-between text-lg font-bold text-gray-800 mb-6">
-                        <span>Total a Cobrar:</span>
-                        <span id="total-vista">$0.00 MXN</span>
-                    </div>
-                    <button onclick="cobrarPedido()" id="btn-cobrar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50">
-                        Procesar Cobro
-                    </button>
-                </div>
-            </div>
+            <button id="btn-procesar" class="btn-cobrar" disabled onclick="procesarCobro()">Procesar Cobro</button>
         </div>
     </div>
 
     <script>
-        let menuProductos = [];
+        const API_URL = "http://192.168.56.101:8010"; 
         let carrito = [];
 
+        window.onload = () => { cargarMenu(); };
+
         async function cargarMenu() {
-            const statusDiv = document.getElementById('status');
             try {
-                const respuesta = await fetch('/api/sus_productos?disponible=true');
-                if (!respuesta.ok) throw new Error("Error en la API");
+                const res = await fetch(`${API_URL}/sus_productos?disponible=true`);
+                if (!res.ok) throw new Error("Error en la red");
+                
+                const productos = await res.json();
+                const contenedor = document.getElementById("contenedor-menu");
+                contenedor.innerHTML = "";
 
-                menuProductos = await respuesta.json();
-
-                statusDiv.textContent = 'Conexión exitosa';
-                statusDiv.className = 'px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold';
-                renderizarMenu();
+                productos.forEach(p => {
+                    const stock = p.cantidad !== undefined ? p.cantidad : 0;
+                    if(stock > 0 || stock === undefined) {
+                        contenedor.innerHTML += `
+                            <div class="producto-item" onclick="agregarAlCarrito('${p.id}', '${p.nombre}', ${p.precio_unitario})">
+                                <span class="prod-nombre">${p.nombre}</span>
+                                <span class="prod-precio">$${p.precio_unitario}</span>
+                            </div>
+                        `;
+                    }
+                });
             } catch (error) {
-                statusDiv.textContent = 'Error de Conexión';
-                statusDiv.className = 'px-4 py-2 bg-red-100 text-red-800 rounded-lg text-sm font-semibold';
-                document.getElementById('menu-grid').innerHTML = '<p class="text-red-500">No se pudo cargar el menú.</p>';
+                console.error("Error:", error);
+                document.getElementById("contenedor-menu").innerHTML = "<p style='color:red; text-align:center;'>Error de conexión con el servidor.</p>";
+            } finally {
+                quitarLoader();
             }
         }
 
-        function renderizarMenu() {
-            const contenedor = document.getElementById('menu-grid');
-            contenedor.innerHTML = '';
+        function quitarLoader() {
+            const loader = document.getElementById("pantalla-carga");
+            loader.style.opacity = "0";
+            setTimeout(() => { loader.style.display = "none"; }, 600); 
+        }
 
-            if(menuProductos.length === 0) {
-                contenedor.innerHTML = '<p class="text-gray-500">No hay productos.</p>';
+        function agregarAlCarrito(id, nombre, precio) {
+            const itemExistente = carrito.find(item => item.producto_id === id);
+            if (itemExistente) {
+                itemExistente.cantidad += 1;
+            } else {
+                carrito.push({ producto_id: id, nombre: nombre, precio: precio, cantidad: 1 });
+            }
+            actualizarTicket();
+        }
+
+        function actualizarTicket() {
+            const lista = document.getElementById("ticket-lista");
+            const btnProcesar = document.getElementById("btn-procesar");
+            let total = 0;
+
+            if (carrito.length === 0) {
+                lista.innerHTML = '<p style="color: #7f8c8d; text-align: center; margin-top: 50px;">El ticket está vacío</p>';
+                document.getElementById("ticket-total").innerText = "$0.00 MXN";
+                btnProcesar.disabled = true;
                 return;
             }
 
-            menuProductos.forEach(prod => {
-                const btn = document.createElement('button');
-                btn.className = 'p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left flex justify-between items-center';
-                btn.onclick = () => agregarAlCarrito(prod);
-                btn.innerHTML = `
-                    <span class="font-semibold text-gray-800">${prod.nombre}</span>
-                    <span class="text-blue-600 font-bold">$${prod.precio_unitario}</span>
+            lista.innerHTML = "";
+            carrito.forEach((item, index) => {
+                const subtotal = item.precio * item.cantidad;
+                total += subtotal;
+                lista.innerHTML += `
+                    <div class="ticket-item">
+                        <div><b>${item.cantidad}x</b> ${item.nombre}</div>
+                        <div>
+                            $${subtotal.toFixed(2)}
+                            <button onclick="eliminarDelCarrito(${index})" style="background:none; border:none; color:red; cursor:pointer; margin-left:5px; font-weight:bold; font-size:16px;">✕</button>
+                        </div>
+                    </div>
                 `;
-                contenedor.appendChild(btn);
             });
+
+            document.getElementById("ticket-total").innerText = `$${total.toFixed(2)} MXN`;
+            btnProcesar.disabled = false;
         }
 
-        function agregarAlCarrito(producto) {
-            const itemExistente = carrito.find(i => i.producto_id === producto.id);
-            if (itemExistente) {
-                itemExistente.cantidad++;
-            } else {
-                carrito.push({ producto_id: producto.id, nombre: producto.nombre, precio: producto.precio_unitario, cantidad: 1 });
-            }
-            renderizarCarrito();
-        }
-
-        function ajustarCantidad(index) {
+        // Lógica corregida para restar de 1 en 1
+        function eliminarDelCarrito(index) {
             if (carrito[index].cantidad > 1) {
-                carrito[index].cantidad--;
+                carrito[index].cantidad -= 1;
             } else {
                 carrito.splice(index, 1);
             }
-            renderizarCarrito();
+            actualizarTicket();
         }
 
-        function renderizarCarrito() {
-            const lista = document.getElementById('lista-carrito');
-            const totalVista = document.getElementById('total-vista');
-            const btnCobrar = document.getElementById('btn-cobrar');
-
-            lista.innerHTML = '';
-            let totalCalculado = 0;
-
-            if (carrito.length === 0) {
-                lista.innerHTML = '<li class="text-gray-400 text-sm text-center mt-10">El ticket está vacío</li>';
-                totalVista.textContent = '$0.00 MXN';
-                btnCobrar.disabled = true;
-                return;
-            }
-
-            btnCobrar.disabled = false;
-
-            carrito.forEach((item, index) => {
-                const subtotal = item.precio * item.cantidad;
-                totalCalculado += subtotal;
-
-                const li = document.createElement('li');
-                li.className = 'flex justify-between items-center text-sm';
-                li.innerHTML = `
-                    <span class="text-gray-700">
-                        <span class="font-bold border border-gray-300 rounded px-1 mr-1">${item.cantidad}x</span> 
-                        ${item.nombre}
-                    </span>
-                    <div class="flex items-center">
-                        <span class="font-bold text-gray-800 mr-3">$${subtotal.toFixed(2)}</span>
-                        <button onclick="ajustarCantidad(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-1 bg-red-50 rounded">X</button>
-                    </div>
-                `;
-                lista.appendChild(li);
-            });
-
-            totalVista.textContent = `$${totalCalculado.toFixed(2)} MXN`;
-        }
-
-        async function cobrarPedido() {
-            const btnCobrar = document.getElementById('btn-cobrar');
-            btnCobrar.disabled = true;
-            btnCobrar.textContent = 'Procesando...';
-
-            const payload = {
-                items: carrito.map(item => ({
-                    producto_id: item.producto_id,
-                    cantidad: item.cantidad
-                }))
-            };
+        async function procesarCobro() {
+            const payload = { items: carrito.map(item => ({ producto_id: item.producto_id, cantidad: item.cantidad })) };
+            const btnProcesar = document.getElementById("btn-procesar");
+            btnProcesar.innerText = "Procesando...";
+            btnProcesar.disabled = true;
 
             try {
-                const respuesta = await fetch('/api/pedidos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const res = await fetch(`${API_URL}/pedidos`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
-                if (!respuesta.ok) throw new Error("Error al cobrar");
-
-                const ticketReal = await respuesta.json();
-                alert("Cobro Exitoso!");
-
-                carrito = [];
-                renderizarCarrito();
-                btnCobrar.textContent = 'Procesar Cobro';
-
+                if (res.ok) {
+                    alert("¡Cobro procesado con éxito!");
+                    carrito = []; 
+                    actualizarTicket();
+                    cargarMenu(); 
+                } else {
+                    const data = await res.json();
+                    alert(`Error al cobrar: ${data.detail || "Revisa el stock en el panel"}`);
+                }
             } catch (error) {
-                alert("Error al procesar el pago.");
-                btnCobrar.disabled = false;
-                btnCobrar.textContent = 'Procesar Cobro';
+                alert("Error de red al intentar cobrar.");
+            } finally {
+                btnProcesar.innerText = "Procesar Cobro";
+                if(carrito.length > 0) btnProcesar.disabled = false;
             }
         }
-
-        window.onload = cargarMenu;
     </script>
 </body>
 </html>
