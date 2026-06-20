@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Annotated
-from fastapi import Depends, HTTPException, status, FastAPI
+from fastapi import Depends, HTTPException, status, FastAPI, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
 from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg
@@ -75,6 +75,18 @@ async def post_pedidos(pedidos: Create_pedido):
 		producto_db = await db["productos"].find_one({"_id": ObjectId(item.producto_id)})
 		if not producto_db:
 			raise HTTPException(status_code=404, detail=f"Error, producto no encontrado")
+		stock = producto_db.get("cantidad", 0)
+		stock_final = stock - item.cantidad
+		if stock_final < 0:
+			raise HTTPException(status_code=400, detail=f"Stock insuficiente para {producto_db['nombre']}")
+		sigue_disponible = True if stock_final > 0 else False
+		await db["productos"].update_one(
+			{"_id": ObjectId(item.producto_id)},
+			{"$set":{
+				"cantidad": stock_final,
+				"disponible": sigue_disponible
+			}}
+		)
 		subtotal = float(producto_db["precio_unitario"]) * item.cantidad
 		total += subtotal
 		items_detallados.append({
@@ -142,4 +154,21 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
-
+@app.patch("/productos/{id}/estado")
+async def cambiar_estado_producto(
+    id: str, 
+    estado: dict = Body(...), 
+    current_user: Annotated[User, Depends(get_current_active_user)] = None
+):
+    oid = ObjectId(id.strip('"'))
+    nuevo_estado = estado.get("disponible", True)
+    
+    resultado = await db["productos"].update_one(
+        {"_id": oid},
+        {"$set": {"disponible": nuevo_estado}}
+    )
+    
+    if resultado.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+    return {"msg": f"Estado cambiado a {nuevo_estado}"}
