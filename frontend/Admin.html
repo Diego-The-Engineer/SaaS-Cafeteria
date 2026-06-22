@@ -170,7 +170,7 @@
     </div>
 
     <script>
-        const API_URL = "http://192.168.56.101:8010";
+        const API_URL = "https://twelve-disorder-plenty.ngrok-free.dev";
         let myChart = null; 
 
         window.onload = () => {
@@ -194,7 +194,7 @@
             try {
                 const res = await fetch(`${API_URL}/token`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    headers: { "Content-Type": "application/x-www-form-urlencoded", "ngrok-skip-browser-warning": "true" },
                     body: formData
                 });
 
@@ -231,7 +231,9 @@
             const token = localStorage.getItem("token");
             try {
                 const res = await fetch(`${API_URL}/stats/estadistica`, {
-                    headers: { "Authorization": `Bearer ${token}` }
+                    headers: { "Authorization": `Bearer ${token}`,
+				"ngrok-skip-browser-warning": "true"
+			 }
                 });
                 
                 if(!res.ok) return;
@@ -277,7 +279,9 @@
             const token = localStorage.getItem("token");
             try {
                 const res = await fetch(`${API_URL}/productos/lista`, {
-                    headers: { "Authorization": `Bearer ${token}` }
+                    headers: { "Authorization": `Bearer ${token}`,
+				"ngrok-skip-browser-warning": "true"
+			 }
                 });
 
                 if (res.status === 401) { cerrarSesion(); return; }
@@ -334,7 +338,7 @@
                 // Mandamos POST a la nueva ruta
                 const res = await fetch(`${API_URL}/productos/`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" },
                     body: JSON.stringify(payload)
                 });
 
@@ -353,7 +357,7 @@
             try {
                 const res = await fetch(`${API_URL}/productos/${id}`, {
                     method: "DELETE",
-                    headers: { "Authorization": `Bearer ${token}` }
+                    headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
                 });
                 if(res.ok) {
                     cargarInventario();
@@ -375,7 +379,8 @@
                     method: "PUT",
                     headers: { 
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` 
+                        "Authorization": `Bearer ${token}`,
+			"ngrok-skip-browser-warning": "true" 
                     },
                     body: JSON.stringify(payload)
                 });
