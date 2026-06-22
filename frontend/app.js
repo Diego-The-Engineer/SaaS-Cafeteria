@@ -124,7 +124,7 @@ async function enviarPedido() {
     btnEnviar.innerText = "Procesando...";
 
     const payload = {
-        productos: carrito.map(item => ({
+        items: carrito.map(item => ({
             producto_id: item.producto_id,
             cantidad: item.cantidad
         }))
