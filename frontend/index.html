@@ -1,120 +1,296 @@
-const API_URL = "http://192.168.56.101:8010"; 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafetería - Menú en Línea</title>
+    <style>
+        :root {
+            --primary: #2962ff;
+            --bg-color: #f4f7f6;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-bg: #ffffff;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-dark);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .menu-container {
+            flex: 2;
+            min-width: 300px;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .producto-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .producto-card h3 { margin: 0 0 10px 0; font-size: 18px; }
+        .precio { color: var(--primary); font-size: 22px; font-weight: bold; margin: 10px 0; }
+        .stock { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
+
+        .btn-add {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .btn-add:hover { background-color: #1e4cd9; }
+        .btn-add:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+        .carrito-container {
+            flex: 1;
+            min-width: 280px;
+            max-width: 400px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            align-self: flex-start;
+            position: sticky;
+            top: 20px;
+        }
+
+        .carrito-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .btn-remove {
+            background: none; border: none; color: var(--danger);
+            cursor: pointer; font-weight: bold;
+        }
+
+        .total-container {
+            margin-top: 20px;
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .btn-checkout {
+            background-color: var(--success);
+            color: white; border: none; padding: 15px;
+            border-radius: 6px; cursor: pointer; font-weight: bold;
+            width: 100%; margin-top: 15px; font-size: 16px;
+        }
+        .btn-checkout:hover { background-color: #27ae60; }
+        .btn-checkout:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>☕ Menú de la Cafetería</h1>
+        <p style="color: var(--text-muted);">Pide en línea y recoge en mostrador</p>
+    </div>
+
+    <div class="menu-container" id="menu-contenedor">
+        <p>Cargando menú desde el servidor...</p>
+    </div>
+
+    <div class="carrito-container">
+        <h2 style="margin-top:0;">Tu Pedido</h2>
+        <div id="lista-carrito">
+            <p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>
+        </div>
+        
+        <div class="total-container">
+            <span>Total:</span>
+            <span id="total-precio">$0.00</span>
+        </div>
+
+        <button class="btn-checkout" id="btn-enviar" onclick="enviarPedido()" disabled>
+            Confirmar Pedido
+        </button>
+    </div>
+
+    <script>
+        // LA URL GLOBAL DE NGROK (Reemplaza si cambia tu dominio en el futuro)
+        const API_URL = "https://twelve-disorder-plenty.ngrok-free.dev";
         let carrito = [];
 
         window.onload = () => { cargarMenu(); };
 
         async function cargarMenu() {
             try {
-		const res = await fetch(`${API_URL}/productos/lista?disponible=true`);
-                if (!res.ok) throw new Error("Error en la red");
-                
-                const productos = await res.json();
-                const contenedor = document.getElementById("contenedor-menu");
-                contenedor.innerHTML = "";
-
-                productos.forEach(p => {
-                    const stock = p.cantidad !== undefined ? p.cantidad : 0;
-                    if(stock > 0 || stock === undefined) {
-                        contenedor.innerHTML += `
-                            <div class="producto-item" onclick="agregarAlCarrito('${p.id}', '${p.nombre}', ${p.precio_unitario})">
-                                <span class="prod-nombre">${p.nombre}</span>
-                                <span class="prod-precio">$${p.precio_unitario}</span>
-                            </div>
-                        `;
+                // El fetch ahora usa el dominio global y el header de Ngrok
+                const res = await fetch(`${API_URL}/productos/lista`, {
+                    headers: {
+                        "ngrok-skip-browser-warning": "true"
                     }
                 });
-            } catch (error) {
-                console.error("Error:", error);
-                document.getElementById("contenedor-menu").innerHTML = "<p style='color:red; text-align:center;'>Error de conexión con el servidor.</p>";
-            } finally {
-                quitarLoader();
-            }
-        }
 
-        function quitarLoader() {
-            const loader = document.getElementById("pantalla-carga");
-            loader.style.opacity = "0";
-            setTimeout(() => { loader.style.display = "none"; }, 600); 
+                if (!res.ok) throw new Error("Error en la conexión con el servidor");
+                
+                const productos = await res.json();
+                const contenedor = document.getElementById("menu-contenedor");
+                contenedor.innerHTML = "";
+
+                // Filtramos solo los disponibles y los mostramos
+                const disponibles = productos.filter(p => p.disponible);
+
+                if (disponibles.length === 0) {
+                    contenedor.innerHTML = "<p>No hay productos disponibles por el momento.</p>";
+                    return;
+                }
+
+                disponibles.forEach(p => {
+                    // Validamos stock (asumiendo que si no existe la propiedad, hay stock infinito)
+                    const stock = p.cantidad !== undefined ? p.cantidad : 999;
+                    const agotado = stock <= 0;
+
+                    contenedor.innerHTML += `
+                        <div class="producto-card">
+                            <div>
+                                <h3>${p.nombre}</h3>
+                                <p class="stock">${agotado ? '❌ Agotado' : `Disponibles: ${stock}`}</p>
+                            </div>
+                            <div>
+                                <p class="precio">$${p.precio_unitario.toFixed(2)}</p>
+                                <button class="btn-add" 
+                                    onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}', ${p.precio_unitario})" 
+                                    ${agotado ? 'disabled' : ''}>
+                                    ${agotado ? 'Sin Stock' : 'Agregar'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+                document.getElementById("menu-contenedor").innerHTML = `<p style="color:red;">Error cargando el menú. Verifica el servidor.</p>`;
+            }
         }
 
         function agregarAlCarrito(id, nombre, precio) {
             const itemExistente = carrito.find(item => item.producto_id === id);
+            
             if (itemExistente) {
                 itemExistente.cantidad += 1;
             } else {
                 carrito.push({ producto_id: id, nombre: nombre, precio: precio, cantidad: 1 });
             }
-            actualizarTicket();
+            actualizarCarrito();
         }
 
-        function actualizarTicket() {
-            const lista = document.getElementById("ticket-lista");
-            const btnProcesar = document.getElementById("btn-procesar");
+        function quitarDelCarrito(id) {
+            carrito = carrito.filter(item => item.producto_id !== id);
+            actualizarCarrito();
+        }
+
+        function actualizarCarrito() {
+            const lista = document.getElementById("lista-carrito");
+            const btnEnviar = document.getElementById("btn-enviar");
+            const labelTotal = document.getElementById("total-precio");
+            
+            lista.innerHTML = "";
             let total = 0;
 
             if (carrito.length === 0) {
-                lista.innerHTML = '<p style="color: #7f8c8d; text-align: center; margin-top: 50px;">El ticket está vacío</p>';
-                document.getElementById("ticket-total").innerText = "$0.00 MXN";
-                btnProcesar.disabled = true;
+                lista.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>';
+                btnEnviar.disabled = true;
+                labelTotal.innerText = "$0.00";
                 return;
             }
 
-            lista.innerHTML = "";
-            carrito.forEach((item, index) => {
+            carrito.forEach(item => {
                 const subtotal = item.precio * item.cantidad;
                 total += subtotal;
                 lista.innerHTML += `
-                    <div class="ticket-item">
-                        <div><b>${item.cantidad}x</b> ${item.nombre}</div>
-                        <div>
+                    <div class="carrito-item">
+                        <span>${item.cantidad}x ${item.nombre}</span>
+                        <span>
                             $${subtotal.toFixed(2)}
-                            <button onclick="eliminarDelCarrito(${index})" style="background:none; border:none; color:red; cursor:pointer; margin-left:5px; font-weight:bold; font-size:16px;">✕</button>
-                        </div>
+                            <button class="btn-remove" onclick="quitarDelCarrito('${item.producto_id}')">✖</button>
+                        </span>
                     </div>
                 `;
             });
 
-            document.getElementById("ticket-total").innerText = `$${total.toFixed(2)} MXN`;
-            btnProcesar.disabled = false;
+            labelTotal.innerText = `$${total.toFixed(2)}`;
+            btnEnviar.disabled = false;
         }
 
-        // Lógica corregida para restar de 1 en 1
-        function eliminarDelCarrito(index) {
-            if (carrito[index].cantidad > 1) {
-                carrito[index].cantidad -= 1;
-            } else {
-                carrito.splice(index, 1);
-            }
-            actualizarTicket();
-        }
+        async function enviarPedido() {
+            if (carrito.length === 0) return;
+            
+            const btnEnviar = document.getElementById("btn-enviar");
+            btnEnviar.disabled = true;
+            btnEnviar.innerText = "Procesando...";
 
-        async function procesarCobro() {
-            const payload = { items: carrito.map(item => ({ producto_id: item.producto_id, cantidad: item.cantidad })) };
-            const btnProcesar = document.getElementById("btn-procesar");
-            btnProcesar.innerText = "Procesando...";
-            btnProcesar.disabled = true;
+            const payload = {
+                productos: carrito.map(item => ({
+                    producto_id: item.producto_id,
+                    cantidad: item.cantidad
+                }))
+            };
 
             try {
-                const res = await fetch(`${API_URL}/pedidos`, {
+                // Aquí también enviamos el header mágico por si acaso
+                const res = await fetch(`${API_URL}/pedidos/`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true"
+                    },
                     body: JSON.stringify(payload)
                 });
 
                 if (res.ok) {
-                    alert("¡Cobro procesado con éxito!");
-                    carrito = []; 
-                    actualizarTicket();
-                    cargarMenu(); 
+                    alert("¡Pedido realizado con éxito!");
+                    carrito = [];
+                    actualizarCarrito();
+                    cargarMenu(); // Recarga para actualizar el stock real
                 } else {
-                    const data = await res.json();
-                    alert(`Error al cobrar: ${data.detail || "Revisa el stock en el panel"}`);
+                    alert("Error al procesar el pedido. Intenta de nuevo.");
                 }
             } catch (error) {
-                alert("Error de red al intentar cobrar.");
+                console.error(error);
+                alert("Error de red conectando al servidor.");
             } finally {
-                btnProcesar.innerText = "Procesar Cobro";
-                if(carrito.length > 0) btnProcesar.disabled = false;
+                btnEnviar.innerText = "Confirmar Pedido";
             }
         }
     </script>
