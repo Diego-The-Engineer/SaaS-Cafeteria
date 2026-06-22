@@ -4,6 +4,19 @@ let carrito = [];
 window.onload = () => { cargarMenu(); };
 
 async function cargarMenu() {
+    const contenedor = document.getElementById("menu-contenedor");
+    
+    contenedor.innerHTML = `
+        <div class="loader-wrapper">
+            <div class="cup-container">
+                <div class="steam steam-1"></div>
+                <div class="steam steam-2"></div>
+                <div class="steam steam-3"></div>
+                <div class="coffee-cup"></div>
+            </div>
+        </div>
+    `;
+
     try {
         const res = await fetch(`${API_URL}/productos/lista`, {
             headers: {
@@ -14,13 +27,13 @@ async function cargarMenu() {
         if (!res.ok) throw new Error("Error en la conexión con el servidor");
         
         const productos = await res.json();
-        const contenedor = document.getElementById("menu-contenedor");
+        
         contenedor.innerHTML = "";
 
         const disponibles = productos.filter(p => p.disponible);
 
         if (disponibles.length === 0) {
-            contenedor.innerHTML = "<p style='color: var(--text-muted); width: 100%; text-align: center;'>No hay productos disponibles por el momento.</p>";
+            contenedor.innerHTML = "<p style='color: var(--text-muted); width: 100%; text-align: center; grid-column: 1 / -1;'>No hay productos disponibles por el momento.</p>";
             return;
         }
 
@@ -29,7 +42,7 @@ async function cargarMenu() {
             const agotado = stock <= 0;
 
             contenedor.innerHTML += `
-                <div class="producto-card">
+                <div class="producto-card reveal">
                     <div>
                         <h3>${p.nombre}</h3>
                         <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
@@ -45,9 +58,12 @@ async function cargarMenu() {
                 </div>
             `;
         });
+
+        iniciarObservadorAnimaciones();
+
     } catch (error) {
         console.error(error);
-        document.getElementById("menu-contenedor").innerHTML = `<p style="color: var(--danger); width: 100%; text-align: center;">Error conectando con el menú. Verifica el estado del servidor.</p>`;
+        contenedor.innerHTML = `<p style="color: var(--danger); width: 100%; text-align: center; grid-column: 1 / -1;">Error conectando con el menú. Verifica el estado del servidor.</p>`;
     }
 }
 
@@ -138,4 +154,22 @@ async function enviarPedido() {
     } finally {
         btnEnviar.innerText = "Confirmar Pedido";
     }
+}
+
+function iniciarObservadorAnimaciones() {
+    const observador = new IntersectionObserver((entradas) => {
+        entradas.forEach((entrada) => {
+            if (entrada.isIntersecting) {
+                entrada.target.classList.add('activo');
+                observador.unobserve(entrada.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    const tarjetas = document.querySelectorAll('.reveal');
+    tarjetas.forEach((tarjeta) => {
+        observador.observe(tarjeta);
+    });
 }

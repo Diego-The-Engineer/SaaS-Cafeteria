@@ -1,13 +1,13 @@
 :root {
-    --primary: #C49A6C;       /* Café claro / Moka */
-    --primary-dark: #8B5E34;  /* Café tostado */
-    --primary-light: #E8D5C4; /* Crema */
-    --bg-color: #FBF9F6;      /* Tono avena muy claro */
-    --text-dark: #3E2723;     /* Texto café oscuro */
-    --text-muted: #A1887F;    /* Texto secundario */
+    --primary: #C49A6C;
+    --primary-dark: #8B5E34;
+    --primary-light: #E8D5C4;
+    --bg-color: #FBF9F6;
+    --text-dark: #3E2723;
+    --text-muted: #A1887F;
     --card-bg: #FFFFFF;
-    --success: #8E9B71;       /* Verde orgánico relajado */
-    --danger: #D96C6C;        /* Rojo desaturado */
+    --success: #8E9B71;
+    --danger: #D96C6C;
 }
 
 body {
@@ -42,13 +42,14 @@ body {
     font-size: 15px;
 }
 
-/* --- ANIMACIÓN DE LA TAZA SÉPTIMA CAFÉ --- */
 .loader-wrapper {
+    grid-column: 1 / -1;
     width: 100%;
     display: flex;
     justify-content: center;
-    margin-top: 10px;
-    margin-bottom: 20px;
+    align-items: center;
+    min-height: 200px;
+    margin-top: 20px;
 }
 
 .cup-container {
@@ -98,7 +99,6 @@ body {
     0% { transform: translateY(0) scale(1); opacity: 0.8; }
     100% { transform: translateY(-25px) scale(1.5); opacity: 0; }
 }
-/* ----------------------------------------- */
 
 .menu-container {
     flex: 2;
@@ -119,12 +119,6 @@ body {
     flex-direction: column;
     justify-content: space-between;
     border: 1px solid rgba(196, 154, 108, 0.15);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.producto-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(139, 94, 52, 0.1);
 }
 
 .producto-card h3 { 
@@ -234,3 +228,14 @@ body {
 }
 .btn-checkout:hover { background-color: #79855D; }
 .btn-checkout:disabled { background-color: var(--primary-light); color: var(--text-muted); cursor: not-allowed; }
+
+.reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.8s ease-out;
+}
+
+.reveal.activo {
+    opacity: 1;
+    transform: translateY(0);
+}
