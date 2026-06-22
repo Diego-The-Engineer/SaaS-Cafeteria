@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - Cafetería</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #2962ff;
@@ -67,7 +68,7 @@
         .badge.stock-low { background: #fdedec; color: var(--danger); }
         .badge.stock-hidden { background: #f2f3f4; color: var(--text-muted); border: 1px solid #ddd; }
 
-        /* --- BOTONES DE ACCIÓN EN TABLA --- */
+        /* --- BOTONES DE ACCIÓN --- */
         .btn-accion {
             padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; 
             font-size: 12px; font-weight: bold; margin-right: 5px; transition: 0.2s;
@@ -112,6 +113,23 @@
     <div id="admin-panel" style="display:none;">
         
         <div class="card">
+            <h2>Resumen Financiero y Ventas</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: center;">
+                
+                <div style="text-align: center; padding: 20px; background: #f8faff; border-radius: 12px; border: 1px solid #e0e0e0;">
+                    <h3 style="color: #7f8c8d; font-size: 16px; margin-bottom: 10px;">Ingresos Brutos</h3>
+                    <h1 id="stat-ganancias" style="color: var(--primary); font-size: 48px; margin: 0;">$0.00</h1>
+                    <p style="color: var(--success); font-weight: bold; font-size: 14px; margin-top: 10px;">Actualizado en tiempo real</p>
+                </div>
+
+                <div style="width: 100%; max-width: 500px; margin: 0 auto;">
+                    <canvas id="chartTopProductos"></canvas>
+                </div>
+            </div>
+            <button onclick="cargarEstadisticas()" style="margin-top: 15px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"> Refrescar Datos</button>
+        </div>
+
+        <div class="card">
             <h2>Agregar Nuevo Producto</h2>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <div class="form-group" style="flex: 1; min-width: 200px;">
@@ -141,7 +159,8 @@
                             <th>Precio</th>
                             <th>Stock</th>
                             <th>Estado</th>
-                            <th>Acciones</th> </tr>
+                            <th>Acciones</th>
+                        </tr>
                     </thead>
                     <tbody id="tabla-productos">
                         </tbody>
@@ -152,12 +171,14 @@
 
     <script>
         const API_URL = "http://192.168.56.101:8010";
+        let myChart = null; 
 
         window.onload = () => {
             const token = localStorage.getItem("token");
             if(token) {
                 mostrarPanel();
                 cargarInventario();
+                cargarEstadisticas();
             }
         };
 
@@ -183,6 +204,7 @@
                     errorMsg.style.display = "none";
                     mostrarPanel();
                     cargarInventario();
+                    cargarEstadisticas();
                 } else {
                     errorMsg.style.display = "block";
                 }
@@ -204,10 +226,57 @@
             document.getElementById("admin-panel").style.display = "block";
         }
 
+        // --- CARGAR ESTADÍSTICAS Y GRÁFICA ---
+        async function cargarEstadisticas() {
+            const token = localStorage.getItem("token");
+            try {
+                const res = await fetch(`${API_URL}/stats/estadistica`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                
+                if(!res.ok) return;
+                const data = await res.json();
+
+                // Actualizar el número de ingresos
+                document.getElementById("stat-ganancias").innerText = `$${data.ganancia_total.toFixed(2)}`;
+
+                // Renderizar la gráfica
+                const ctx = document.getElementById('chartTopProductos').getContext('2d');
+                
+                if (myChart) { myChart.destroy(); } // Destruir la anterior para evitar errores visuales
+
+                myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.top_productos.map(p => p._id),
+                        datasets: [{
+                            label: 'Unidades Vendidas',
+                            data: data.top_productos.map(p => p.cantidad_total),
+                            backgroundColor: '#2962ff',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Top 5 Productos Más Vendidos' }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { precision: 0 } }
+                        }
+                    }
+                });
+            } catch(e) {
+                console.error("Error cargando estadísticas", e);
+            }
+        }
+
+        // --- CARGAR INVENTARIO 
         async function cargarInventario() {
             const token = localStorage.getItem("token");
             try {
-                const res = await fetch(`${API_URL}/sus_productos`, {
+                const res = await fetch(`${API_URL}/productos/lista`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -220,7 +289,6 @@
                 productos.forEach(p => {
                     const stock = p.cantidad !== undefined ? p.cantidad : 0;
                     
-                    // Lógica visual del estado
                     let estadoHtml = '';
                     if (!p.disponible) {
                         estadoHtml = '<span class="badge stock-hidden">Oculto</span>';
@@ -263,7 +331,8 @@
             const payload = { nombre: nombre, precio_unitario: precio, cantidad: cantidad, disponible: true };
 
             try {
-                const res = await fetch(`${API_URL}/productos`, {
+                // Mandamos POST a la nueva ruta
+                const res = await fetch(`${API_URL}/productos/`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify(payload)
@@ -278,7 +347,6 @@
             } catch (error) { alert("Error de conexión"); }
         }
 
-        // --- FUNCIONES RESTAURADAS ---
         async function eliminarProducto(id) {
             if(!confirm("¿Seguro que quieres eliminar este producto para siempre?")) return;
             const token = localStorage.getItem("token");
@@ -289,13 +357,12 @@
                 });
                 if(res.ok) {
                     cargarInventario();
-                } else { alert("Error al eliminar el producto de la base de datos."); }
+                } else { alert("Error al eliminar el producto."); }
             } catch(e) { alert("Error de red"); }
         }
 
         async function toggleDisponibilidad(id, estadoActual, nombre, precio, stock) {
             const token = localStorage.getItem("token");
-            // Se hace un PUT mandando el objeto completo pero con el "disponible" invertido
             const payload = { 
                 nombre: nombre, 
                 precio_unitario: precio, 
