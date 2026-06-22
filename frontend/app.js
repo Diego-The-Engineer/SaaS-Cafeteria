@@ -78,13 +78,16 @@ function agregarAlCarrito(id, nombre, precio) {
     actualizarCarrito();
 }
 
-function quitarDelCarrito(index) {
+function quitarDelCarrito(id) {
+    const index = arrito.findIndex(item => item.producto_id === id);
+    if(index !== -1){
     if(carrito[index].cantidad > 1) {
-        carrito[index].cantidad--	
-    }else{
-        carrito.splice(index,1)
+            carrito[index].cantidad--	
+        }else{
+            carrito.splice(index,1)
+        }
+        actualizarCarrito();
     }
-    actualizarCarrito();
 }
 
 function actualizarCarrito() {
