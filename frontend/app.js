@@ -78,8 +78,12 @@ function agregarAlCarrito(id, nombre, precio) {
     actualizarCarrito();
 }
 
-function quitarDelCarrito(id) {
-    carrito = carrito.filter(item => item.producto_id !== id);
+function quitarDelCarrito(index) {
+    if(carrito[index].cantidad > 1) {
+        carrito[index].cantidad--	
+    }else{
+        carrito.splice(index,1)
+    }
     actualizarCarrito();
 }
 
