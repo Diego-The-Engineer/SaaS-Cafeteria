@@ -3,141 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafetería - Menú en Línea</title>
-    <style>
-        :root {
-            --primary: #2962ff;
-            --bg-color: #f4f7f6;
-            --text-dark: #2c3e50;
-            --text-muted: #7f8c8d;
-            --card-bg: #ffffff;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-            color: var(--text-dark);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .header {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .menu-container {
-            flex: 2;
-            min-width: 300px;
-            max-width: 800px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
-
-        .producto-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .producto-card h3 { margin: 0 0 10px 0; font-size: 18px; }
-        .precio { color: var(--primary); font-size: 22px; font-weight: bold; margin: 10px 0; }
-        .stock { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
-
-        .btn-add {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            width: 100%;
-        }
-        .btn-add:hover { background-color: #1e4cd9; }
-        .btn-add:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-
-        .carrito-container {
-            flex: 1;
-            min-width: 280px;
-            max-width: 400px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            align-self: flex-start;
-            position: sticky;
-            top: 20px;
-        }
-
-        .carrito-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
-            font-size: 14px;
-        }
-
-        .btn-remove {
-            background: none; border: none; color: var(--danger);
-            cursor: pointer; font-weight: bold;
-        }
-
-        .total-container {
-            margin-top: 20px;
-            border-top: 2px solid #eee;
-            padding-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .btn-checkout {
-            background-color: var(--success);
-            color: white; border: none; padding: 15px;
-            border-radius: 6px; cursor: pointer; font-weight: bold;
-            width: 100%; margin-top: 15px; font-size: 16px;
-        }
-        .btn-checkout:hover { background-color: #27ae60; }
-        .btn-checkout:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-
-    </style>
+    <title>Séptima Café - Punto de Venta</title>
+    <!-- Conexión al archivo CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="header">
-        <h1>☕ Menú de la Cafetería</h1>
-        <p style="color: var(--text-muted);">Pide en línea y recoge en mostrador</p>
+        <div class="loader-wrapper">
+            <div class="cup-container">
+                <div class="steam steam-1"></div>
+                <div class="steam steam-2"></div>
+                <div class="steam steam-3"></div>
+                <div class="coffee-cup"></div>
+            </div>
+        </div>
+        <h1>Menú de la Cafetería</h1>
+        <p>Pide en línea y recoge en mostrador</p>
     </div>
 
+    <!-- Contenedor del menú -->
     <div class="menu-container" id="menu-contenedor">
-        <p>Cargando menú desde el servidor...</p>
+        <p style="text-align: center; width: 100%; color: var(--text-muted);">Conectando con el servidor...</p>
     </div>
 
+    <!-- Panel Lateral del Carrito -->
     <div class="carrito-container">
-        <h2 style="margin-top:0;">Tu Pedido</h2>
+        <h2>Tu Pedido</h2>
         <div id="lista-carrito">
             <p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>
         </div>
         
         <div class="total-container">
-            <span>Total:</span>
+            <span>Total</span>
             <span id="total-precio">$0.00</span>
         </div>
 
@@ -146,153 +44,7 @@
         </button>
     </div>
 
-    <script>
-        // LA URL GLOBAL DE NGROK (Reemplaza si cambia tu dominio en el futuro)
-        const API_URL = "https://twelve-disorder-plenty.ngrok-free.dev";
-        let carrito = [];
-
-        window.onload = () => { cargarMenu(); };
-
-        async function cargarMenu() {
-            try {
-                // El fetch ahora usa el dominio global y el header de Ngrok
-                const res = await fetch(`${API_URL}/productos/lista`, {
-                    headers: {
-                        "ngrok-skip-browser-warning": "true"
-                    }
-                });
-
-                if (!res.ok) throw new Error("Error en la conexión con el servidor");
-                
-                const productos = await res.json();
-                const contenedor = document.getElementById("menu-contenedor");
-                contenedor.innerHTML = "";
-
-                // Filtramos solo los disponibles y los mostramos
-                const disponibles = productos.filter(p => p.disponible);
-
-                if (disponibles.length === 0) {
-                    contenedor.innerHTML = "<p>No hay productos disponibles por el momento.</p>";
-                    return;
-                }
-
-                disponibles.forEach(p => {
-                    // Validamos stock (asumiendo que si no existe la propiedad, hay stock infinito)
-                    const stock = p.cantidad !== undefined ? p.cantidad : 999;
-                    const agotado = stock <= 0;
-
-                    contenedor.innerHTML += `
-                        <div class="producto-card">
-                            <div>
-                                <h3>${p.nombre}</h3>
-                                <p class="stock">${agotado ? '❌ Agotado' : `Disponibles: ${stock}`}</p>
-                            </div>
-                            <div>
-                                <p class="precio">$${p.precio_unitario.toFixed(2)}</p>
-                                <button class="btn-add" 
-                                    onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}', ${p.precio_unitario})" 
-                                    ${agotado ? 'disabled' : ''}>
-                                    ${agotado ? 'Sin Stock' : 'Agregar'}
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error(error);
-                document.getElementById("menu-contenedor").innerHTML = `<p style="color:red;">Error cargando el menú. Verifica el servidor.</p>`;
-            }
-        }
-
-        function agregarAlCarrito(id, nombre, precio) {
-            const itemExistente = carrito.find(item => item.producto_id === id);
-            
-            if (itemExistente) {
-                itemExistente.cantidad += 1;
-            } else {
-                carrito.push({ producto_id: id, nombre: nombre, precio: precio, cantidad: 1 });
-            }
-            actualizarCarrito();
-        }
-
-        function quitarDelCarrito(id) {
-            carrito = carrito.filter(item => item.producto_id !== id);
-            actualizarCarrito();
-        }
-
-        function actualizarCarrito() {
-            const lista = document.getElementById("lista-carrito");
-            const btnEnviar = document.getElementById("btn-enviar");
-            const labelTotal = document.getElementById("total-precio");
-            
-            lista.innerHTML = "";
-            let total = 0;
-
-            if (carrito.length === 0) {
-                lista.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>';
-                btnEnviar.disabled = true;
-                labelTotal.innerText = "$0.00";
-                return;
-            }
-
-            carrito.forEach(item => {
-                const subtotal = item.precio * item.cantidad;
-                total += subtotal;
-                lista.innerHTML += `
-                    <div class="carrito-item">
-                        <span>${item.cantidad}x ${item.nombre}</span>
-                        <span>
-                            $${subtotal.toFixed(2)}
-                            <button class="btn-remove" onclick="quitarDelCarrito('${item.producto_id}')">✖</button>
-                        </span>
-                    </div>
-                `;
-            });
-
-            labelTotal.innerText = `$${total.toFixed(2)}`;
-            btnEnviar.disabled = false;
-        }
-
-        async function enviarPedido() {
-            if (carrito.length === 0) return;
-            
-            const btnEnviar = document.getElementById("btn-enviar");
-            btnEnviar.disabled = true;
-            btnEnviar.innerText = "Procesando...";
-
-            const payload = {
-                productos: carrito.map(item => ({
-                    producto_id: item.producto_id,
-                    cantidad: item.cantidad
-                }))
-            };
-
-            try {
-                // Aquí también enviamos el header mágico por si acaso
-                const res = await fetch(`${API_URL}/pedidos/`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "ngrok-skip-browser-warning": "true"
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    alert("¡Pedido realizado con éxito!");
-                    carrito = [];
-                    actualizarCarrito();
-                    cargarMenu(); // Recarga para actualizar el stock real
-                } else {
-                    alert("Error al procesar el pedido. Intenta de nuevo.");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Error de red conectando al servidor.");
-            } finally {
-                btnEnviar.innerText = "Confirmar Pedido";
-            }
-        }
-    </script>
+    <!-- Conexión al archivo JavaScript -->
+    <script src="app.js"></script>
 </body>
 </html>
