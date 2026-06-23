@@ -7,7 +7,7 @@ from datetime import datetime
 class Model_producto(BaseModel):
     nombre: str = Field(..., example="Latte")
     precio_unitario: float = Field(..., example=30.5)
-    disponible: bool = Field(..., example=True)
+    disponible: bool = True
     cantidad: int = 0
 
 class Response_producto(Model_producto):
