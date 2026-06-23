@@ -124,22 +124,48 @@ function actualizarCarrito() {
     btnEnviar.disabled = false;
 }
 
-async function enviarPedido() {
-    if (carrito.length === 0) return;
+async function procesarPago() {
+    // 1. Capturar los datos del modal
+    const nombre = document.getElementById('cliente-nombre').value;
+    const apellido = document.getElementById('cliente-apellido').value;
+    const email = document.getElementById('cliente-email').value;
+    const telefono = document.getElementById('cliente-telefono').value;
+    const tokenTarjeta = document.getElementById('tarjeta-token').value;
 
-    const btnEnviar = document.getElementById("btn-enviar");
-    btnEnviar.disabled = true;
-    btnEnviar.innerText = "Procesando...";
+    // 2. Validación básica para que no manden campos vacíos
+    if (!nombre || !apellido || !email || !telefono || !tokenTarjeta) {
+        alert("Por favor, llena todos los datos de contacto y pago.");
+        return;
+    }
 
+    if (carrito.length === 0) {
+        alert("Tu carrito está vacío.");
+        return;
+    }
+
+    // 3. Bloquear el botón para evitar doble cobro
+    const btnPagar = document.querySelector('#staticBackdrop .btn-primary');
+    const textoOriginal = btnPagar.innerText;
+    btnPagar.innerText = "Procesando pago...";
+    btnPagar.disabled = true;
+
+    // 4. Armar el Super-Payload (Datos del cliente + Carrito)
     const payload = {
+        first_name: nombre,
+        last_name: apellido,
+        email: email,
+        phone: telefono,
+        token_tarjeta: tokenTarjeta,
         items: carrito.map(item => ({
             producto_id: item.producto_id,
+            nombre: item.nombre,
+            precio_unitario: item.precio, 
             cantidad: item.cantidad
         }))
     };
 
     try {
-        const res = await fetch(`${API_URL}/pedidos/`, {
+        const res = await fetch(`${API_URL}/pedidos`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -148,18 +174,25 @@ async function enviarPedido() {
         });
 
         if (res.ok) {
-            alert("¡Pedido realizado con éxito!");
+            const respuestaData = await res.json();
+            alert("¡Pago exitoso! Tu pedido está en preparación.");
             carrito = [];
             actualizarCarrito();
-            cargarMenu();
+            document.getElementById('form-checkout').reset(); 
+            const modalElement = document.getElementById('staticBackdrop');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+            cargarMenu(); 
         } else {
-            alert("Error al procesar el pedido. Intenta de nuevo.");
+            const errorData = await res.json();
+            alert(`El pago fue rechazado: ${errorData.detail || 'Verifica los datos de la tarjeta'}`);
         }
     } catch (error) {
-        console.error(error);
-        alert("Error de red conectando al servidor.");
+        console.error("Error al procesar el pago:", error);
+        alert("Error de conexión con el servidor de pagos.");
     } finally {
-        btnEnviar.innerText = "Confirmar Pedido";
+        btnPagar.innerText = textoOriginal;
+        btnPagar.disabled = false;
     }
 }
 
