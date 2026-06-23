@@ -50,7 +50,7 @@
         .form-group input {
             width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;
         }
-        
+
         .btn-primary {
             background-color: var(--primary); color: white; border: none; padding: 12px 20px;
             border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s;
@@ -62,7 +62,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         th { background-color: #f8faff; color: var(--text-muted); font-size: 14px;}
-        
+
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .badge.stock-ok { background: #e8f8f5; color: var(--success); }
         .badge.stock-low { background: #fdedec; color: var(--danger); }
@@ -70,7 +70,7 @@
 
         /* --- BOTONES DE ACCIÓN --- */
         .btn-accion {
-            padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; 
+            padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;
             font-size: 12px; font-weight: bold; margin-right: 5px; transition: 0.2s;
         }
         .btn-toggle { background: var(--warning); color: #333; }
@@ -111,11 +111,11 @@
     </div>
 
     <div id="admin-panel" style="display:none;">
-        
+
         <div class="card">
             <h2>Resumen Financiero y Ventas</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: center;">
-                
+
                 <div style="text-align: center; padding: 20px; background: #f8faff; border-radius: 12px; border: 1px solid #e0e0e0;">
                     <h3 style="color: #7f8c8d; font-size: 16px; margin-bottom: 10px;">Ingresos Brutos</h3>
                     <h1 id="stat-ganancias" style="color: var(--primary); font-size: 48px; margin: 0;">$0.00</h1>
@@ -170,8 +170,8 @@
     </div>
 
     <script>
-        const API_URL = "https://twelve-disorder-plenty.ngrok-free.dev";
-        let myChart = null; 
+        const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
+        let myChart = null;
 
         window.onload = () => {
             const token = localStorage.getItem("token");
@@ -192,9 +192,10 @@
             formData.append("password", pass);
 
             try {
+                // Petición limpia sin headers de Ngrok
                 const res = await fetch(`${API_URL}/token`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded", "ngrok-skip-browser-warning": "true" },
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: formData
                 });
 
@@ -231,11 +232,9 @@
             const token = localStorage.getItem("token");
             try {
                 const res = await fetch(`${API_URL}/stats/estadistica`, {
-                    headers: { "Authorization": `Bearer ${token}`,
-				"ngrok-skip-browser-warning": "true"
-			 }
+                    headers: { "Authorization": `Bearer ${token}` }
                 });
-                
+
                 if(!res.ok) return;
                 const data = await res.json();
 
@@ -244,7 +243,7 @@
 
                 // Renderizar la gráfica
                 const ctx = document.getElementById('chartTopProductos').getContext('2d');
-                
+
                 if (myChart) { myChart.destroy(); } // Destruir la anterior para evitar errores visuales
 
                 myChart = new Chart(ctx, {
@@ -274,14 +273,12 @@
             }
         }
 
-        // --- CARGAR INVENTARIO 
+        // --- CARGAR INVENTARIO
         async function cargarInventario() {
             const token = localStorage.getItem("token");
             try {
                 const res = await fetch(`${API_URL}/productos/lista`, {
-                    headers: { "Authorization": `Bearer ${token}`,
-				"ngrok-skip-browser-warning": "true"
-			 }
+                    headers: { "Authorization": `Bearer ${token}` }
                 });
 
                 if (res.status === 401) { cerrarSesion(); return; }
@@ -292,7 +289,7 @@
 
                 productos.forEach(p => {
                     const stock = p.cantidad !== undefined ? p.cantidad : 0;
-                    
+
                     let estadoHtml = '';
                     if (!p.disponible) {
                         estadoHtml = '<span class="badge stock-hidden">Oculto</span>';
@@ -301,7 +298,7 @@
                     } else {
                         estadoHtml = '<span class="badge stock-low">Bajo Stock</span>';
                     }
-                    
+
                     tbody.innerHTML += `
                         <tr>
                             <td style="color:#7f8c8d; font-size:12px;">${p.id || 'N/A'}</td>
@@ -335,10 +332,12 @@
             const payload = { nombre: nombre, precio_unitario: precio, cantidad: cantidad, disponible: true };
 
             try {
-                // Mandamos POST a la nueva ruta
                 const res = await fetch(`${API_URL}/productos/`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" },
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Authorization": `Bearer ${token}` 
+                    },
                     body: JSON.stringify(payload)
                 });
 
@@ -357,7 +356,7 @@
             try {
                 const res = await fetch(`${API_URL}/productos/${id}`, {
                     method: "DELETE",
-                    headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
+                    headers: { "Authorization": `Bearer ${token}` }
                 });
                 if(res.ok) {
                     cargarInventario();
@@ -367,20 +366,19 @@
 
         async function toggleDisponibilidad(id, estadoActual, nombre, precio, stock) {
             const token = localStorage.getItem("token");
-            const payload = { 
-                nombre: nombre, 
-                precio_unitario: precio, 
-                cantidad: stock, 
-                disponible: !estadoActual 
+            const payload = {
+                nombre: nombre,
+                precio_unitario: precio,
+                cantidad: stock,
+                disponible: !estadoActual
             };
 
             try {
                 const res = await fetch(`${API_URL}/productos/${id}`, {
                     method: "PUT",
-                    headers: { 
+                    headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
-			"ngrok-skip-browser-warning": "true" 
+                        "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify(payload)
                 });
