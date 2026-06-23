@@ -1,11 +1,11 @@
-const API_URL = "https://twelve-disorder-plenty.ngrok-free.dev";
+const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com"; 
 let carrito = [];
 
 window.onload = () => { cargarMenu(); };
 
 async function cargarMenu() {
     const contenedor = document.getElementById("menu-contenedor");
-    
+
     contenedor.innerHTML = `
         <div class="loader-wrapper">
             <div class="cup-container">
@@ -18,16 +18,13 @@ async function cargarMenu() {
     `;
 
     try {
-        const res = await fetch(`${API_URL}/productos/lista`, {
-            headers: {
-                "ngrok-skip-browser-warning": "true"
-            }
-        });
+        // Petición limpia directa a la nube
+        const res = await fetch(`${API_URL}/productos/lista`);
 
         if (!res.ok) throw new Error("Error en la conexión con el servidor");
-        
+
         const productos = await res.json();
-        
+
         contenedor.innerHTML = "";
 
         const disponibles = productos.filter(p => p.disponible);
@@ -49,8 +46,8 @@ async function cargarMenu() {
                     </div>
                     <div>
                         <p class="precio">$${p.precio_unitario.toFixed(2)}</p>
-                        <button class="btn-add" 
-                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}', ${p.precio_unitario})" 
+                        <button class="btn-add"
+                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}', ${p.precio_unitario})"
                             ${agotado ? 'disabled' : ''}>
                             ${agotado ? 'Sin Stock' : 'Agregar'}
                         </button>
@@ -69,7 +66,7 @@ async function cargarMenu() {
 
 function agregarAlCarrito(id, nombre, precio) {
     const itemExistente = carrito.find(item => item.producto_id === id);
-    
+
     if (itemExistente) {
         itemExistente.cantidad += 1;
     } else {
@@ -79,14 +76,18 @@ function agregarAlCarrito(id, nombre, precio) {
 }
 
 function quitarDelCarrito(id) {
-    const index =carrito.findIndex(item => item.producto_id === id);
-    if(index !== -1){
-    if(carrito[index].cantidad > 1) {
-            carrito[index].cantidad--;	
-        }else{
-            carrito.splice(index,1);
+    // Typo corregido, ya no hay espacio extra
+    const index = carrito.findIndex(item => item.producto_id === id);
+    
+    if(index !== -1) {
+        if(carrito[index].cantidad > 1) {
+            carrito[index].cantidad--;
+        } else {
+            carrito.splice(index, 1);
         }
         actualizarCarrito();
+    } else {
+        console.error("¡No se encontró el producto con ese ID en el carrito!");
     }
 }
 
@@ -94,7 +95,7 @@ function actualizarCarrito() {
     const lista = document.getElementById("lista-carrito");
     const btnEnviar = document.getElementById("btn-enviar");
     const labelTotal = document.getElementById("total-precio");
-    
+
     lista.innerHTML = "";
     let total = 0;
 
@@ -125,7 +126,7 @@ function actualizarCarrito() {
 
 async function enviarPedido() {
     if (carrito.length === 0) return;
-    
+
     const btnEnviar = document.getElementById("btn-enviar");
     btnEnviar.disabled = true;
     btnEnviar.innerText = "Procesando...";
@@ -141,8 +142,7 @@ async function enviarPedido() {
         const res = await fetch(`${API_URL}/pedidos/`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(payload)
         });
@@ -151,7 +151,7 @@ async function enviarPedido() {
             alert("¡Pedido realizado con éxito!");
             carrito = [];
             actualizarCarrito();
-            cargarMenu(); 
+            cargarMenu();
         } else {
             alert("Error al procesar el pedido. Intenta de nuevo.");
         }
