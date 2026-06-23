@@ -1,5 +1,6 @@
 # SaaS Cafetería - POS - Sistema de Gestión Full-Stack
 Sistema integral para la gestión de inventario y pedidos en línea para cafeterías, desarrollado con arquitectura de microservicios y despliegue en la nube.
+
 <a href="https://www.python.org/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" width="100" height="60" alt="Python"/></a>
 <a href="https://fastapi.tiangolo.com/" target="_blank"><img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png" width="100" height="60" alt="FastAPI"/></a>
 <a href="https://www.mongodb.com/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg" width="100" height="60" alt="MongoDB"/></a>
@@ -7,7 +8,6 @@ Sistema integral para la gestión de inventario y pedidos en línea para cafeter
 <a href= "https://nginx.org/" target="_blank"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/1280px-Nginx_logo.svg.png?_=20170311021525" width="100" height="60" alt="Nginx"/></a>
 <a href= "https://openEuler.org/" target="_blank"> <img src="https://images.seeklogo.com/logo-png/49/1/openeuler-logo-png_seeklogo-491447.png" width="100" height="60" alt="openEuler"/></a>
 <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" width="100" height="100"/>
-<img src="https://render.com/icons/logo.svg" width="100" height="100"/>
 <img src="https://assets.vercel.com/image/upload/v1607554385/repositories/vercel/logo.png" width="100" height="100"/>
 
 Sistema de Punto de Venta (POS) de alto rendimiento, diseñado con una arquitectura asíncrona y escalable. Este proyecto implementa una solución completa desde la persistencia de datos hasta una interfaz de usuario fluida, optimizada para entornos de contenedores industriales.
