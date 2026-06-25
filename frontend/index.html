@@ -44,37 +44,52 @@
         <form id="form-checkout">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="cliente-nombre" class="form-label">Nombre</label>
-                    <input type="text" class="form-control" id="cliente-nombre" placeholder="Ej. Moises" required>
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" placeholder="Ej. Moises" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="cliente-apellido" class="form-label">Apellido</label>
-                    <input type="text" class="form-control" id="cliente-apellido" placeholder="Ej. Garcia" required>
+                    <label for="apellido" class="form-label">Apellido</label>
+                    <input type="text" class="form-control" id="apellido" placeholder="Ej. Garcia" required>
                 </div>
             </div>
             
             <div class="mb-3">
-                <label for="cliente-email" class="form-label">Correo Electrónico</label>
-                <input type="email" class="form-control" id="cliente-email" placeholder="a.cruz@ejemplo.com" required>
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" id="email" placeholder="a.cruz@ejemplo.com" required>
             </div>
             
             <div class="mb-3">
-                <label for="cliente-telefono" class="form-label">Teléfono</label>
-                <input type="tel" class="form-control" id="cliente-telefono" placeholder="9341024062" required>
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" placeholder="9341024062" required>
             </div>
             
-            <hr class="my-4">
-            
-            <div class="mb-3">
-                <label for="tarjeta-token" class="form-label text-muted">Token de Tarjeta (Entorno Sandbox)</label>
-                <input type="text" class="form-control border-warning" id="tarjeta-token" placeholder="tok_sandbox_12345" required>
-            </div>
+            <hr class="my-3">
+<h6 class="mb-3 text-muted">Datos de Pago Seguro</h6>
+
+<div class="row g-2">
+    <div class="col-12">
+        <label class="form-label">Número de Tarjeta</label>
+        <input type="text" id="card-number" class="form-control" placeholder="4242 4242 4242 4242" maxlength="19">
+    </div>
+    <div class="col-6">
+        <label class="form-label">Mes (MM)</label>
+        <input type="text" id="card-month" class="form-control" placeholder="12" maxlength="2">
+    </div>
+    <div class="col-6">
+        <label class="form-label">Año (AA)</label>
+        <input type="text" id="card-year" class="form-control" placeholder="28" maxlength="2">
+    </div>
+    <div class="col-12 mt-2">
+        <label class="form-label">Código de Seguridad (CVC)</label>
+        <input type="text" id="card-cvc" class="form-control" placeholder="123" maxlength="4">
+    </div>
+</div>
         </form>
       </div>
       
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="procesarPago()">Confirmar y Pagar</button>
+        <button type="button" class="btn btn-primary" onclick="procesarPago()" id="btn-pagar">Confirmar y Pagar</button>
       </div>
     </div>
   </div>

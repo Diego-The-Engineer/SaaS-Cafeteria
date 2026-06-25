@@ -1,4 +1,4 @@
-const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com"; 
+const API_URL = "http://localhost:8000"; 
 let carrito = [];
 
 window.onload = () => { cargarMenu(); };
@@ -124,78 +124,91 @@ function actualizarCarrito() {
     btnEnviar.disabled = false;
 }
 
+
 async function procesarPago() {
-    // 1. Capturar los datos del modal
-    const nombre = document.getElementById('cliente-nombre').value;
-    const apellido = document.getElementById('cliente-apellido').value;
-    const email = document.getElementById('cliente-email').value;
-    const telefono = document.getElementById('cliente-telefono').value;
-    const tokenTarjeta = document.getElementById('tarjeta-token').value;
-
-    // 2. Validación básica para que no manden campos vacíos
-    if (!nombre || !apellido || !email || !telefono || !tokenTarjeta) {
-        alert("Por favor, llena todos los datos de contacto y pago.");
-        return;
-    }
-
-    if (carrito.length === 0) {
-        alert("Tu carrito está vacío.");
-        return;
-    }
-
-    // 3. Bloquear el botón para evitar doble cobro
-    const btnPagar = document.querySelector('#staticBackdrop .btn-primary');
-    const textoOriginal = btnPagar.innerText;
-    btnPagar.innerText = "Procesando pago...";
+    const btnPagar = document.getElementById("btn-pagar"); 
+    btnPagar.innerText = "Encriptando tarjeta...";
     btnPagar.disabled = true;
 
-    // 4. Armar el Super-Payload (Datos del cliente + Carrito)
-    const payload = {
-        first_name: nombre,
-        last_name: apellido,
-        email: email,
-        phone: telefono,
-        token_tarjeta: tokenTarjeta,
-        items: carrito.map(item => ({
-            producto_id: item.producto_id,
-            nombre: item.nombre,
-            precio_unitario: item.precio, 
-            cantidad: item.cantidad
-        }))
-    };
-
     try {
-        const res = await fetch(`${API_URL}/pedidos`, {
+
+        const nombre = document.getElementById("nombre").value || "Diego";
+        const apellido = document.getElementById("apellido").value || "Gómez";
+        const email = document.getElementById("email").value || "diego.aimi67@gmail.com";
+        const telefono = document.getElementById("telefono").value || "9514087678";
+        
+        const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
+        const cardMonth = document.getElementById("card-month").value;
+        const cardYear = document.getElementById("card-year").value;
+        const cardCvc = document.getElementById("card-cvc").value;       
+        const respuestaToken = await fetch("http://localhost:8000/pedidos/api/obtener_token",{
+            method: "POST"
+        }); 
+        if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
+        const datosToken = await respuestaToken.json();
+        const miToken = datosToken.token;
+        const tokenResponse = await fetch("https://sandbox.ecartpay.com/api/tokens", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${miToken}`
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                name: nombre + " " + apellido,
+                number: cardNum,
+                exp_month: cardMonth,
+                exp_year: "20" + cardYear,
+                cvc: cardCvc
+            })
         });
 
-        if (res.ok) {
-            const respuestaData = await res.json();
-            alert("¡Pago exitoso! Tu pedido está en preparación.");
-            carrito = [];
-            actualizarCarrito();
-            document.getElementById('form-checkout').reset(); 
-            const modalElement = document.getElementById('staticBackdrop');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            modalInstance.hide();
-            cargarMenu(); 
-        } else {
-            const errorData = await res.json();
-            alert(`El pago fue rechazado: ${errorData.detail || 'Verifica los datos de la tarjeta'}`);
+        if (!tokenResponse.ok) {
+            const token_response = await tokenResponse.json()
+            console.log("Error en: ", token_response)
+            throw new Error("Datos inválidos");
         }
+
+        const tokenData = await tokenResponse.json();
+        const tokenSeguro = tokenData.id || tokenData.token; 
+        console.log("token: ", tokenSeguro)
+        btnPagar.innerText = "Procesando cobro...";
+     
+        const pedidoData = {
+            items: carrito, 
+            first_name: nombre,
+            last_name: apellido,
+            email: email,
+            phone: telefono,
+            token_tarjeta: tokenSeguro 
+        };
+
+        const backendResponse = await fetch(`${API_URL}/pedidos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pedidoData)
+        });
+
+        if (!backendResponse.ok) {
+            const errorBack = await backendResponse.json();
+            throw new Error(errorBack.detail || "Error en el servidor");
+        }
+
+        alert("¡Pago exitoso! Tu pedido ha sido confirmado.");
+
+        carrito = [];
+        const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
+        modal.hide();
+        cargarMenu();
+        actualizarCarrito();
+        document.getElementById("form-checkout").reset();
+
     } catch (error) {
-        console.error("Error al procesar el pago:", error);
-        alert("Error de conexión con el servidor de pagos.");
+        alert("El pago fue rechazado: " + error.message);
     } finally {
-        btnPagar.innerText = textoOriginal;
+        btnPagar.innerText = "Confirmar y Pagar";
         btnPagar.disabled = false;
     }
 }
-
 function iniciarObservadorAnimaciones() {
     const observador = new IntersectionObserver((entradas) => {
         entradas.forEach((entrada) => {
