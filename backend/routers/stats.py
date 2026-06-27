@@ -45,7 +45,8 @@ async def get_stats(current_user: Annotated[User, Depends(get_current_active_use
 async def post_stats(current_user: Annotated[User, Depends(get_current_active_user)], stat: Create_stats):
         stat_dict = stat.model_dump()
         resultado = await db["ganancias"].insert_one(stat_dict)
-        return {"msg ": "Guardado en el historial"}
+        return {"msg": "Guardado en el historial"}
+
 @router.delete("/estadistica")
 async def borrar_estadistica(current_user: Annotated[User, Depends(get_current_active_user)]):
         eliminar_ganancias = await db["pedidos"].delete_many({})
@@ -69,6 +70,6 @@ async def get_ganancias(current_user: Annotated[User, Depends(get_current_active
         ganancias_db = await cursor.to_list(length=100)
         for ganancia in ganancias_db:
                 ganancia["id"] = str(ganancia["_id"])
-                ganancia["ingresos"] = float(ganancia.get("ingresos"),0.0)
-                ganancia["egresos"] = float(ganancia.get("egresos"),0.0)
+                ganancia["ingresos"] = float(ganancia.get("ingresos" ,0.0))
+                ganancia["egresos"] = float(ganancia.get("egresos" ,0.0))
         return ganancias_db
