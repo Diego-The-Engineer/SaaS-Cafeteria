@@ -1,4 +1,7 @@
-const API_URL = "http://localhost:8000"; 
+const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
+
+ const API_URL = esLocal ? "http://localhost:5500" : "https://sep7imacafeteria.vercel.app";
+
 let carrito = [];
 
 window.onload = () => { cargarMenu(); };
@@ -18,7 +21,6 @@ async function cargarMenu() {
     `;
 
     try {
-        // Petición limpia directa a la nube
         const res = await fetch(`${API_URL}/productos/lista`);
 
         if (!res.ok) throw new Error("Error en la conexión con el servidor");
@@ -76,7 +78,6 @@ function agregarAlCarrito(id, nombre, precio) {
 }
 
 function quitarDelCarrito(id) {
-    // Typo corregido, ya no hay espacio extra
     const index = carrito.findIndex(item => item.producto_id === id);
     
     if(index !== -1) {
@@ -87,7 +88,7 @@ function quitarDelCarrito(id) {
         }
         actualizarCarrito();
     } else {
-        console.error("¡No se encontró el producto con ese ID en el carrito!");
+        console.error("No se encontró el producto con ese ID en el carrito");
     }
 }
 
@@ -141,13 +142,13 @@ async function procesarPago() {
         const cardMonth = document.getElementById("card-month").value;
         const cardYear = document.getElementById("card-year").value;
         const cardCvc = document.getElementById("card-cvc").value;       
-        const respuestaToken = await fetch("http://localhost:8000/pedidos/api/obtener_token",{
+        const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{
             method: "POST"
         }); 
         if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
         const datosToken = await respuestaToken.json();
         const miToken = datosToken.token;
-        const tokenResponse = await fetch("https://sandbox.ecartpay.com/api/tokens", {
+        const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -164,13 +165,11 @@ async function procesarPago() {
 
         if (!tokenResponse.ok) {
             const token_response = await tokenResponse.json()
-            console.log("Error en: ", token_response)
             throw new Error("Datos inválidos");
         }
 
         const tokenData = await tokenResponse.json();
         const tokenSeguro = tokenData.id || tokenData.token; 
-        console.log("token: ", tokenSeguro)
         btnPagar.innerText = "Procesando cobro...";
      
         const pedidoData = {

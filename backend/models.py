@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -32,3 +31,11 @@ class Response_pedido(BaseModel):
 
 class Response_msg(BaseModel):
 	msg: str
+       
+class Create_stats(BaseModel):
+       fecha: datetime = Field(default_factory=datetime.utcnow)
+       ingresos: float
+       egresos: float
+
+class Response_stats(BaseModel):
+        msg: str

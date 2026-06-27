@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #2962ff;
+            --primary: #a88631;
             --bg-color: #f4f7f6;
             --text-dark: #2c3e50;
             --text-muted: #7f8c8d;
@@ -100,11 +100,11 @@
         <h2>Iniciar Sesión</h2>
         <div class="form-group">
             <label>Usuario</label>
-            <input type="text" id="username" placeholder="admin">
+            <input type="text" id="username">
         </div>
         <div class="form-group">
             <label>Contraseña</label>
-            <input type="password" id="password" placeholder="***">
+            <input type="password" id="password">
         </div>
         <button class="btn-primary" style="width: 100%;" onclick="login()">Entrar</button>
         <p id="login-error" style="color: red; font-size: 14px; text-align: center; display: none;">Credenciales incorrectas</p>
@@ -127,6 +127,7 @@
                 </div>
             </div>
             <button onclick="cargarEstadisticas()" style="margin-top: 15px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"> Refrescar Datos</button>
+            <button onclick="borrar_stats()" style="margin-top: 15px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"> Borrar Datos </button>
         </div>
 
         <div class="card">
@@ -272,7 +273,48 @@
                 console.error("Error cargando estadísticas", e);
             }
         }
+            async function borrar_stats(){
+                const confirmacion = confirm("ATENCION: ¿Estás completamente seguro de que quieres reiniciar TODAS las estadísticas y pedidos? Esta acción borrará el historial y no se puede deshacer.");
 
+    if (!confirmacion) {
+        console.log("Operación de borrado cancelada por el usuario.");
+        return; 
+    }
+
+    try {
+        // 2. Extraer la llave del administrador
+        const token = localStorage.getItem("token"); 
+
+        if (!token) {
+            alert("Error de sesión: No tienes permisos para hacer esto.");
+            return;
+        }
+
+        // 3. El disparo al Backend
+        const respuesta = await fetch(`${API_URL}/stats/estadistica`, {
+            method: "DELETE", 
+            headers: {
+                "Authorization": `Bearer ${token}`, 
+                "Content-Type": "application/json"
+            }
+        });
+
+        const datos = await respuesta.json();
+
+        // 4. Manejo del resultado
+        if (respuesta.ok) {
+            alert(`${datos.mensaje}\nRegistros limpiados: ${datos.registros_eliminados}`);
+            
+            window.location.reload(); 
+        } else {
+            alert(`Error al borrar: ${datos.detail || 'No se pudo completar la acción'}`);
+        }
+
+    } catch (error) {
+        console.error("Fallo de conexión:", error);
+        alert("Error: No se pudo conectar con el servidor.");
+    }
+            }
         // --- CARGAR INVENTARIO
         async function cargarInventario() {
             const token = localStorage.getItem("token");

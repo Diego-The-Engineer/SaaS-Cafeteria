@@ -11,7 +11,7 @@ from database import db
 from dotenv import load_dotenv
 load_dotenv()
 app = FastAPI()
-url = "https://sandbox.ecartpay.com/api/authorizations/token"
+url = "https://ecartpay.com/api/authorizations/token"
 token_secreto = os.getenv("TOKEN")
 
 def generar_token():
@@ -25,7 +25,7 @@ def generar_token():
     data = response.json()
 
     token_ecart = data.get("token")
-    print(f"¡Éxito! Mi token de eCartPay es: {token_ecart}")
+    print(f"¡Éxito! Mi token de eCartPay es: {token_secreto}")
 
 @app.post("/pedidos/api/obtener_token")
 async def obtener_token_ecart():
