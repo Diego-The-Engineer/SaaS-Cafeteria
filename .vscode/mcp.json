@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"ecartpay": {
+			"type": "http",
+			"url": "https://docs.ecartpay.com/mcp"
+		}
+	},
+	"inputs": []
+}

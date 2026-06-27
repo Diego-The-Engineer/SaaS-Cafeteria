@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Séptima Café - Punto de Venta</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -27,11 +28,73 @@
             <span id="total-precio">$0.00</span>
         </div>
 
-        <button class="btn-checkout" id="btn-enviar" onclick="enviarPedido()" disabled>
+        <button type= "button" class="btn btn-primary w-100" id="btn-enviar" data-bs-toggle="modal" data-bs-target="#staticBackdrop" disabled>
             Confirmar Pedido
         </button>
     </div>
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Completa tu Pedido</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+        <form id="form-checkout">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" placeholder="Ej. Moises" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="apellido" class="form-label">Apellido</label>
+                    <input type="text" class="form-control" id="apellido" placeholder="Ej. Garcia" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" id="email" placeholder="a.cruz@ejemplo.com" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" placeholder="9341024062" required>
+            </div>
+            
+            <hr class="my-3">
+<h6 class="mb-3 text-muted">Datos de Pago Seguro</h6>
 
+<div class="row g-2">
+    <div class="col-12">
+        <label class="form-label">Número de Tarjeta</label>
+        <input type="text" id="card-number" class="form-control" placeholder="4242 4242 4242 4242" maxlength="19">
+    </div>
+    <div class="col-6">
+        <label class="form-label">Mes (MM)</label>
+        <input type="text" id="card-month" class="form-control" placeholder="12" maxlength="2">
+    </div>
+    <div class="col-6">
+        <label class="form-label">Año (AA)</label>
+        <input type="text" id="card-year" class="form-control" placeholder="28" maxlength="2">
+    </div>
+    <div class="col-12 mt-2">
+        <label class="form-label">Código de Seguridad (CVC)</label>
+        <input type="text" id="card-cvc" class="form-control" placeholder="123" maxlength="4">
+    </div>
+</div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="procesarPago()" id="btn-pagar">Confirmar y Pagar</button>
+      </div>
+    </div>
+  </div>
+</div>
     <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

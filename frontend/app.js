@@ -1,4 +1,7 @@
-const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com"; 
+const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
+
+ const API_URL = esLocal ? "http://localhost:5500" : "https://sep7imacafeteria.vercel.app";
+
 let carrito = [];
 
 window.onload = () => { cargarMenu(); };
@@ -18,7 +21,6 @@ async function cargarMenu() {
     `;
 
     try {
-        // Petición limpia directa a la nube
         const res = await fetch(`${API_URL}/productos/lista`);
 
         if (!res.ok) throw new Error("Error en la conexión con el servidor");
@@ -76,7 +78,6 @@ function agregarAlCarrito(id, nombre, precio) {
 }
 
 function quitarDelCarrito(id) {
-    // Typo corregido, ya no hay espacio extra
     const index = carrito.findIndex(item => item.producto_id === id);
     
     if(index !== -1) {
@@ -87,7 +88,7 @@ function quitarDelCarrito(id) {
         }
         actualizarCarrito();
     } else {
-        console.error("¡No se encontró el producto con ese ID en el carrito!");
+        console.error("No se encontró el producto con ese ID en el carrito");
     }
 }
 
@@ -124,45 +125,89 @@ function actualizarCarrito() {
     btnEnviar.disabled = false;
 }
 
-async function enviarPedido() {
-    if (carrito.length === 0) return;
 
-    const btnEnviar = document.getElementById("btn-enviar");
-    btnEnviar.disabled = true;
-    btnEnviar.innerText = "Procesando...";
-
-    const payload = {
-        items: carrito.map(item => ({
-            producto_id: item.producto_id,
-            cantidad: item.cantidad
-        }))
-    };
+async function procesarPago() {
+    const btnPagar = document.getElementById("btn-pagar"); 
+    btnPagar.innerText = "Encriptando tarjeta...";
+    btnPagar.disabled = true;
 
     try {
-        const res = await fetch(`${API_URL}/pedidos/`, {
+
+        const nombre = document.getElementById("nombre").value || "Diego";
+        const apellido = document.getElementById("apellido").value || "Gómez";
+        const email = document.getElementById("email").value || "diego.aimi67@gmail.com";
+        const telefono = document.getElementById("telefono").value || "9514087678";
+        
+        const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
+        const cardMonth = document.getElementById("card-month").value;
+        const cardYear = document.getElementById("card-year").value;
+        const cardCvc = document.getElementById("card-cvc").value;       
+        const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{
+            method: "POST"
+        }); 
+        if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
+        const datosToken = await respuestaToken.json();
+        const miToken = datosToken.token;
+        const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${miToken}`
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                name: nombre + " " + apellido,
+                number: cardNum,
+                exp_month: cardMonth,
+                exp_year: "20" + cardYear,
+                cvc: cardCvc
+            })
         });
 
-        if (res.ok) {
-            alert("¡Pedido realizado con éxito!");
-            carrito = [];
-            actualizarCarrito();
-            cargarMenu();
-        } else {
-            alert("Error al procesar el pedido. Intenta de nuevo.");
+        if (!tokenResponse.ok) {
+            const token_response = await tokenResponse.json()
+            throw new Error("Datos inválidos");
         }
+
+        const tokenData = await tokenResponse.json();
+        const tokenSeguro = tokenData.id || tokenData.token; 
+        btnPagar.innerText = "Procesando cobro...";
+     
+        const pedidoData = {
+            items: carrito, 
+            first_name: nombre,
+            last_name: apellido,
+            email: email,
+            phone: telefono,
+            token_tarjeta: tokenSeguro 
+        };
+
+        const backendResponse = await fetch(`${API_URL}/pedidos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pedidoData)
+        });
+
+        if (!backendResponse.ok) {
+            const errorBack = await backendResponse.json();
+            throw new Error(errorBack.detail || "Error en el servidor");
+        }
+
+        alert("¡Pago exitoso! Tu pedido ha sido confirmado.");
+
+        carrito = [];
+        const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
+        modal.hide();
+        cargarMenu();
+        actualizarCarrito();
+        document.getElementById("form-checkout").reset();
+
     } catch (error) {
-        console.error(error);
-        alert("Error de red conectando al servidor.");
+        alert("El pago fue rechazado: " + error.message);
     } finally {
-        btnEnviar.innerText = "Confirmar Pedido";
+        btnPagar.innerText = "Confirmar y Pagar";
+        btnPagar.disabled = false;
     }
 }
-
 function iniciarObservadorAnimaciones() {
     const observador = new IntersectionObserver((entradas) => {
         entradas.forEach((entrada) => {

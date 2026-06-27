@@ -5,7 +5,7 @@ from typing import List, Optional, Annotated
 from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
-from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg
+from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg, Create_stats, Response_stats
 from database import db
 from auth import (
     create_access_token,

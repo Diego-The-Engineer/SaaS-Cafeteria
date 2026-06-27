@@ -1,9 +1,10 @@
-import os
+import os, sys
 from datetime import datetime, timedelta
 from typing import List, Optional, Annotated
 from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg
 from database import db
 from auth import User, get_current_active_user
