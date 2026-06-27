@@ -1,6 +1,6 @@
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
 
- const API_URL = esLocal ? "http://localhost:5500" : "https://sep7imacafeteria.vercel.app";
+ const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f7z2.onrender.com";
 
 let carrito = [];
 
