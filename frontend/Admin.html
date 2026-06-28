@@ -7,166 +7,477 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #a88631;
-            --bg-color: #f4f7f6;
-            --text-dark: #2c3e50;
-            --text-muted: #7f8c8d;
-            --card-bg: #ffffff;
-            --danger: #e74c3c;
-            --success: #2ecc71;
-            --warning: #f1c40f;
+            --primary: #4a3319;       /* Café oscuro profundo para botones principales y títulos */
+            --primary-hover: #362410;
+            --accent: #a88631;        /* Tono dorado/café claro para detalles y bordes */
+            --accent-hover: #8e7025;
+            --bg-overlay: rgba(0, 0, 0, 0.45);
+            --card-bg: #fcf8f2;       /* Fondo crema texturizado de las imágenes */
+            --text-dark: #2c1a11;     /* Texto principal en marrón oscuro */
+            --text-muted: #705c53;    /* Texto secundario */
+            --danger: #962d2d;        /* Rojo quemado para errores y eliminaciones */
+            --success: #27ae60;       /* Verde para stock suficiente */
+            --warning: #df9b12;       /* Naranja/Amarillo para stock bajo */
         }
 
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('cafeteria-fondo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             margin: 0;
-            padding: 30px;
+            padding: 4% 2%;
             color: var(--text-dark);
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* --- CONTENEDORES PRINCIPALES --- */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
         }
 
         .header {
-            display: flex; justify-content: space-between; align-items: baseline;
-            margin-bottom: 30px; max-width: 1200px; margin-left: auto; margin-right: auto;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 30px; 
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
-        .header h1 { margin: 0; font-size: 28px; }
-        .header button {
-            background: none; border: 1px solid var(--danger); color: var(--danger);
-            padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: 0.3s;
+        .header h1 { 
+            margin: 0; 
+            font-size: 26px; 
+            color: var(--primary);
+            font-weight: 700;
         }
-        .header button:hover { background: var(--danger); color: white; }
+
+        .header button {
+            background: none; 
+            border: 2px solid var(--danger); 
+            color: var(--danger);
+            padding: 8px 18px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .header button:hover { 
+            background: var(--danger); 
+            color: white; 
+        }
 
         .card {
-            background: var(--card-bg); border-radius: 12px; padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 1200px; margin: 0 auto 25px auto;
+            background-color: var(--card-bg); 
+            border-radius: 16px; 
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15); 
+            margin-bottom: 30px;
+            border: 1px solid rgba(168, 134, 49, 0.2);
+            position: relative;
+            overflow: hidden;
         }
 
-        h2 { margin-top: 0; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;}
+        /* Patrón sutil de fondo para las tarjetas simulando el diseño de la imagen */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(168, 134, 49, 0.03) 1px, transparent 1px);
+            background-size: 20px 100%;
+            pointer-events: none;
+        }
+
+        h2 { 
+            margin-top: 0; 
+            font-size: 22px; 
+            color: var(--primary);
+            border-bottom: 2px solid rgba(168, 134, 49, 0.15); 
+            padding-bottom: 12px; 
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* --- DISTRIBUCIÓN EN PANEL (GRID COFFEE) --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 30px;
+        }
+
+        /* --- SECCIÓN FINANCIERA --- */
+        .stats-display {
+            display: grid; 
+            grid-template-columns: 1fr 1.2fr; 
+            gap: 20px; 
+            align-items: center;
+        }
+
+        .stat-box {
+            text-align: center; 
+            padding: 25px 15px; 
+            background: #fff; 
+            border-radius: 12px; 
+            border: 1px solid rgba(168, 134, 49, 0.15);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .stat-box h3 { 
+            color: var(--text-muted); 
+            font-size: 15px; 
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-box h1 { 
+            color: var(--primary); 
+            font-size: 42px; 
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .stat-box p { 
+            color: var(--success); 
+            font-weight: bold; 
+            font-size: 13px; 
+            margin: 10px 0 0 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(168, 134, 49, 0.15);
+            box-sizing: border-box;
+        }
+
+        .action-buttons-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(168, 134, 49, 0.1);
+            padding-top: 20px;
+        }
+
+        /* --- SECCIÓN DE LOGIN CON DEGRADADO SEGURO --- */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 70vh;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px 35px 25px 35px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(168, 134, 49, 0.2);
+            position: relative;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 30px;
+        }
+
+        .error-gradient-base {
+            margin: 20px -35px -25px -35px;
+            padding: 20px 35px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 25%, rgba(255,255,255,1) 100%);
+            border-radius: 0 0 16px 16px;
+            text-align: center;
+        }
+
+        .error-text {
+            color: var(--danger);
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+        }
 
         /* --- FORMULARIOS --- */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            font-size: 14px;
+            color: var(--primary);
+        }
+        
         .form-group input {
-            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ccbfb5; 
+            border-radius: 8px; 
+            box-sizing: border-box;
+            background-color: #fff;
+            color: var(--text-dark);
+            font-size: 15px;
+            transition: 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 134, 49, 0.15);
         }
 
         .btn-primary {
-            background-color: var(--primary); color: white; border: none; padding: 12px 20px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 13px 25px;
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 15px;
+            transition: 0.3s;
+            width: 100%;
         }
-        .btn-primary:hover { background-color: #1e4cd9; }
+        .btn-primary:hover { 
+            background-color: var(--primary-hover); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-outline {
+            background: none;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-outline:hover {
+            background-color: rgba(74, 51, 25, 0.08);
+        }
+
+        .btn-outline-danger {
+            background: none;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-outline-danger:hover {
+            background-color: rgba(150, 45, 45, 0.08);
+        }
 
         /* --- TABLA --- */
-        .tabla-contenedor { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8faff; color: var(--text-muted); font-size: 14px;}
-
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .badge.stock-ok { background: #e8f8f5; color: var(--success); }
-        .badge.stock-low { background: #fdedec; color: var(--danger); }
-        .badge.stock-hidden { background: #f2f3f4; color: var(--text-muted); border: 1px solid #ddd; }
-
-        /* --- BOTONES DE ACCIÓN --- */
-        .btn-accion {
-            padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;
-            font-size: 12px; font-weight: bold; margin-right: 5px; transition: 0.2s;
+        .tabla-contenedor { 
+            width: 100%; 
+            overflow-x: auto; 
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid rgba(168, 134, 49, 0.15);
         }
-        .btn-toggle { background: var(--warning); color: #333; }
-        .btn-toggle:hover { background: #d4ac0d; color: white; }
-        .btn-delete { background: var(--danger); color: white; }
-        .btn-delete:hover { background: #c0392b; }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        
+        th, td { 
+            padding: 14px 18px; 
+            text-align: left; 
+            border-bottom: 1px solid #f0eae4; 
+        }
+        
+        th { 
+            background-color: #fcfaf7; 
+            color: var(--text-dark); 
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 2px solid rgba(168, 134, 49, 0.15);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* --- BADGES (ESTADOS) --- */
+        .badge { 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge.stock-ok { 
+            background: #e8f8f5; 
+            color: var(--success); 
+        }
+        .badge.stock-low { 
+            background: #fdedec; 
+            color: var(--danger); 
+        }
+        .badge.stock-hidden { 
+            background: #f2f3f4; 
+            color: var(--text-muted); 
+            border: 1px solid #ddd; 
+        }
+
+        /* --- BOTONES DE ACCIÓN EN TABLA --- */
+        .btn-accion {
+            padding: 6px 14px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-size: 12px; 
+            font-weight: bold; 
+            margin-right: 8px; 
+            transition: 0.2s;
+        }
+        .btn-toggle { 
+            background: var(--card-bg); 
+            color: var(--primary); 
+            border: 1px solid var(--accent);
+        }
+        .btn-toggle:hover { 
+            background: var(--accent); 
+            color: white; 
+        }
+        .btn-delete { 
+            background: var(--danger); 
+            color: white; 
+        }
+        .btn-delete:hover { 
+            background: #7d2424; 
+        }
+
+        /* --- DISEÑO RESPONSIVO --- */
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
         @media (max-width: 768px) {
-            body { padding: 15px; }
-            .header { flex-direction: column; text-align: center; gap: 15px; }
-            .card { padding: 15px; }
+            body { padding: 20px 10px; }
+            .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px; }
+            .stats-display { grid-template-columns: 1fr; }
+            .card { padding: 20px; }
+            .error-gradient-base { margin: 20px -20px -25px -20px; padding: 20px; }
             table { white-space: nowrap; }
-            .btn-primary, input { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <div class="header" id="admin-header" style="display:none;">
-        <div>
-            <h1>Dashboard Administrativo</h1>
+    <div class="container">
+        <div class="header" id="admin-header" style="display:none;">
+            <div>
+                <h1>Dashboard Administrativo</h1>
+            </div>
+            <button onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
-        <button onclick="cerrarSesion()">Cerrar Sesión</button>
-    </div>
 
-    <div class="card" id="login-section" style="max-width: 400px; margin-top: 50px;">
-        <h2>Iniciar Sesión</h2>
-        <div class="form-group">
-            <label>Usuario</label>
-            <input type="text" id="username">
-        </div>
-        <div class="form-group">
-            <label>Contraseña</label>
-            <input type="password" id="password">
-        </div>
-        <button class="btn-primary" style="width: 100%;" onclick="login()">Entrar</button>
-        <p id="login-error" style="color: red; font-size: 14px; text-align: center; display: none;">Credenciales incorrectas</p>
-    </div>
-
-    <div id="admin-panel" style="display:none;">
-
-        <div class="card">
-            <h2>Resumen Financiero y Ventas</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: center;">
-
-                <div style="text-align: center; padding: 20px; background: #f8faff; border-radius: 12px; border: 1px solid #e0e0e0;">
-                    <h3 style="color: #7f8c8d; font-size: 16px; margin-bottom: 10px;">Ingresos Brutos</h3>
-                    <h1 id="stat-ganancias" style="color: var(--primary); font-size: 48px; margin: 0;">$0.00</h1>
-                    <p style="color: var(--success); font-weight: bold; font-size: 14px; margin-top: 10px;">Actualizado en tiempo real</p>
+        <div class="login-wrapper" id="login-section">
+            <div class="login-card">
+                <h2>Iniciar Sesión</h2>
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="username" placeholder="Tu usuario">
                 </div>
-
-                <div style="width: 100%; max-width: 500px; margin: 0 auto;">
-                    <canvas id="chartTopProductos"></canvas>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                <button class="btn-primary" onclick="login()">Entrar</button>
+                
+                <div class="error-gradient-base" id="login-error" style="display: none;">
+                    <p class="error-text">Credenciales incorrectas. Inténtalo de nuevo.</p>
                 </div>
             </div>
-            <button onclick="cargarEstadisticas()" style="margin-top: 15px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"> Refrescar Datos</button>
-            <button onclick="borrar_stats()" style="margin-top: 15px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"> Borrar Datos </button>
         </div>
 
-        <div class="card">
-            <h2>Agregar Nuevo Producto</h2>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <div class="form-group" style="flex: 1; min-width: 200px;">
-                    <label>Nombre del Producto</label>
-                    <input type="text" id="prod-nombre" placeholder="Ej. Frappé">
-                </div>
-                <div class="form-group" style="flex: 1; min-width: 100px;">
-                    <label>Precio ($)</label>
-                    <input type="number" id="prod-precio" placeholder="0.00">
-                </div>
-                <div class="form-group" style="flex: 1; min-width: 100px;">
-                    <label>Cantidad (Stock)</label>
-                    <input type="number" id="prod-cantidad" placeholder="0">
-                </div>
-            </div>
-            <button class="btn-primary" onclick="agregarProducto()">Guardar Producto</button>
-        </div>
+        <div id="admin-panel" style="display:none;">
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h2>Resumen Financiero y Ventas</h2>
+                    <div class="stats-display">
+                        <div class="stat-box">
+                            <h3>Ingresos Brutos</h3>
+                            <h1 id="stat-ganancias">$0.00</h1>
+                            <p>Actualizado en tiempo real</p>
+                        </div>
 
-        <div class="card">
-            <h2>Inventario Actual</h2>
-            <div class="tabla-contenedor">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-productos">
-                        </tbody>
-                </table>
+                        <div class="chart-container">
+                            <canvas id="chartTopProductos"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons-container">
+                        <button class="btn-outline" onclick="cargarEstadisticas()">Refrescar Datos</button>
+                        <button class="btn-outline-danger" onclick="borrar_stats()">Borrar Datos</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Agregar Nuevo Producto</h2>
+                    <div class="form-group">
+                        <label>Nombre del Producto</label>
+                        <input type="text" id="prod-nombre" placeholder="Ej. Frappé">
+                    </div>
+                    <div class="form-group">
+                        <label>Precio ($)</label>
+                        <input type="number" id="prod-precio" placeholder="0.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad (Stock)</label>
+                        <input type="number" id="prod-cantidad" placeholder="0">
+                    </div>
+                    <button class="btn-primary" onclick="agregarProducto()" style="margin-top: 10px;">Guardar Producto</button>
+                </div>
             </div>
+
+            <div class="card">
+                <h2>Inventario Actual</h2>
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-productos">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -193,7 +504,6 @@
             formData.append("password", pass);
 
             try {
-                // Petición limpia sin headers de Ngrok
                 const res = await fetch(`${API_URL}/token`, {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -219,7 +529,7 @@
             localStorage.removeItem("token");
             document.getElementById("admin-panel").style.display = "none";
             document.getElementById("admin-header").style.display = "none";
-            document.getElementById("login-section").style.display = "block";
+            document.getElementById("login-section").style.display = "flex";
         }
 
         function mostrarPanel() {
@@ -228,7 +538,6 @@
             document.getElementById("admin-panel").style.display = "block";
         }
 
-        // --- CARGAR ESTADÍSTICAS Y GRÁFICA ---
         async function cargarEstadisticas() {
             const token = localStorage.getItem("token");
             try {
@@ -239,13 +548,11 @@
                 if(!res.ok) return;
                 const data = await res.json();
 
-                // Actualizar el número de ingresos
                 document.getElementById("stat-ganancias").innerText = `$${data.ganancia_total.toFixed(2)}`;
 
-                // Renderizar la gráfica
                 const ctx = document.getElementById('chartTopProductos').getContext('2d');
 
-                if (myChart) { myChart.destroy(); } // Destruir la anterior para evitar errores visuales
+                if (myChart) { myChart.destroy(); }
 
                 myChart = new Chart(ctx, {
                     type: 'bar',
@@ -254,7 +561,7 @@
                         datasets: [{
                             label: 'Unidades Vendidas',
                             data: data.top_productos.map(p => p.cantidad_total),
-                            backgroundColor: '#2962ff',
+                            backgroundColor: '#a88631',
                             borderRadius: 6
                         }]
                     },
@@ -273,49 +580,46 @@
                 console.error("Error cargando estadísticas", e);
             }
         }
-            async function borrar_stats(){
-                const confirmacion = confirm("ATENCION: ¿Estás completamente seguro de que quieres reiniciar TODAS las estadísticas y pedidos? Esta acción borrará el historial y no se puede deshacer.");
 
-    if (!confirmacion) {
-        console.log("Operación de borrado cancelada por el usuario.");
-        return; 
-    }
+        async function borrar_stats(){
+            const confirmacion = confirm("ATENCION: ¿Estás completamente seguro de que quieres reiniciar TODAS las estadísticas y pedidos? Esta acción borrará el historial y no se puede deshacer.");
 
-    try {
-        // 2. Extraer la llave del administrador
-        const token = localStorage.getItem("token"); 
+            if (!confirmacion) {
+                console.log("Operación de borrado cancelada por el usuario.");
+                return; 
+            }
 
-        if (!token) {
-            alert("Error de sesión: No tienes permisos para hacer esto.");
-            return;
+            try {
+                const token = localStorage.getItem("token"); 
+
+                if (!token) {
+                    alert("Error de sesión: No tienes permisos para hacer esto.");
+                    return;
+                }
+
+                const respuesta = await fetch(`${API_URL}/stats/estadistica`, {
+                    method: "DELETE", 
+                    headers: {
+                        "Authorization": `Bearer ${token}`, 
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    alert(`${datos.mensaje}\nRegistros limpiados: ${datos.registros_eliminados}`);
+                    window.location.reload(); 
+                } else {
+                    alert(`Error al borrar: ${datos.detail || 'No se pudo completar la acción'}`);
+                }
+
+            } catch (error) {
+                console.error("Fallo de conexión:", error);
+                alert("Error: No se pudo conectar con el servidor.");
+            }
         }
 
-        // 3. El disparo al Backend
-        const respuesta = await fetch(`${API_URL}/stats/estadistica`, {
-            method: "DELETE", 
-            headers: {
-                "Authorization": `Bearer ${token}`, 
-                "Content-Type": "application/json"
-            }
-        });
-
-        const datos = await respuesta.json();
-
-        // 4. Manejo del resultado
-        if (respuesta.ok) {
-            alert(`${datos.mensaje}\nRegistros limpiados: ${datos.registros_eliminados}`);
-            
-            window.location.reload(); 
-        } else {
-            alert(`Error al borrar: ${datos.detail || 'No se pudo completar la acción'}`);
-        }
-
-    } catch (error) {
-        console.error("Fallo de conexión:", error);
-        alert("Error: No se pudo conectar con el servidor.");
-    }
-            }
-        // --- CARGAR INVENTARIO
         async function cargarInventario() {
             const token = localStorage.getItem("token");
             try {
