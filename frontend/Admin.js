@@ -70,7 +70,7 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
             const totalFilas = document.querySelectorAll('.variante-row').length;
 
             if(totalFilas > 1) {
-                File.remove();
+                fila.remove();
             }else{
                 alert("El producto debe tener un tamaño al menos");
             }
