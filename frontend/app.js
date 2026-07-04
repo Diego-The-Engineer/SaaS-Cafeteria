@@ -185,6 +185,21 @@ function actualizarCarrito() {
 
     labelTotal.innerText = `$${total.toFixed(2)}`;
     btnEnviar.disabled = false;
+
+    const flotanteMovil = document.getElementById('flotante-movil');
+    const flotanteTotal = document.getElementById('flotante-total');
+    const flotanteCantidad = document.getElementById('flotante-cantidad');
+
+    if (flotanteMovil) {
+        if (carrito.length > 0) {
+            const cantidadItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+            flotanteCantidad.innerText = cantidadItems;
+            flotanteTotal.innerText = `$${total.toFixed(2)}`;
+            flotanteMovil.classList.add('mostrar'); 
+        } else {
+            flotanteMovil.classList.remove('mostrar'); 
+        }
+    }
 }
 
 async function procesarPago() {
@@ -288,4 +303,11 @@ function iniciarObservadorAnimaciones() {
     tarjetas.forEach((tarjeta) => {
         observador.observe(tarjeta);
     });
+}
+
+function scrollToCart() {
+    const carritoSeccion = document.querySelector('.carrito-container');
+    if (carritoSeccion) {
+        carritoSeccion.scrollIntoView({ behavior: 'smooth' });
+    }
 }

@@ -13,7 +13,7 @@
         <h1>Menú de la Cafetería</h1>
         <p>Pide en línea y recoge en mostrador</p>
     </div>
-    
+
     <div id="categorias-filtro" class="filtros-container"></div>
     <div class="main-layout">
         <div class="menu-container" id="menu-contenedor">
@@ -98,7 +98,13 @@
             </div>
         </div>
     </div>
-
+    <div id="flotante-movil" class="cart-flotante" onclick="scrollToCart()">
+        <div class="cart-flotante-info">
+            <span id="flotante-cantidad" class="badge-flotante">0</span>
+            <span>Ver Pedido</span>
+        </div>
+        <span id="flotante-total">$0.00</span>
+    </div>
     <script src="app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
