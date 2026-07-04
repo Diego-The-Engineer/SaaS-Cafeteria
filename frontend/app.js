@@ -1,6 +1,6 @@
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
 
- const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f7z2.onrender.com";
 
 let carrito = [];
 
@@ -37,20 +37,32 @@ async function cargarMenu() {
         }
 
         disponibles.forEach(p => {
-            const stock = p.cantidad !== undefined ? p.cantidad : 999;
+            const stock = p.cantidad !== undefined ? p.cantidad : 0;
             const agotado = stock <= 0;
+            let selectorHTML = '';
+            let tieneVariantes = p.variantes && p.variantes.length > 0;
+
+            if (tieneVariantes) {
+                selectorHTML = `<select id="variante-${p.id || p._id}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
+                p.variantes.forEach(v => {
+                    selectorHTML += `<option value="${v.tamaño}|${v.precio}">${v.tamaño} - $${v.precio.toFixed(2)}</option>`;
+                });
+                selectorHTML += `</select>`;
+            } else {
+                selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
+            }
 
             contenedor.innerHTML += `
                 <div class="producto-card reveal">
                     <div>
                         <h3>${p.nombre}</h3>
                         <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
+                        ${selectorHTML}
                     </div>
-                    <div>
-                        <p class="precio">$${p.precio_unitario.toFixed(2)}</p>
-                        <button class="btn-add"
-                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}', ${p.precio_unitario})"
-                            ${agotado ? 'disabled' : ''}>
+                    <div style="margin-top: 10px;">
+                        <button class="btn-add" style="width: 100%;"
+                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}')"
+                            ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
                             ${agotado ? 'Sin Stock' : 'Agregar'}
                         </button>
                     </div>
@@ -65,20 +77,32 @@ async function cargarMenu() {
         contenedor.innerHTML = `<p style="color: var(--danger); width: 100%; text-align: center; grid-column: 1 / -1;">Error conectando con el menú. Verifica el estado del servidor.</p>`;
     }
 }
+function agregarAlCarrito(id, nombre) {
+    const select = document.getElementById(`variante-${id}`);
+    if (!select) return;
+    const [tamano, precioString] = select.value.split('|');
+    const precio = parseFloat(precioString);
+    const idUnico = `${id}-${tamano}`;
 
-function agregarAlCarrito(id, nombre, precio) {
-    const itemExistente = carrito.find(item => item.producto_id === id);
+    const itemExistente = carrito.find(item => item.idUnico === idUnico);
 
     if (itemExistente) {
         itemExistente.cantidad += 1;
     } else {
-        carrito.push({ producto_id: id, nombre: nombre, precio: precio, cantidad: 1 });
+        carrito.push({ 
+            idUnico: idUnico, 
+            producto_id: id, 
+            nombre: nombre, 
+            tamano: tamano,
+            precio: precio, 
+            cantidad: 1 
+        });
     }
     actualizarCarrito();
 }
 
-function quitarDelCarrito(id) {
-    const index = carrito.findIndex(item => item.producto_id === id);
+function quitarDelCarrito(idUnico) {
+    const index = carrito.findIndex(item => item.idUnico === idUnico);
     
     if(index !== -1) {
         if(carrito[index].cantidad > 1) {
@@ -112,10 +136,11 @@ function actualizarCarrito() {
         total += subtotal;
         lista.innerHTML += `
             <div class="carrito-item">
-                <span>${item.cantidad}x ${item.nombre}</span>
+                <!-- Mostramos el tamaño junto al nombre en el carrito -->
+                <span>${item.cantidad}x ${item.nombre} <b>(${item.tamano})</b></span>
                 <span>
                     $${subtotal.toFixed(2)}
-                    <button class="btn-remove" onclick="quitarDelCarrito('${item.producto_id}')">Quitar</button>
+                    <button class="btn-remove" onclick="quitarDelCarrito('${item.idUnico}')">Quitar</button>
                 </span>
             </div>
         `;
@@ -125,14 +150,12 @@ function actualizarCarrito() {
     btnEnviar.disabled = false;
 }
 
-
 async function procesarPago() {
     const btnPagar = document.getElementById("btn-pagar"); 
     btnPagar.innerText = "Encriptando tarjeta...";
     btnPagar.disabled = true;
 
     try {
-
         const nombre = document.getElementById("nombre").value || "Diego";
         const apellido = document.getElementById("apellido").value || "Gómez";
         const email = document.getElementById("email").value || "diego.aimi67@gmail.com";
@@ -142,12 +165,15 @@ async function procesarPago() {
         const cardMonth = document.getElementById("card-month").value;
         const cardYear = document.getElementById("card-year").value;
         const cardCvc = document.getElementById("card-cvc").value;       
+        
         const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{
             method: "POST"
         }); 
+        
         if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
         const datosToken = await respuestaToken.json();
         const miToken = datosToken.token;
+        
         const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
             method: "POST",
             headers: {
@@ -164,7 +190,7 @@ async function procesarPago() {
         });
 
         if (!tokenResponse.ok) {
-            const token_response = await tokenResponse.json()
+            const token_response = await tokenResponse.json();
             throw new Error("Datos inválidos");
         }
 
@@ -208,6 +234,7 @@ async function procesarPago() {
         btnPagar.disabled = false;
     }
 }
+
 function iniciarObservadorAnimaciones() {
     const observador = new IntersectionObserver((entradas) => {
         entradas.forEach((entrada) => {

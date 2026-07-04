@@ -220,7 +220,7 @@ async function cargarInventario() {
 async function agregarProducto() {
     const nombre = document.getElementById("prod-nombre").value;
     const categoria = document.getElementById("prod-categoria").value;
-    const stock = document.getElementById("prod-stock").value;
+    const stock = parseInt(document.getElementById("prod-stock").value) || 0;
     const token = localStorage.getItem("token");
     const variantes = [];
     const filas = document.querySelectorAll(".variante-row");
@@ -243,7 +243,7 @@ async function agregarProducto() {
     }
     const payload = { 
         nombre: nombre, 
-        cantidad: 0,
+        cantidad: stock,
         categoria: categoria,
         variantes: variantes, 
         disponible: true 
