@@ -240,3 +240,39 @@ body {
     opacity: 1;
     transform: translateY(0);
 }
+
+.categorias-wrapper {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 5px;
+    scrollbar-width: none; 
+    -webkit-overflow-scrolling: touch; 
+}
+
+.categorias-wrapper::-webkit-scrollbar {
+    display: none; 
+}
+
+.btn-categoria {
+    padding: 8px 18px;
+    border-radius: 20px;
+    background-color: #f0f0f0;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap; 
+    font-weight: 600;
+    color: #555;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-categoria:hover {
+    background-color: #e2e2e2;
+}
+
+.btn-categoria.activa {
+    background-color: #5b8cd9;
+    color: white;
+    box-shadow: 0 4px 8px rgba(91, 140, 217, 0.3);
+}

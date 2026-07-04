@@ -1,8 +1,9 @@
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
-
 const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f7z2.onrender.com";
 
 let carrito = [];
+let productosGlobales = []; 
+let categoriaActiva = "Todos"; 
 
 window.onload = () => { cargarMenu(); };
 
@@ -22,61 +23,98 @@ async function cargarMenu() {
 
     try {
         const res = await fetch(`${API_URL}/productos/lista`);
-
         if (!res.ok) throw new Error("Error en la conexión con el servidor");
 
         const productos = await res.json();
+        productosGlobales = productos.filter(p => p.disponible);
 
-        contenedor.innerHTML = "";
-
-        const disponibles = productos.filter(p => p.disponible);
-
-        if (disponibles.length === 0) {
+        if (productosGlobales.length === 0) {
             contenedor.innerHTML = "<p style='color: var(--text-muted); width: 100%; text-align: center; grid-column: 1 / -1;'>No hay productos disponibles por el momento.</p>";
             return;
         }
-
-        disponibles.forEach(p => {
-            const stock = p.cantidad !== undefined ? p.cantidad : 0;
-            const agotado = stock <= 0;
-            let selectorHTML = '';
-            let tieneVariantes = p.variantes && p.variantes.length > 0;
-
-            if (tieneVariantes) {
-                selectorHTML = `<select id="variante-${p.id || p._id}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
-                p.variantes.forEach(v => {
-                    selectorHTML += `<option value="${v.tamaño}|${v.precio}">${v.tamaño} - $${v.precio.toFixed(2)}</option>`;
-                });
-                selectorHTML += `</select>`;
-            } else {
-                selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
-            }
-
-            contenedor.innerHTML += `
-                <div class="producto-card reveal">
-                    <div>
-                        <h3>${p.nombre}</h3>
-                        <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
-                        ${selectorHTML}
-                    </div>
-                    <div style="margin-top: 10px;">
-                        <button class="btn-add" style="width: 100%;"
-                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}')"
-                            ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
-                            ${agotado ? 'Sin Stock' : 'Agregar'}
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-
-        iniciarObservadorAnimaciones();
+        renderizarCategorias();
+        renderizarProductos();
 
     } catch (error) {
         console.error(error);
         contenedor.innerHTML = `<p style="color: var(--danger); width: 100%; text-align: center; grid-column: 1 / -1;">Error conectando con el menú. Verifica el estado del servidor.</p>`;
     }
 }
+
+function renderizarCategorias() {
+    const contenedorFiltros = document.getElementById("categorias-filtro");
+    if (!contenedorFiltros) return;
+    const categoriasSet = new Set(productosGlobales.map(p => p.categoria || "Otros"));
+    const categorias = ["Todos", ...Array.from(categoriasSet)];
+
+    let botonesHTML = `<div class="categorias-wrapper">`;
+    
+    categorias.forEach(cat => {
+        const claseActiva = (cat === categoriaActiva) ? 'activa' : '';
+        botonesHTML += `<button class="btn-categoria ${claseActiva}" onclick="filtrarCategoria('${cat}')">${cat}</button>`;
+    });
+    
+    botonesHTML += `</div>`;
+    contenedorFiltros.innerHTML = botonesHTML;
+}
+
+function filtrarCategoria(categoria) {
+    categoriaActiva = categoria; 
+    renderizarCategorias();      
+    renderizarProductos();       
+}
+
+function renderizarProductos() {
+    const contenedor = document.getElementById("menu-contenedor");
+    contenedor.innerHTML = "";
+    let productosAMostrar = productosGlobales;
+    if (categoriaActiva !== "Todos") {
+        productosAMostrar = productosGlobales.filter(p => (p.categoria || "Otros") === categoriaActiva);
+    }
+
+    if (productosAMostrar.length === 0) {
+        contenedor.innerHTML = `<p style="color: gray; text-align: center; width: 100%; grid-column: 1 / -1;">No hay productos en esta categoría.</p>`;
+        return;
+    }
+
+    productosAMostrar.forEach(p => {
+        const stock = p.cantidad !== undefined ? p.cantidad : 0;
+        const agotado = stock <= 0;
+
+        let selectorHTML = '';
+        let tieneVariantes = p.variantes && p.variantes.length > 0;
+
+        if (tieneVariantes) {
+            selectorHTML = `<select id="variante-${p.id || p._id}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
+            p.variantes.forEach(v => {
+                selectorHTML += `<option value="${v.tamaño}|${v.precio}">${v.tamaño} - $${v.precio.toFixed(2)}</option>`;
+            });
+            selectorHTML += `</select>`;
+        } else {
+            selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
+        }
+
+        contenedor.innerHTML += `
+            <div class="producto-card reveal">
+                <div>
+                    <h3>${p.nombre}</h3>
+                    <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
+                    ${selectorHTML}
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn-add" style="width: 100%;"
+                        onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}')"
+                        ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
+                        ${agotado ? 'Sin Stock' : 'Agregar'}
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    iniciarObservadorAnimaciones();
+}
+
 function agregarAlCarrito(id, nombre) {
     const select = document.getElementById(`variante-${id}`);
     if (!select) return;
@@ -136,7 +174,6 @@ function actualizarCarrito() {
         total += subtotal;
         lista.innerHTML += `
             <div class="carrito-item">
-                <!-- Mostramos el tamaño junto al nombre en el carrito -->
                 <span>${item.cantidad}x ${item.nombre} <b>(${item.tamano})</b></span>
                 <span>
                     $${subtotal.toFixed(2)}
