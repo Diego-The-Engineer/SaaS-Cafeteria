@@ -190,7 +190,7 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
                     tbody.innerHTML += `
                         <tr>
                             <td style="font-weight:bold;">${p.nombre}</td>
-                            <td>$${p.preciosFormateados}</td>
+                            <td>${preciosFormateados}</td>
                             <td>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <button class="btn-outline" style="padding: 2px 8px; font-size: 14px; border-radius: 4px;" onclick="modificarStock('${p.id}', -1)">-</button>
@@ -201,7 +201,7 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
                             <td>${estadoHtml}</td>
                             <td>${p.categoria || '<span style="color: gray; font-style: italic;">Sin categoría</span>'} </td>
                             <td>
-                                <button class="btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible}, '${p.nombre}', $${p.preciosFormateados}, ${stock})">
+                                <button class="btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible}, '${p.nombre}', ${preciosFormateados}, ${stock})">
                                     ${p.disponible ? 'Ocultar' : 'Activar'}
                                 </button>
                                 <button class="btn-accion btn-delete" onclick="eliminarProducto('${p.id}')">Borrar</button>
