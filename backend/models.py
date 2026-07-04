@@ -3,11 +3,15 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 
+class Variante(BaseModel):
+       tamaño: str
+       precio_unitario: float
+
 class Model_producto(BaseModel):
     nombre: str = Field(..., example="Latte")
-    precio_unitario: float = Field(..., example=30.5)
-    disponible: bool = True
+    variantes: list[Variante] = []
     cantidad: int = 0
+    disponible: bool = True
 
 class Response_producto(Model_producto):
         id: str
@@ -39,3 +43,5 @@ class Create_stats(BaseModel):
 
 class Response_stats(BaseModel):
         msg: str
+
+

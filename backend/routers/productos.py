@@ -55,4 +55,17 @@ async def actualizar_producto_completo(
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"msg": "Producto actualizado"}
 
-
+@router.patch("/{id}")
+async def editar_stock(
+    id: str,
+    payload: dict = Body(...),
+    current_user: Annotated[User, Depends(get_current_active_user)] = None
+):
+    oid = ObjectId(id.strip('"'))
+    modificacion = payload.get("cantidad", 0)
+    resultado = await db["productos"].update_one(
+        {"_id": oid},
+        {"$inc": {"cantidad": modificacion}}
+    )
+    if resultado.matched_count == 0: raise HTTPException(status=404, detail="Producto no encontrado")
+    return {"msg": f"Stock actualizado en {modificacion} unidades"}
