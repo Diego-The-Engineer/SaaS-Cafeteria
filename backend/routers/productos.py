@@ -69,3 +69,22 @@ async def editar_stock(
     )
     if resultado.matched_count == 0: raise HTTPException(status=404, detail="Producto no encontrado")
     return {"msg": f"Stock actualizado en {modificacion} unidades"}
+
+@router.patch("/{id}/estado")
+async def cambiar_estado(
+    id: str, 
+    payload: dict = Body(...),
+    current_user: Annotated[User, Depends(get_current_active_user)] = None   
+):
+    oid = ObjectId(id.strip('"'))
+    nuevo_estado = payload.get("disponible")
+    
+    resultado = await db["productos"].update_one(
+        {"_id": oid},
+        {"$set": {"disponible": nuevo_estado}}
+    )
+    
+    if resultado.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+    return {"msg": "Estado actualizado correctamente"}

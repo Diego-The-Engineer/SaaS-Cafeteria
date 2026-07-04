@@ -299,7 +299,7 @@ async function toggleDisponibilidad(id, estadoActual) {
     };
 
     try {
-        const res = await fetch(`${API_URL}/productos/${id}`, {
+        const res = await fetch(`${API_URL}/productos/${id}/estado`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

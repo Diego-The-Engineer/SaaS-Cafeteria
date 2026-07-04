@@ -12,6 +12,7 @@ class Model_producto(BaseModel):
     cantidad: int = 0
     categoria: str
     variantes: list[Variante] = []
+    disponible: bool = True
 
 class Response_producto(Model_producto):
         id: str
