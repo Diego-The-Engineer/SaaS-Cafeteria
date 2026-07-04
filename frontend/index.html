@@ -13,27 +13,27 @@
         <h1>Menú de la Cafetería</h1>
         <p>Pide en línea y recoge en mostrador</p>
     </div>
-
-    <!-- AQUÍ ESTÁ EL NUEVO CONTENEDOR PARA LOS FILTROS TIPO UBER EATS -->
-    <div id="categorias-filtro" style="margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; padding: 0 15px;"></div>
-
-    <div class="menu-container" id="menu-contenedor">
-    </div>
-
-    <div class="carrito-container">
-        <h2>Tu Pedido</h2>
-        <div id="lista-carrito">
-            <p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>
+    
+    <div id="categorias-filtro" class="filtros-container"></div>
+    <div class="main-layout">
+        <div class="menu-container" id="menu-contenedor">
         </div>
-        
-        <div class="total-container">
-            <span>Total</span>
-            <span id="total-precio">$0.00</span>
+        <div class="carrito-container">
+            <h2>Tu Pedido</h2>
+            <div id="lista-carrito">
+                <p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>
+            </div>
+            
+            <div class="total-container">
+                <span>Total</span>
+                <span id="total-precio">$0.00</span>
+            </div>
+
+            <button type="button" class="btn btn-primary w-100" id="btn-enviar" data-bs-toggle="modal" data-bs-target="#staticBackdrop" disabled>
+                Confirmar Pedido
+            </button>
         </div>
 
-        <button type="button" class="btn btn-primary w-100" id="btn-enviar" data-bs-toggle="modal" data-bs-target="#staticBackdrop" disabled>
-            Confirmar Pedido
-        </button>
     </div>
 
     <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">

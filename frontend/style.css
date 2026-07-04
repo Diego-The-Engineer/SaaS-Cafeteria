@@ -272,7 +272,82 @@ body {
 }
 
 .btn-categoria.activa {
-    background-color: #5b8cd9;
+    background-color: #d9d35b;
     color: white;
     box-shadow: 0 4px 8px rgba(91, 140, 217, 0.3);
+}
+
+/* --- CONTENEDOR PRINCIPAL (MÓVIL POR DEFECTO) --- */
+.main-layout {
+    display: flex;
+    flex-direction: column; /* En celular, apila todo verticalmente */
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto; /* Centra toda la página */
+    padding: 0 15px 50px 15px;
+}
+
+/* --- FILTROS CENTRADOS --- */
+.filtros-container {
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    padding: 0 15px;
+}
+
+.categorias-wrapper {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 5px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+.categorias-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* --- GRID DE PRODUCTOS (MÓVIL) --- */
+.menu-container {
+    display: grid;
+    grid-template-columns: 1fr; /* En celular, 1 producto por fila */
+    gap: 20px;
+    flex: 1; /* Permite que el menú tome el espacio principal */
+}
+
+/* --- ESTILOS DEL CARRITO --- */
+.carrito-container {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: max-content; /* Clave para que el efecto sticky funcione */
+}
+
+/* --- ADAPTACIÓN A PANTALLAS GRANDES (PC / TABLET) --- */
+@media (min-width: 768px) {
+    /* Centramos los botones de categorías en PC */
+    .categorias-wrapper {
+        justify-content: center; 
+    }
+
+    /* Convertimos el layout a lado a lado */
+    .main-layout {
+        flex-direction: row; /* Productos a la izquierda, carrito a la derecha */
+        align-items: flex-start; /* Alinea los bloques desde arriba */
+    }
+
+    /* El menú se vuelve un Grid de varias columnas */
+    .menu-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    /* El carrito toma un ancho fijo y te persigue al hacer scroll */
+    .carrito-container {
+        width: 350px; 
+        flex-shrink: 0; /* Evita que el carrito se aplaste */
+        position: sticky;
+        top: 20px; /* Se queda a 20px del techo al bajar la página */
+    }
 }
