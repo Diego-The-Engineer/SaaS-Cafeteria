@@ -5,12 +5,12 @@ from datetime import datetime
 
 class Variante(BaseModel):
        tamaño: str
-       precio_unitario: float
+       precio: float
 
 class Model_producto(BaseModel):
     nombre: str = Field(..., example="Latte")
     cantidad: int = 0
-    categoria = str
+    categoria: str
     variantes: list[Variante] = []
 
 class Response_producto(Model_producto):

@@ -234,7 +234,7 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
     }
     const payload = { 
         nombre: nombre, 
-        stock: stock,
+        cantidad: 0,
         categoria: categoria,
         variantes: variantes, 
         disponible: true 
