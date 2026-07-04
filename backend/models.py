@@ -9,9 +9,9 @@ class Variante(BaseModel):
 
 class Model_producto(BaseModel):
     nombre: str = Field(..., example="Latte")
-    variantes: list[Variante] = []
     cantidad: int = 0
-    disponible: bool = True
+    categoria = str
+    variantes: list[Variante] = []
 
 class Response_producto(Model_producto):
         id: str
