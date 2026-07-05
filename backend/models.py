@@ -18,7 +18,11 @@ class Response_producto(Model_producto):
         id: str
 
 class Item_pedido(BaseModel):
+        idUnico: str
         producto_id: str
+        nombre: str
+        tamano: str
+        precio: float
         cantidad: int
 class Create_pedido(BaseModel):
         items: list[Item_pedido]
