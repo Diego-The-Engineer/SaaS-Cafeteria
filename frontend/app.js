@@ -270,7 +270,12 @@ async function procesarPago() {
             throw new Error(errorBack.detail || "Error en el servidor");
         }
 
-        alert("¡Pago exitoso! Tu pedido ha sido confirmado.");
+        Toastify({
+            text: "¡Pago exitoso! Tu pedido ha sido confirmado.",
+            duration: 3000,
+            gravity: "top",
+            position: "right"
+        }).showToast();
 
         carrito = [];
         const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
@@ -280,7 +285,12 @@ async function procesarPago() {
         document.getElementById("form-checkout").reset();
 
     } catch (error) {
-        alert("El pago fue rechazado: " + error.message);
+        Toastify({
+            text: "Pago rechazado" + error.message,
+            duration: 3000,
+            gravity: "top",
+            position: "right"
+        }).showToast();
     } finally {
         btnPagar.innerText = "Confirmar y Pagar";
         btnPagar.disabled = false;
