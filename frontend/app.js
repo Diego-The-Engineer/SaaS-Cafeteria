@@ -208,10 +208,10 @@ async function procesarPago() {
     btnPagar.disabled = true;
 
     try {
-        const nombre = document.getElementById("nombre").value || "Diego";
-        const apellido = document.getElementById("apellido").value || "Gómez";
-        const email = document.getElementById("email").value || "diego.aimi67@gmail.com";
-        const telefono = document.getElementById("telefono").value || "9514087678";
+        const nombre = document.getElementById("nombre").value;
+        const apellido = document.getElementById("apellido").value;
+        const email = document.getElementById("email").value;
+        const telefono = document.getElementById("telefono").value;
         
         const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
         const cardMonth = document.getElementById("card-month").value;
@@ -243,7 +243,7 @@ async function procesarPago() {
 
         if (!tokenResponse.ok) {
             const token_response = await tokenResponse.json();
-            throw new Error("Datos inválidos");
+            throw new Error("datos inválidos");
         }
 
         const tokenData = await tokenResponse.json();
@@ -267,7 +267,7 @@ async function procesarPago() {
 
         if (!backendResponse.ok) {
             const errorBack = await backendResponse.json();
-            throw new Error(errorBack.detail || "Error en el servidor");
+            throw new Error(errorBack.detail || "error en el servidor");
         }
 
         Toastify({
@@ -286,7 +286,7 @@ async function procesarPago() {
 
     } catch (error) {
         Toastify({
-            text: "Pago rechazado" + error.message,
+            text: "Pago rechazado por: " + error.message,
             duration: 3000,
             gravity: "top",
             position: "right",
