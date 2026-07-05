@@ -289,7 +289,12 @@ async function procesarPago() {
             text: "Pago rechazado" + error.message,
             duration: 3000,
             gravity: "top",
-            position: "right"
+            position: "right",
+            style: {
+                background: "#D96C6C", 
+                color: "white",
+                borderRadius: "8px"
+            }
         }).showToast();
     } finally {
         btnPagar.innerText = "Confirmar y Pagar";
