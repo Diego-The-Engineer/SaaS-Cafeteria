@@ -98,6 +98,8 @@ async def get_categorias(
     async for cat in cursor:
         cat["categoria_id"] = str(cat["_id"])
         del cat["_id"]
+        if "categoria_id" not in cat:
+            cat["categoria_id"] = "sin_categoria"
         categorias.append(cat)
     return categorias
 
