@@ -1,196 +1,227 @@
-const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
-const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
+let myChart = null;
 
-let categoriasGlobales = []; 
-
-// --- 1. INICIALIZACIÓN ---
-window.onload = async () => {
+window.onload = () => {
     const token = localStorage.getItem("token");
     if(token) {
-        await cargarCategorias(); 
-        cargarInventario();       
-    } else {
-        window.location.href = "login.html"; 
+        mostrarPanel();
+        cargarInventario();
+        cargarEstadisticas();
     }
 };
 
-function cerrarSesion() {
-    localStorage.removeItem("token");
-    window.location.href = "login.html";
-}
+async function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const errorMsg = document.getElementById("login-error");
 
-// --- 2. CRUD ---
-
-async function cargarCategorias() {
-    try {
-        const res = await fetch(`${API_URL}/categorias/lista`);
-        if (!res.ok) throw new Error("Fallo al cargar categorías");
-        
-        categoriasGlobales = await res.json();
-        const select = document.getElementById("prod-categoria");
-        
-        if (!select) return; 
-
-        if(categoriasGlobales.length === 0) {
-            select.innerHTML = '<option value="">Crea una categoría primero</option>';
-            return;
-        }
-        select.innerHTML = categoriasGlobales.map(cat => 
-            `<option value="${cat.categoria_id}">${cat.nombre}</option>`
-        ).join('');
-
-    } catch (error) {
-        console.error("Error cargando categorías", error);
-    }
-}
-
-async function agregarNuevaCategoria() {
-    const nombreNuevaCat = prompt("Escribe el nombre de la nueva categoría (Ej. Postres, Bebidas Frías):");
-    
-    if (!nombreNuevaCat || nombreNuevaCat.trim() === "") return;
-    
-    const token = localStorage.getItem("token");
-    const payload = {
-        nombre: nombreNuevaCat.trim(),
-        image: null,
-        disponible: true,
-        orden: 0,
-        color: null
-    };
+    const formData = new URLSearchParams();
+    formData.append("username", user);
+    formData.append("password", pass);
 
     try {
-        const res = await fetch(`${API_URL}/categorias/`, {
+        const res = await fetch(`${API_URL}/token`, {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json", 
-                "Authorization": `Bearer ${token}` 
-            },
-            body: JSON.stringify(payload)
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData
         });
 
-        if(res.ok) {
-            alert("Categoría creada correctamente.");
-            await cargarCategorias(); 
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem("token", data.access_token);
+            errorMsg.style.display = "none";
+            mostrarPanel();
+            cargarInventario();
+            cargarEstadisticas();
         } else {
-            alert("Error al guardar la categoría en el servidor.");
+            errorMsg.style.display = "block";
         }
     } catch (error) {
-        alert("Error de conexión al crear categoría.");
+        alert("Error de red conectando al servidor");
     }
 }
 
-async function editarCategoriaSeleccionada() {
-    const select = document.getElementById("prod-categoria");
-    const categoriaId = select.value;
-    const categoriaNombreActual = select.options[select.selectedIndex]?.text;
+function cerrarSesion() {
+    localStorage.removeItem("token");
+    document.getElementById("admin-panel").style.display = "none";
+    document.getElementById("admin-header").style.display = "none";
+    document.getElementById("login-section").style.display = "flex";
+}
 
-    if (!categoriaId) {
-        alert("Selecciona una categoría primero.");
-        return;
+function mostrarPanel() {
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("admin-header").style.display = "flex";
+    document.getElementById("admin-panel").style.display = "block";
+}
+
+function agregarFilaVariante(){
+    const container = document.getElementById("variantes-container");
+    const nuevaFila = document.createElement("div");
+    nuevaFila.className = "variante-row";
+    nuevaFila.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
+    nuevaFila.innerHTML = `
+        <input type="text" class="var-tamano" placeholder="Tamaño (Ej. G)" style="flex: 1;">
+        <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
+        <button type="button" class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
+    `;
+    container.appendChild(nuevaFila);
+}
+
+function eliminarFila(boton){
+    const fila = boton.parentElement;
+    const totalFilas = document.querySelectorAll('.variante-row').length;
+
+    if(totalFilas > 1) {
+        fila.remove();
+    } else {
+        alert("El producto debe tener un tamaño al menos");
     }
+}
 
-    const nuevoNombre = prompt("Edita el nombre de la categoría:", categoriaNombreActual);
-    
-    if (!nuevoNombre || nuevoNombre.trim() === "" || nuevoNombre.trim() === categoriaNombreActual) {
+// --- ESTADÍSTICAS ---
+async function cargarEstadisticas() {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`${API_URL}/stats/estadistica`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if(!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById("stat-ganancias").innerText = `$${data.ganancia_total.toFixed(2)}`;
+
+        const ctx = document.getElementById('chartTopProductos').getContext('2d');
+
+        if (myChart) { myChart.destroy(); }
+
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.top_productos.map(p => p._id),
+                datasets: [{
+                    label: 'Unidades Vendidas',
+                    data: data.top_productos.map(p => p.cantidad_total),
+                    backgroundColor: '#a88631',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Top 5 Productos Más Vendidos' }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    } catch(e) {
+        console.error("Error cargando estadísticas", e);
+    }
+}
+
+async function borrar_stats(){
+    const confirmacion = confirm("ATENCION: ¿Estás completamente seguro de que quieres reiniciar TODAS las estadísticas y pedidos? Esta acción borrará el historial y no se puede deshacer.");
+
+    if (!confirmacion) {
+        console.log("Operación de borrado cancelada por el usuario.");
         return; 
     }
 
-    const token = localStorage.getItem("token");
-    const payload = {
-        nombre: nuevoNombre.trim(),
-        image: null,
-        disponible: true,
-        orden: 0,
-        color: null
-    };
-
     try {
-        const res = await fetch(`${API_URL}/categorias/lista/${categoriaId}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
+        const token = localStorage.getItem("token"); 
 
-        if (res.ok) {
-            alert("Categoría actualizada con éxito.");
-            await cargarCategorias(); 
-            cargarInventario();   
-        } else {
-            alert("Error al actualizar la categoría en el servidor.");
+        if (!token) {
+            alert("Error de sesión: No tienes permisos para hacer esto.");
+            return;
         }
-    } catch (error) {
-        alert("Error de red conectando al servidor.");
-    }
-}
 
-async function eliminarCategoriaSeleccionada() {
-    const select = document.getElementById("prod-categoria");
-    const categoriaId = select.value;
-    const categoriaNombre = select.options[select.selectedIndex]?.text;
-
-    if (!categoriaId) {
-        alert("Selecciona una categoría primero.");
-        return;
-    }
-
-    const confirmacion = confirm(`¿Estás seguro de que deseas eliminar la categoría "${categoriaNombre}"?\n\nOjo: Los productos que tengan esta categoría se mostrarán como "Sin categoría".`);
-    
-    if (!confirmacion) return;
-
-    const token = localStorage.getItem("token");
-
-    try {
-        const res = await fetch(`${API_URL}/categorias/lista/${categoriaId}`, {
-            method: "DELETE",
+        const respuesta = await fetch(`${API_URL}/stats/estadistica`, {
+            method: "DELETE", 
             headers: {
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`, 
+                "Content-Type": "application/json"
             }
         });
 
-        if (res.ok) {
-            alert("Categoría eliminada con éxito.");
-            await cargarCategorias(); 
-            cargarInventario(); 
+        const datos = await respuesta.json();
+
+        if (respuesta.ok) {
+            alert(`${datos.mensaje}\nRegistros limpiados: ${datos.registros_eliminados}`);
+            window.location.reload(); 
         } else {
-            alert("Error al eliminar la categoría en el servidor.");
+            alert(`Error al borrar: ${datos.detail || 'No se pudo completar la acción'}`);
         }
+
     } catch (error) {
-        alert("Error de red conectando al servidor.");
+        console.error("Fallo de conexión:", error);
+        alert("Error: No se pudo conectar con el servidor.");
     }
 }
+async function cargarInventario() {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`${API_URL}/productos/lista`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
 
-// --- 3. SISTEMA DE PRODUCTOS (INVENTARIO) ---
+        if (res.status === 401) { cerrarSesion(); return; }
 
-function agregarFilaVariante() {
-    const contenedor = document.getElementById("variantes-container");
-    if(!contenedor) return;
-    
-    const div = document.createElement("div");
-    div.className = "variante-row";
-    div.style.display = "flex";
-    div.style.gap = "10px";
-    div.style.marginBottom = "10px";
-    
-    div.innerHTML = `
-        <input type="text" placeholder="Tamaño (Ej. M, G)" class="var-tamano" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-        <input type="number" placeholder="Precio ($)" class="var-precio" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-        <button type="button" onclick="this.parentElement.remove()" style="background: var(--danger); color: white; border: none; border-radius: 5px; padding: 0 10px; cursor: pointer;">X</button>
-    `;
-    contenedor.appendChild(div);
+        const productos = await res.json();
+        const tbody = document.getElementById("tabla-productos");
+        tbody.innerHTML = "";
+
+        productos.forEach(p => {
+            const stock = p.cantidad !== undefined ? p.cantidad : 0;
+
+            let estadoHtml = '';
+            if (!p.disponible) {
+                estadoHtml = '<span class="badge stock-hidden">Oculto</span>';
+            } else if (stock >= 50) {
+                estadoHtml = '<span class="badge stock-perfect">Excelente</span>';
+            } else if (stock < 50 && stock >= 20){
+                estadoHtml = '<span class="badge stock-ok">Suficiente</span>';
+            } else {
+                estadoHtml = '<span class="badge stock-low">Bajo Stock</span>';
+            }
+            
+            let preciosFormateados = '<span style="color: gray; font-size: 12px;">Sin precios</span>';
+            if(p.variantes && p.variantes.length > 0){
+                preciosFormateados = p.variantes.map(v => `<b>${v.tamaño}</b>: $${v.precio.toFixed(2)}`).join(' | '); 
+            }
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:bold;">${p.nombre}</td>
+                    <td>${preciosFormateados}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="btn-outline" style="padding: 2px 8px; font-size: 14px; border-radius: 4px;" onclick="modificarStock('${p.id}', -1)">-</button>
+                            <span style="font-weight: bold; min-width: 25px; text-align: center;">${stock}</span>
+                            <button class="btn-outline" style="padding: 2px 8px; font-size: 14px; border-radius: 4px;" onclick="modificarStock('${p.id}', 1)">+</button>
+                        </div>
+                    </td>
+                    <td>${estadoHtml}</td>
+                    <td>${p.categoria || '<span style="color: gray; font-style: italic;">Sin categoría</span>'} </td>
+                    <td>
+                        <button class="btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible})">
+                            ${p.disponible ? 'Ocultar' : 'Activar'}
+                        </button>
+                        <button class="btn-accion btn-delete" onclick="eliminarProducto('${p.id}')">Borrar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (error) { console.error("Error al cargar inventario", error); }
 }
 
 async function agregarProducto() {
     const nombre = document.getElementById("prod-nombre").value;
-    const categoriaId = document.getElementById("prod-categoria").value;
-    const stockInicial = parseInt(document.getElementById("prod-stock").value) || 0; 
-    const imgInput = document.getElementById("prod-imagen");
-    const imagenUrl = imgInput ? imgInput.value.trim() : null; 
-    
+    const categoria = document.getElementById("prod-categoria").value;
+    const stock = parseInt(document.getElementById("prod-stock").value) || 0;
     const token = localStorage.getItem("token");
-    
     const variantes = [];
     const filas = document.querySelectorAll(".variante-row");
     let formularioValido = true;
@@ -198,22 +229,24 @@ async function agregarProducto() {
     filas.forEach(fila => {
         const tamano = fila.querySelector(".var-tamano").value.trim();
         const precio = parseFloat(fila.querySelector(".var-precio").value);
-        if (!tamano || isNaN(precio)) formularioValido = false;
-        else variantes.push({ tamaño: tamano, precio: precio });
+
+        if (!tamano || isNaN(precio)) {
+            formularioValido = false;
+        } else {
+            variantes.push({ tamaño: tamano, precio: precio });
+        }
     });
 
-    if(!nombre || !categoriaId || !formularioValido || variantes.length === 0) {
-        alert("Por favor llena todos los campos, selecciona una categoría y agrega al menos un tamaño con precio válido.");
+    if(!nombre || !categoria || !formularioValido || variantes.length === 0) {
+        alert("Por favor llena todos los campos y revisa los precios.");
         return;
     }
-    
     const payload = { 
         nombre: nombre, 
-        cantidad: stockInicial,
-        categoria_id: categoriaId,
+        cantidad: stock,
+        categoria: categoria,
         variantes: variantes, 
-        disponible: true,
-        imagen: imagenUrl ? imagenUrl : null 
+        disponible: true 
     };
 
     try {
@@ -227,86 +260,83 @@ async function agregarProducto() {
         });
 
         if(res.ok) {
-            alert("Producto agregado al menú exitosamente.");
             document.getElementById("prod-nombre").value = "";
-            document.getElementById("prod-stock").value = "0";
-            if (imgInput) imgInput.value = "";
-            document.getElementById("variantes-container").innerHTML = ""; 
-            agregarFilaVariante(); 
-            
+            document.getElementById("prod-categoria").value = "";
+            document.getElementById("variantes-container").innerHTML = `
+                <div class="variante-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" class="var-tamano" placeholder="Tamaño (Ej. M)" style="flex: 1;">
+                    <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
+                    <button type="button" class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
+                </div>
+            `;
             cargarInventario(); 
         } else { 
-            alert("Error al guardar el producto en el servidor."); 
+            alert("Error al guardar en el servidor"); 
         }
     } catch (error) { 
-        alert("Error de conexión al servidor."); 
-    }
-}
-
-async function cargarInventario() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-        const res = await fetch(`${API_URL}/productos/lista`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        
-        if (!res.ok) throw new Error("Fallo al obtener inventario");
-        const productos = await res.json();
-        const tbody = document.getElementById("inventario-body"); 
-        if(!tbody) return;
-
-        tbody.innerHTML = "";
-
-        productos.forEach(p => {
-            const nombreCategoria = categoriasGlobales.find(c => c.categoria_id === p.categoria_id)?.nombre 
-                || '<span style="color: gray; font-style: italic;">Sin categoría</span>';
-            const variantesInfo = p.variantes && p.variantes.length > 0
-                ? p.variantes.map(v => `${v.tamaño}: $${v.precio}`).join("<br>")
-                : "Sin variantes";
-            const estadoImagen = p.imagen 
-                ? `<span style="color: var(--success); font-size: 12px;">✅ Sí</span>` 
-                : `<span style="color: gray; font-size: 12px;">❌ No</span>`;
-
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${p.nombre}</strong></td>
-                    <td>${nombreCategoria}</td>
-                    <td>${p.cantidad !== undefined ? p.cantidad : 0}</td>
-                    <td>${variantesInfo}</td>
-                    <td>${estadoImagen}</td>
-                    <td>
-                        <button onclick="eliminarProducto('${p.id || p._id}')" class="btn-outline" style="border-color: var(--danger); color: var(--danger); padding: 4px 8px; font-size: 12px;">
-                            Borrar
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-    } catch (error) {
-        console.error("Error cargando inventario:", error);
+        alert("Error de conexión"); 
     }
 }
 
 async function eliminarProducto(id) {
-    const confirmacion = confirm("¿Estás seguro de que deseas eliminar este producto del menú?");
-    if (!confirmacion) return;
-
+    if(!confirm("¿Seguro que quieres eliminar este producto para siempre?")) return;
     const token = localStorage.getItem("token");
-
     try {
         const res = await fetch(`${API_URL}/productos/${id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });
+        if(res.ok) {
+            cargarInventario();
+        } else { alert("Error al eliminar el producto."); }
+    } catch(e) { alert("Error de red"); }
+}
+
+async function toggleDisponibilidad(id, estadoActual) {
+    const token = localStorage.getItem("token");
+    const payload = {
+        disponible: !estadoActual
+    };
+
+    try {
+        const res = await fetch(`${API_URL}/productos/${id}/estado`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            cargarInventario();
+        } else { alert("Error al cambiar la disponibilidad."); }
+    } catch(e) { alert("Error de red"); }
+}
+
+async function modificarStock(id, cantidadCambio) {
+    const token = localStorage.getItem("token");
+    
+    const payload = {
+        cantidad: cantidadCambio
+    };
+
+    try {
+        const res = await fetch(`${API_URL}/productos/${id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
 
         if (res.ok) {
-            cargarInventario();
+            cargarInventario(); 
         } else {
-            alert("Error al eliminar el producto.");
+            const errorData = await res.json();
+            alert(`Error al actualizar el stock: ${errorData.detail || 'Desconocido'}`);
         }
-    } catch (error) {
-        alert("Error de conexión con el servidor.");
+    } catch (e) {
+        alert("Error de red conectando al servidor.");
     }
 }
