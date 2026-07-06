@@ -232,10 +232,10 @@ async function procesarPago() {
     btnPagar.disabled = true;
 
     try {
-        const nombre = document.getElementById("nombre").value || "Diego";
-        const apellido = document.getElementById("apellido").value || "Gómez";
-        const email = document.getElementById("email").value || "diego.aimi67@gmail.com";
-        const telefono = document.getElementById("telefono").value || "9514087678";
+        const nombre = document.getElementById("nombre").value;
+        const apellido = document.getElementById("apellido").value;
+        const email = document.getElementById("email").value;
+        const telefono = document.getElementById("telefono").value;
         
         const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
         const cardMonth = document.getElementById("card-month").value;

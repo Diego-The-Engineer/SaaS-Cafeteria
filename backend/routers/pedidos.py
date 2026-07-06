@@ -61,7 +61,7 @@ async def post_pedidos(pedidos: Create_pedido):
         if (stock - item.cantidad) < 0:
             raise HTTPException(status_code=400, detail=f"Stock insuficiente para {producto_db['nombre']}")
 
-        subtotal = float(producto_db["precio_unitario"]) * item.cantidad
+        subtotal = float(item.precio) * item.cantidad
         total += subtotal
         
         items_detallados.append({
