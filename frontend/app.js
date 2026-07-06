@@ -64,7 +64,7 @@ function renderizarCategorias() {
             mostrar_nombre = "Todos";
         }else if( cat === "Otros") mostrar_nombre = "Otros";
         else {
-            const categoria_encontrada = categoriasGlobales.find(c => categoria_id === cat);
+            const categoria_encontrada = categoriasGlobales.find(c => c.categoria_id === cat);
             mostrar_nombre = categoria_encontrada ? categoria_encontrada.nombre : "Sin nombre";
         }
         botonesHTML += `<button class="btn-categoria ${claseActiva}" onclick="filtrarCategoria('${cat}')">${mostrar_nombre}</button>`;
