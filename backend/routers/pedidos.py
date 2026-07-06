@@ -68,14 +68,14 @@ async def post_pedidos(pedidos: Create_pedido):
             "producto_id": str(producto_db["_id"]),
             "nombre": str(producto_db["nombre"]),
             "cantidad": item.cantidad,
-            "precio_unitario": float(producto_db["precio_unitario"]),
+            "precio": float(item.precio),
             "subtotal": subtotal
         })
         
         items_ecart.append({
             "name": str(producto_db["nombre"]),
             "quantity": item.cantidad,
-            "price": float(producto_db["precio_unitario"]) 
+            "price": float(item.precio) 
         })
 
     token_pasarela = token_ecartpay() 
