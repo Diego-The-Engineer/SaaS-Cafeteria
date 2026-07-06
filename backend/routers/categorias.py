@@ -15,9 +15,7 @@ router = APIRouter(
 )
 
 @router.get("/lista")
-async def get_categorias(
-    current_user: Annotated[User, Depends(get_current_active_user)] = None 
-):
+async def get_categorias():
     cursor = db["categorias"].find({})
     categorias = []
     async for cat in cursor:
