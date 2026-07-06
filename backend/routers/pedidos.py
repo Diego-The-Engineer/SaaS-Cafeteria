@@ -65,9 +65,10 @@ async def post_pedidos(pedidos: Create_pedido):
         total += subtotal
         
         items_detallados.append({
-            "producto_id": str(producto_db["_id"]),
-            "nombre": str(producto_db["nombre"]),
+            "producto_id": item.producto_id,
+            "nombre": item.nombre,
             "cantidad": item.cantidad,
+            "tamano": item.tamano,
             "precio": float(item.precio),
             "subtotal": subtotal
         })
