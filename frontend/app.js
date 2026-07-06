@@ -3,6 +3,7 @@ const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f
 
 let carrito = [];
 let productosGlobales = []; 
+let categoriasGlobales = [];
 let categoriaActiva = "Todos"; 
 
 window.onload = () => { cargarMenu(); };
@@ -22,6 +23,10 @@ async function cargarMenu() {
     `;
 
     try {
+        const resCat = await fetch(`${API_URL}/categorias/lista`);
+        if(resCat.ok){
+            categoriasGlobales = await resCat.json();
+        }
         const res = await fetch(`${API_URL}/productos/lista`);
         if (!res.ok) throw new Error("Error en la conexión con el servidor");
 
@@ -54,7 +59,15 @@ function renderizarCategorias() {
     
     categorias.forEach(cat => {
         const claseActiva = (cat === categoriaActiva) ? 'activa' : '';
-        botonesHTML += `<button class="btn-categoria ${claseActiva}" onclick="filtrarCategoria('${cat}')">${cat}</button>`;
+        let mostrar_nombre = cat;
+        if(cat === "Todos"){
+            mostrar_nombre = "Todos";
+        }else if( cat === "Otros") mostrar_nombre = "Otros";
+        else {
+            const categoria_encontrada = categoriasGlobales.find(c => categoria_id === cat);
+            mostrar_nombre = categoria_encontrada ? categoria_encontrada.nombre : "Sin nombre";
+        }
+        botonesHTML += `<button class="btn-categoria ${claseActiva}" onclick="filtrarCategoria('${cat}')">${mostrar_nombre}</button>`;
     });
     
     botonesHTML += `</div>`;
