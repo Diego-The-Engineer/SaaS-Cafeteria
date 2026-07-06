@@ -28,7 +28,7 @@ async def get_categorias(
         categorias.append(cat)
     return categorias
 
-@router.post("/")
+@router.post("")
 async def post_categorias(
     categoria: Categoria,
     current_user: Annotated[User, Depends(get_current_active_user)] = None 

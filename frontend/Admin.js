@@ -1,10 +1,11 @@
 const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
 let myChart = null;
-
-window.onload = () => {
+let categoriasGlobales = []; 
+window.onload = async () => {
     const token = localStorage.getItem("token");
     if(token) {
         mostrarPanel();
+        await cargarCategorias(); 
         cargarInventario();
         cargarEstadisticas();
     }
@@ -31,6 +32,7 @@ async function login() {
             localStorage.setItem("token", data.access_token);
             errorMsg.style.display = "none";
             mostrarPanel();
+            await cargarCategorias();
             cargarInventario();
             cargarEstadisticas();
         } else {
@@ -58,12 +60,11 @@ function agregarFilaVariante(){
     const container = document.getElementById("variantes-container");
     const nuevaFila = document.createElement("div");
     nuevaFila.className = "variante-row";
-    nuevaFila.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
+    nuevaFila.style =  "display: flex; gap: 10px; margin-bottom: 10px;";
     nuevaFila.innerHTML = `
-        <input type="text" class="var-tamano" placeholder="Tamaño (Ej. G)" style="flex: 1;">
-        <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
-        <button type="button" class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
-    `;
+    <input type="text" class="var-tamano" placeholder="Tamaño (Ej. G)" style="flex: 1;">
+<input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
+<button class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>`;
     container.appendChild(nuevaFila);
 }
 
@@ -73,12 +74,11 @@ function eliminarFila(boton){
 
     if(totalFilas > 1) {
         fila.remove();
-    } else {
+    }else{
         alert("El producto debe tener un tamaño al menos");
     }
 }
 
-// --- ESTADÍSTICAS ---
 async function cargarEstadisticas() {
     const token = localStorage.getItem("token");
     try {
@@ -160,6 +160,107 @@ async function borrar_stats(){
         alert("Error: No se pudo conectar con el servidor.");
     }
 }
+
+
+// --- NUEVAS FUNCIONES DE CATEGORÍAS ---
+
+async function cargarCategorias() {
+    try {
+        const res = await fetch(`${API_URL}/categorias/lista`);
+        if (!res.ok) return;
+        
+        categoriasGlobales = await res.json();
+        const select = document.getElementById("prod-categoria");
+        
+        if (!select) return; 
+
+        if(categoriasGlobales.length === 0) {
+            select.innerHTML = '<option value="">Crea una categoría primero</option>';
+            return;
+        }
+
+        select.innerHTML = categoriasGlobales.map(cat => 
+            `<option value="${cat.categoria_id}">${cat.nombre}</option>`
+        ).join('');
+
+    } catch (error) {
+        console.error("Error cargando categorías", error);
+    }
+}
+
+async function agregarNuevaCategoria() {
+    const nombreNuevaCat = prompt("Escribe el nombre de la nueva categoría:");
+    if (!nombreNuevaCat || nombreNuevaCat.trim() === "") return;
+    
+    const token = localStorage.getItem("token");
+    const payload = { nombre: nombreNuevaCat.trim(), image: null, disponible: true, orden: 0, color: null };
+
+    try {
+        const res = await fetch(`${API_URL}/categorias`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify(payload)
+        });
+
+        if(res.ok) {
+            alert("Categoría creada.");
+            await cargarCategorias(); 
+        } else { alert("Error al guardar."); }
+    } catch (error) { alert("Error de red."); }
+}
+
+async function editarCategoriaSeleccionada() {
+    const select = document.getElementById("prod-categoria");
+    const categoriaId = select.value;
+    const categoriaNombreActual = select.options[select.selectedIndex]?.text;
+
+    if (!categoriaId) { alert("Selecciona una categoría."); return; }
+
+    const nuevoNombre = prompt("Edita el nombre:", categoriaNombreActual);
+    if (!nuevoNombre || nuevoNombre.trim() === "" || nuevoNombre.trim() === categoriaNombreActual) return; 
+
+    const token = localStorage.getItem("token");
+    const payload = { nombre: nuevoNombre.trim(), image: null, disponible: true, orden: 0, color: null };
+
+    try {
+        const res = await fetch(`${API_URL}/categorias/lista/${categoriaId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("Categoría actualizada.");
+            await cargarCategorias(); 
+            cargarInventario(); 
+        } else { alert("Error al actualizar."); }
+    } catch (error) { alert("Error de red."); }
+}
+
+async function eliminarCategoriaSeleccionada() {
+    const select = document.getElementById("prod-categoria");
+    const categoriaId = select.value;
+
+    if (!categoriaId) { alert("Selecciona una categoría."); return; }
+    if (!confirm("¿Seguro que deseas eliminar esta categoría?")) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+        const res = await fetch(`${API_URL}/categorias/lista/${categoriaId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            alert("Categoría eliminada.");
+            await cargarCategorias(); 
+            cargarInventario();
+        } else { alert("Error al eliminar."); }
+    } catch (error) { alert("Error de red."); }
+}
+
+
 async function cargarInventario() {
     const token = localStorage.getItem("token");
     try {
@@ -192,6 +293,8 @@ async function cargarInventario() {
                 preciosFormateados = p.variantes.map(v => `<b>${v.tamaño}</b>: $${v.precio.toFixed(2)}`).join(' | '); 
             }
             
+            const nombreCategoria = categoriasGlobales.find(c => c.categoria_id === p.categoria_id)?.nombre || '<span style="color: gray; font-style: italic;">Sin categoría</span>';
+            
             tbody.innerHTML += `
                 <tr>
                     <td style="font-weight:bold;">${p.nombre}</td>
@@ -204,7 +307,7 @@ async function cargarInventario() {
                         </div>
                     </td>
                     <td>${estadoHtml}</td>
-                    <td>${p.categoria || '<span style="color: gray; font-style: italic;">Sin categoría</span>'} </td>
+                    <td>${nombreCategoria}</td> <!-- ACTUALIZADO -->
                     <td>
                         <button class="btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible})">
                             ${p.disponible ? 'Ocultar' : 'Activar'}
@@ -219,8 +322,12 @@ async function cargarInventario() {
 
 async function agregarProducto() {
     const nombre = document.getElementById("prod-nombre").value;
-    const categoria = document.getElementById("prod-categoria").value;
+    const categoriaId = document.getElementById("prod-categoria").value; 
     const stock = parseInt(document.getElementById("prod-stock").value) || 0;
+    
+    const imgInput = document.getElementById("prod-imagen");
+    const imagenUrl = imgInput ? imgInput.value.trim() : null; 
+
     const token = localStorage.getItem("token");
     const variantes = [];
     const filas = document.querySelectorAll(".variante-row");
@@ -237,16 +344,18 @@ async function agregarProducto() {
         }
     });
 
-    if(!nombre || !categoria || !formularioValido || variantes.length === 0) {
-        alert("Por favor llena todos los campos y revisa los precios.");
+    if(!nombre || !categoriaId || !formularioValido || variantes.length === 0) {
+        alert("Por favor llena todos los campos, selecciona una categoría y revisa los precios.");
         return;
     }
+
     const payload = { 
         nombre: nombre, 
         cantidad: stock,
-        categoria: categoria,
+        categoria_id: categoriaId, 
         variantes: variantes, 
-        disponible: true 
+        disponible: true,
+        imagen: imagenUrl ? imagenUrl : null 
     };
 
     try {
@@ -262,11 +371,14 @@ async function agregarProducto() {
         if(res.ok) {
             document.getElementById("prod-nombre").value = "";
             document.getElementById("prod-categoria").value = "";
+            document.getElementById("prod-stock").value = "";
+            if (imgInput) imgInput.value = "";
+            
             document.getElementById("variantes-container").innerHTML = `
                 <div class="variante-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <input type="text" class="var-tamano" placeholder="Tamaño (Ej. M)" style="flex: 1;">
                     <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
-                    <button type="button" class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
+                    <button class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
                 </div>
             `;
             cargarInventario(); 
@@ -292,14 +404,17 @@ async function eliminarProducto(id) {
     } catch(e) { alert("Error de red"); }
 }
 
-async function toggleDisponibilidad(id, estadoActual) {
+async function toggleDisponibilidad(id, estadoActual, nombre, precio, stock) {
     const token = localStorage.getItem("token");
     const payload = {
+        nombre: nombre,
+        precio_unitario: precio,
+        cantidad: stock,
         disponible: !estadoActual
     };
 
     try {
-        const res = await fetch(`${API_URL}/productos/${id}/estado`, {
+        const res = await fetch(`${API_URL}/productos/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
