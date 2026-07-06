@@ -10,9 +10,10 @@ class Variante(BaseModel):
 class Model_producto(BaseModel):
     nombre: str = Field(..., example="Latte")
     cantidad: int = 0
-    categoria: str
+    categoria_id: str
     variantes: list[Variante] = []
     disponible: bool = True
+    imagen: Optional[str] = None
 
 class Response_producto(Model_producto):
         id: str
@@ -48,5 +49,12 @@ class Create_stats(BaseModel):
 
 class Response_stats(BaseModel):
         msg: str
+
+class Categoria(BaseModel):
+       nombre: str
+       image: Optional[str] = None
+       disponible: bool = True
+       orden: int = 0
+       color: Optional[str] = None
 
 

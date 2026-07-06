@@ -72,10 +72,28 @@
                         <input type="number" id="prod-stock" placeholder="Ej. 10">
                     </div>
 
-                    <div class="form-group">
-                        <label>Categoría</label>
-                        <input type="text" id="prod-categoria" placeholder="Ej. Fríos con Café">
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Categoría</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="prod-categoria" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; background-color: white;">
+                                <option value="">Cargando categorías...</option>
+                            </select>
+                            
+                            <button type="button" class="btn-outline" onclick="agregarNuevaCategoria()" style="padding: 0 15px; border-radius: 8px; white-space: nowrap;" title="Nueva categoría">
+                                + Nueva
+                            </button>
+
+                            <button type="button" class="btn-outline" onclick="editarCategoriaSeleccionada()" style="padding: 0 15px; border-radius: 8px; border-color: var(--primary); color: var(--primary);" title="Editar categoría">
+                            </button>
+
+                            <button type="button" class="btn-outline" onclick="eliminarCategoriaSeleccionada()" style="padding: 0 15px; border-radius: 8px; border-color: var(--danger); color: var(--danger);" title="Eliminar categoría">
+                            </button>
+                        </div>
                     </div>
+                    <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">URL de la Imagen (Opcional)</label>
+                <input type="text" id="prod-imagen" placeholder="Ej. https://misitio.com/frappe.jpg" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+            </div>
                     <div class="form-group">
                         <label>Tamaños y Precios</label>
                         <div id="variantes-container">

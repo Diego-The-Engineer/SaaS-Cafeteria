@@ -32,6 +32,7 @@ async function cargarMenu() {
             contenedor.innerHTML = "<p style='color: var(--text-muted); width: 100%; text-align: center; grid-column: 1 / -1;'>No hay productos disponibles por el momento.</p>";
             return;
         }
+
         renderizarCategorias();
         renderizarProductos();
 
@@ -41,10 +42,12 @@ async function cargarMenu() {
     }
 }
 
+// --- SISTEMA DE FILTROS ---
 function renderizarCategorias() {
     const contenedorFiltros = document.getElementById("categorias-filtro");
     if (!contenedorFiltros) return;
-    const categoriasSet = new Set(productosGlobales.map(p => p.categoria || "Otros"));
+
+    const categoriasSet = new Set(productosGlobales.map(p => p.categoria_id || "Otros"));
     const categorias = ["Todos", ...Array.from(categoriasSet)];
 
     let botonesHTML = `<div class="categorias-wrapper">`;
@@ -64,12 +67,14 @@ function filtrarCategoria(categoria) {
     renderizarProductos();       
 }
 
+// --- RENDERIZADO DEL MENÚ ---
 function renderizarProductos() {
     const contenedor = document.getElementById("menu-contenedor");
     contenedor.innerHTML = "";
+
     let productosAMostrar = productosGlobales;
     if (categoriaActiva !== "Todos") {
-        productosAMostrar = productosGlobales.filter(p => (p.categoria || "Otros") === categoriaActiva);
+        productosAMostrar = productosGlobales.filter(p => (p.categoria_id || "Otros") === categoriaActiva);
     }
 
     if (productosAMostrar.length === 0) {
@@ -94,19 +99,26 @@ function renderizarProductos() {
             selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
         }
 
+        const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x200/E8D5C4/8B5E34?text=S%C3%A9ptima+Caf%C3%A9";
+
         contenedor.innerHTML += `
             <div class="producto-card reveal">
-                <div>
-                    <h3>${p.nombre}</h3>
-                    <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
-                    ${selectorHTML}
-                </div>
-                <div style="margin-top: 10px;">
-                    <button class="btn-add" style="width: 100%;"
-                        onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}')"
-                        ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
-                        ${agotado ? 'Sin Stock' : 'Agregar'}
-                    </button>
+                <img src="${imagenSource}" alt="${p.nombre}" class="producto-img" loading="lazy">
+                
+                <div class="producto-info">
+                    <div>
+                        <h3>${p.nombre}</h3>
+                        <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
+                        ${selectorHTML}
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <button class="btn-add" style="width: 100%;"
+                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}')"
+                            ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
+                            ${agotado ? 'Sin Stock' : 'Agregar'}
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -115,9 +127,11 @@ function renderizarProductos() {
     iniciarObservadorAnimaciones();
 }
 
+// --- LÓGICA DEL CARRITO ---
 function agregarAlCarrito(id, nombre) {
     const select = document.getElementById(`variante-${id}`);
     if (!select) return;
+
     const [tamano, precioString] = select.value.split('|');
     const precio = parseFloat(precioString);
     const idUnico = `${id}-${tamano}`;
@@ -149,8 +163,6 @@ function quitarDelCarrito(idUnico) {
             carrito.splice(index, 1);
         }
         actualizarCarrito();
-    } else {
-        console.error("No se encontró el producto con ese ID en el carrito");
     }
 }
 
@@ -166,25 +178,23 @@ function actualizarCarrito() {
         lista.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>';
         btnEnviar.disabled = true;
         labelTotal.innerText = "$0.00";
-        return;
+    } else {
+        carrito.forEach(item => {
+            const subtotal = item.precio * item.cantidad;
+            total += subtotal;
+            lista.innerHTML += `
+                <div class="carrito-item">
+                    <span>${item.cantidad}x ${item.nombre} <b>(${item.tamano})</b></span>
+                    <span>
+                        $${subtotal.toFixed(2)}
+                        <button class="btn-remove" onclick="quitarDelCarrito('${item.idUnico}')">Quitar</button>
+                    </span>
+                </div>
+            `;
+        });
+        labelTotal.innerText = `$${total.toFixed(2)}`;
+        btnEnviar.disabled = false;
     }
-
-    carrito.forEach(item => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-        lista.innerHTML += `
-            <div class="carrito-item">
-                <span>${item.cantidad}x ${item.nombre} <b>(${item.tamano})</b></span>
-                <span>
-                    $${subtotal.toFixed(2)}
-                    <button class="btn-remove" onclick="quitarDelCarrito('${item.idUnico}')">Quitar</button>
-                </span>
-            </div>
-        `;
-    });
-
-    labelTotal.innerText = `$${total.toFixed(2)}`;
-    btnEnviar.disabled = false;
 
     const flotanteMovil = document.getElementById('flotante-movil');
     const flotanteTotal = document.getElementById('flotante-total');
@@ -202,16 +212,17 @@ function actualizarCarrito() {
     }
 }
 
+// --- LÓGICA DE PAGO ---
 async function procesarPago() {
     const btnPagar = document.getElementById("btn-pagar"); 
     btnPagar.innerText = "Encriptando tarjeta...";
     btnPagar.disabled = true;
 
     try {
-        const nombre = document.getElementById("nombre").value;
-        const apellido = document.getElementById("apellido").value;
-        const email = document.getElementById("email").value;
-        const telefono = document.getElementById("telefono").value;
+        const nombre = document.getElementById("nombre").value || "Diego";
+        const apellido = document.getElementById("apellido").value || "Gómez";
+        const email = document.getElementById("email").value || "diego.aimi67@gmail.com";
+        const telefono = document.getElementById("telefono").value || "9514087678";
         
         const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
         const cardMonth = document.getElementById("card-month").value;
@@ -242,8 +253,7 @@ async function procesarPago() {
         });
 
         if (!tokenResponse.ok) {
-            const token_response = await tokenResponse.json();
-            throw new Error("datos inválidos");
+            throw new Error("Datos de tarjeta inválidos");
         }
 
         const tokenData = await tokenResponse.json();
@@ -267,15 +277,10 @@ async function procesarPago() {
 
         if (!backendResponse.ok) {
             const errorBack = await backendResponse.json();
-            throw new Error(errorBack.detail || "error en el servidor");
+            throw new Error(errorBack.detail || "Error procesando el pedido en el servidor");
         }
 
-        Toastify({
-            text: "¡Pago exitoso! Tu pedido ha sido confirmado.",
-            duration: 3000,
-            gravity: "top",
-            position: "right"
-        }).showToast();
+        alert("¡Pago exitoso! Tu pedido ha sido confirmado.");
 
         carrito = [];
         const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
@@ -286,12 +291,12 @@ async function procesarPago() {
 
     } catch (error) {
         Toastify({
-            text: "Pago rechazado por: " + error.message,
+            text: "Pago rechazado: " + error.message,
             duration: 3000,
             gravity: "top",
             position: "right",
             style: {
-                background: "#D96C6C", 
+                background: "#D96C6C",
                 color: "white",
                 borderRadius: "8px"
             }
@@ -302,6 +307,7 @@ async function procesarPago() {
     }
 }
 
+// --- UTILIDADES ---
 function iniciarObservadorAnimaciones() {
     const observador = new IntersectionObserver((entradas) => {
         entradas.forEach((entrada) => {
@@ -310,9 +316,7 @@ function iniciarObservadorAnimaciones() {
                 observador.unobserve(entrada.target);
             }
         });
-    }, {
-        threshold: 0.1
-    });
+    }, { threshold: 0.1 });
 
     const tarjetas = document.querySelectorAll('.reveal');
     tarjetas.forEach((tarjeta) => {
