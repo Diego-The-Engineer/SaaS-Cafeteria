@@ -165,8 +165,12 @@ async function borrar_stats(){
 // --- NUEVAS FUNCIONES DE CATEGORÍAS ---
 
 async function cargarCategorias() {
+    const token = localStorage.getItem("token"); 
     try {
-        const res = await fetch(`${API_URL}/categorias/lista`);
+        const res = await fetch(`${API_URL}/categorias/lista`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
         if (!res.ok) return;
         
         categoriasGlobales = await res.json();
