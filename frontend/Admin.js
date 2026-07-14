@@ -487,6 +487,7 @@ async function agregarProducto() {
             document.getElementById("prod-categoria").value = "";
             document.getElementById("prod-stock").value = "";
             document.getElementById("prod-desc").value = "";
+            document.getElementById("contenedor-opciones").innerHTML = "";
             if (imgInput) imgInput.value = "";
             
             document.getElementById("variantes-container").innerHTML = `
