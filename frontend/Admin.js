@@ -419,10 +419,10 @@ function extraerOpcionesDelFormulario() {
 
 async function agregarProducto() {
     const nombre = document.getElementById("prod-nombre").value;
-    const descripcion = document.getElementById("prod-desc").value;
+    const descripcionIn = document.getElementById("prod-desc").value;
     const categoriaId = document.getElementById("prod-categoria").value; 
     const stock = parseInt(document.getElementById("prod-stock").value) || 0;
-    
+    const descripcion = descripcionIn ? descripcionIn.value.trim() : "";
     const imgInput = document.getElementById("prod-imagen");
     const imagenUrl = imgInput ? imgInput.value.trim() : null; 
 
@@ -463,11 +463,13 @@ async function agregarProducto() {
 
     const payload = { 
         nombre: nombre, 
+        descripcion: descripcion ? descripcion: null,
         cantidad: stock,
         categoria_id: categoriaId, 
         variantes: variantes, 
         disponible: true,
-        imagen: imagenUrl ? imagenUrl : null 
+        imagen: imagenUrl ? imagenUrl : null,
+        opciones: opciones 
     };
 
     try {
@@ -484,6 +486,7 @@ async function agregarProducto() {
             document.getElementById("prod-nombre").value = "";
             document.getElementById("prod-categoria").value = "";
             document.getElementById("prod-stock").value = "";
+            document.getElementById("prod-desc").value = "";
             if (imgInput) imgInput.value = "";
             
             document.getElementById("variantes-container").innerHTML = `

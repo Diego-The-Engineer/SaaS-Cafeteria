@@ -44,6 +44,8 @@ class Model_producto(BaseModel):
 
 class Response_producto(Model_producto):
         id: str
+        descripcion: Optional[str] = None
+        opciones: list[Opcion] = []
 
 class Item_pedido(BaseModel):
         idUnico: str
