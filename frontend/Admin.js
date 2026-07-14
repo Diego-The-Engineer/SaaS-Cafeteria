@@ -383,8 +383,43 @@ async function cargarInventario() {
     } catch (error) { console.error("Error al cargar inventario", error); }
 }
 
+function agregarFilaOpcion() {
+    const contenedor = document.getElementById("contenedor-opciones");
+    const fila = document.createElement("div");
+    fila.className = "d-flex gap-2 mb-2 fila-opcion align-items-center"; 
+    fila.innerHTML = `
+        <input type="text" class="form-control form-control-sm op-nombre" placeholder="Ej. Leche de Almendras">
+        <input type="number" class="form-control form-control-sm op-precio" placeholder="Precio Extra (Deja vacío si es gratis)" step="0.5">
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()" title="Eliminar opción">
+            X
+        </button>
+    `;
+    
+    contenedor.appendChild(fila);
+}
+
+function extraerOpcionesDelFormulario() {
+    const opciones = [];
+    const filas = document.querySelectorAll(".fila-opcion"); 
+
+    filas.forEach(fila => {
+        const nombreStr = fila.querySelector(".op-nombre").value.trim();
+        const precioRaw = fila.querySelector(".op-precio").value;
+        if (nombreStr !== "") {
+            opciones.push({
+                nombre: nombreStr,
+                precio_extra: precioRaw !== "" ? parseFloat(precioRaw) : null,
+                disponible: true
+            });
+        }
+    });
+
+    return opciones;
+}
+
 async function agregarProducto() {
     const nombre = document.getElementById("prod-nombre").value;
+    const descripcion = document.getElementById("prod-desc").value;
     const categoriaId = document.getElementById("prod-categoria").value; 
     const stock = parseInt(document.getElementById("prod-stock").value) || 0;
     
@@ -393,6 +428,20 @@ async function agregarProducto() {
 
     const token = localStorage.getItem("token");
     const variantes = [];
+    const opciones = [];
+    const filasOpciones = document.querySelectorAll(".fila-opcion");
+    filasOpciones.forEach(fila => {
+    const nombreStr = fila.querySelector(".op-nombre").value.trim();
+    const precioRaw = fila.querySelector(".op-precio").value;
+
+    if (nombreStr !== "") {
+        opciones.push({
+            nombre: nombreStr,
+            precio_extra: precioRaw !== "" ? parseFloat(precioRaw) : null,
+            disponible: true
+            });
+        }
+    });
     const filas = document.querySelectorAll(".variante-row");
     let formularioValido = true;
 
