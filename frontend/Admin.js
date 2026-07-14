@@ -422,7 +422,7 @@ async function agregarProducto() {
     const descripcionIn = document.getElementById("prod-desc").value;
     const categoriaId = document.getElementById("prod-categoria").value; 
     const stock = parseInt(document.getElementById("prod-stock").value) || 0;
-    const descripcion = descripcionIn ? descripcionIn.value.trim() : "";
+    const descripcion = (descripcionIn && descripcionIn.value) ? descripcionIn.value.trim() : "";
     const imgInput = document.getElementById("prod-imagen");
     const imagenUrl = imgInput ? imgInput.value.trim() : null; 
 
@@ -570,8 +570,8 @@ async function modificarStock(id, cantidadCambio) {
     } catch (e) {
         alert("Error de red conectando al servidor.");
     }
-
-    async function cargarPedidosPendientes() {
+} 
+async function cargarPedidosPendientes() {
     const tbody = document.getElementById('tabla-pedidos-body');
     
     try {
@@ -583,6 +583,7 @@ async function modificarStock(id, cantidadCambio) {
 
         if (!res.ok) throw new Error("Error de conexión");
         const pedidos = await res.json();
+        
         if (pedidos.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No hay pedidos pendientes por el momento. ¡A limpiar la barra! 🧹</td></tr>`;
             return;
@@ -643,10 +644,10 @@ async function modificarStock(id, cantidadCambio) {
     } catch (error) {
         console.error("Error al cargar pedidos:", error);
         tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger" style="padding: 20px;">Hubo un error al cargar los pedidos. Revisa tu conexión.</td></tr>`;
-            }
-        }   
+    }
+}   
+
 document.addEventListener("DOMContentLoaded", () => {
     cargarPedidosPendientes();
     setInterval(cargarPedidosPendientes, 15000); 
-    });
-}
+});
