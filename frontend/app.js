@@ -98,18 +98,44 @@ function renderizarProductos() {
     productosAMostrar.forEach(p => {
         const stock = p.cantidad !== undefined ? p.cantidad : 0;
         const agotado = stock <= 0;
+        const prodId = p.id || p._id; 
 
         let selectorHTML = '';
         let tieneVariantes = p.variantes && p.variantes.length > 0;
 
         if (tieneVariantes) {
-            selectorHTML = `<select id="variante-${p.id || p._id}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
+            selectorHTML = `<select id="variante-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
             p.variantes.forEach(v => {
                 selectorHTML += `<option value="${v.tamaño}|${v.precio}">${v.tamaño} - $${v.precio.toFixed(2)}</option>`;
             });
             selectorHTML += `</select>`;
         } else {
             selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
+        }
+        const descripcionHTML = p.descripcion 
+            ? `<p class="descripcion-prod" style="font-size: 0.85em; color: #666; margin: 4px 0 8px 0; line-height: 1.3;">${p.descripcion}</p>` 
+            : '';
+
+        let opcionesHTML = '';
+        if (p.opciones && p.opciones.length > 0) {
+            opcionesHTML = `<div class="opciones-seleccion" style="margin: 10px 0; text-align: left; background: #faf6f0; padding: 8px; border-radius: 8px; border: 1px solid #ebd9cb;">`;
+            opcionesHTML += `<small style="font-weight: bold; color: #5c4033; display: block; margin-bottom: 5px; font-size: 0.8em;">Personaliza tu bebida:</small>`;
+            
+            p.opciones.forEach((opc, index) => {
+                const precioBadge = opc.precio_extra ? `+$${opc.precio_extra.toFixed(2)}` : 'Gratis';
+                const colorBadge = opc.precio_extra ? '#a52a2a' : '#4CAF50';
+                
+                opcionesHTML += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85em; margin-bottom: 4px;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; width: 100%;">
+                            <input type="checkbox" class="opcion-chk-${prodId}" value="${opc.nombre}" data-precio="${opc.precio_extra || 0}">
+                            <span>${opc.nombre}</span>
+                        </label>
+                        <span style="color: ${colorBadge}; font-weight: 600; font-size: 0.9em; white-space: nowrap; margin-left: 5px;">${precioBadge}</span>
+                    </div>
+                `;
+            });
+            opcionesHTML += `</div>`;
         }
 
         const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x200/E8D5C4/8B5E34?text=S%C3%A9ptima+Caf%C3%A9";
@@ -121,13 +147,13 @@ function renderizarProductos() {
                 <div class="producto-info">
                     <div>
                         <h3>${p.nombre}</h3>
-                        <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
+                        ${descripcionHTML} <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
                         ${selectorHTML}
-                    </div>
+                        ${opcionesHTML}    </div>
                     
                     <div style="margin-top: 10px;">
                         <button class="btn-add" style="width: 100%;"
-                            onclick="agregarAlCarrito('${p.id || p._id}', '${p.nombre}')"
+                            onclick="agregarAlCarrito('${prodId}', '${p.nombre}')"
                             ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
                             ${agotado ? 'Sin Stock' : 'Agregar'}
                         </button>
@@ -146,8 +172,24 @@ function agregarAlCarrito(id, nombre) {
     if (!select) return;
 
     const [tamano, precioString] = select.value.split('|');
-    const precio = parseFloat(precioString);
-    const idUnico = `${id}-${tamano}`;
+  
+    let precio = parseFloat(precioString); 
+    const checkboxes = document.querySelectorAll(`.opcion-chk-${id}:checked`);
+    let opcionesElegidas = [];
+
+    checkboxes.forEach(chk => {
+        opcionesElegidas.push(chk.value); 
+        precio += parseFloat(chk.getAttribute('data-precio') || 0); 
+    });
+    let nombreFinal = nombre;
+    let sufijoOpciones = ""; 
+    
+    if (opcionesElegidas.length > 0) {
+        sufijoOpciones = opcionesElegidas.join(', ');
+        nombreFinal = `${nombre} (con ${sufijoOpciones})`;
+    }
+
+    const idUnico = `${id}-${tamano}-${sufijoOpciones}`;
 
     const itemExistente = carrito.find(item => item.idUnico === idUnico);
 
@@ -157,12 +199,15 @@ function agregarAlCarrito(id, nombre) {
         carrito.push({ 
             idUnico: idUnico, 
             producto_id: id, 
-            nombre: nombre, 
+            nombre: nombreFinal, 
             tamano: tamano,
-            precio: precio, 
+            precio: precio,     
             cantidad: 1 
         });
     }
+    
+    checkboxes.forEach(chk => chk.checked = false);
+
     actualizarCarrito();
 }
 
