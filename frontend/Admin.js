@@ -50,6 +50,65 @@ function cerrarSesion() {
     document.getElementById("login-section").style.display = "flex";
 }
 
+async function entregarPedido(pedidoId) {
+    if (!confirm("¿Confirmas que este pedido ya fue entregado y cobrado?")) return;
+
+    try {
+
+        const token = localStorage.getItem("token"); 
+        
+        const res = await fetch(`${API_URL}/pedidos/${pedidoId}/entregar`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.detail || "Error al entregar el pedido");
+        }
+
+        const data = await res.json();
+        alert(data.message); 
+        cargarPedidosPendientes(); 
+        
+    } catch (error) {
+        console.error("Error:", error);
+        alert(error.message);
+    }
+}
+
+async function cancelarPedido(pedidoId) {
+    if (!confirm("¿Estás seguro de cancelar este pedido? Los productos regresarán al inventario.")) return;
+
+    try {
+        const token = localStorage.getItem("token"); 
+        
+        const res = await fetch(`${API_URL}/pedidos/${pedidoId}/cancelar`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.detail || "Error al cancelar el pedido");
+        }
+
+        alert("Pedido cancelado. Inventario restaurado.");
+        
+        cargarPedidosPendientes(); 
+        
+    } catch (error) {
+        console.error("Error:", error);
+        alert(error.message);
+    }
+}
+
 function mostrarPanel() {
     document.getElementById("login-section").style.display = "none";
     document.getElementById("admin-header").style.display = "flex";
@@ -458,4 +517,83 @@ async function modificarStock(id, cantidadCambio) {
     } catch (e) {
         alert("Error de red conectando al servidor.");
     }
+
+    async function cargarPedidosPendientes() {
+    const tbody = document.getElementById('tabla-pedidos-body');
+    
+    try {
+        const token = localStorage.getItem("token"); 
+        const res = await fetch(`${API_URL}/pedidos/pendientes`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Error de conexión");
+        const pedidos = await res.json();
+        if (pedidos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No hay pedidos pendientes por el momento. ¡A limpiar la barra! 🧹</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        pedidos.forEach(pedido => {
+            const fecha = new Date(pedido.fecha);
+            const horaStr = fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const folio = pedido.id.slice(-4).toUpperCase(); 
+            const listaProductos = pedido.items.map(item => 
+                `<li><strong>${item.cantidad}x</strong> ${item.nombre} <small class="text-muted">(${item.tamano})</small></li>`
+            ).join('');
+            const alertaCobro = pedido.metodo_pago === 'Efectivo' 
+                ? '<small class="text-danger fw-bold"><i class="fas fa-hand-holding-usd"></i> Cobrar Efectivo</small>'
+                : `<small class="text-success"><i class="fas fa-check-circle"></i> ${pedido.metodo_pago}</small>`;
+
+            html += `
+                <tr>
+                    <td>
+                        <strong>${horaStr}</strong><br>
+                        <small style="color: #888;">#${folio}</small>
+                    </td>
+                    <td>
+                        <strong>${pedido.cliente_nombre}</strong><br>
+                        <small style="color: #666;">${pedido.telefono || ''}</small>
+                    </td>
+                    <td>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em;">
+                            ${listaProductos}
+                        </ul>
+                    </td>
+                    <td>
+                        <strong>$${pedido.total_pagado.toFixed(2)}</strong><br>
+                        ${alertaCobro}
+                    </td>
+                    <td>
+                        <span class="badge" style="background-color: #ffe4b5; color: #b8860b; padding: 8px 12px; border-radius: 20px;">
+                            ${pedido.estado.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-2">
+                            <button class="btn btn-sm" style="background-color: #4CAF50; color: white; border-radius: 8px; width: 100px;" onclick="entregarPedido('${pedido.id}')">
+                                Entregar
+                            </button>
+                            <button class="btn btn-sm" style="background-color: #a52a2a; color: white; border-radius: 8px; width: 100px;" onclick="cancelarPedido('${pedido.id}')">
+                                Cancelar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+
+    } catch (error) {
+        console.error("Error al cargar pedidos:", error);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger" style="padding: 20px;">Hubo un error al cargar los pedidos. Revisa tu conexión.</td></tr>`;
+            }
+        }   
+document.addEventListener("DOMContentLoaded", () => {
+    cargarPedidosPendientes();
+    setInterval(cargarPedidosPendientes, 15000); 
+    });
 }

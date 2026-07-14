@@ -132,7 +132,27 @@
                     </table>
                 </div>
             </div>
-
+                        <div class="card p-4 shadow-sm mb-4" style="border-radius: 15px; background-color: #fffaf0;">
+                <h4 class="mb-4" style="color: #5c4033;"><i class="fas fa-bell"></i> Pedidos Activos</h4>
+                
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead style="border-bottom: 2px solid #eaddcf;">
+                            <tr>
+                                <th>Hora</th>
+                                <th>Cliente</th>
+                                <th>Detalle del Pedido</th>
+                                <th>Total / Pago</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pedidos-body">
+                            <tr><td colspan="6" class="text-center text-muted">Cargando pedidos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 <script src="Admin.js"></script>
