@@ -113,8 +113,8 @@ function renderizarProductos() {
         } else {
             selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
         }
-        const descripcionHTML = p.descripcion 
-            ? `<p class="descripcion-prod" style="font-size: 0.85em; color: #666; margin: 4px 0 8px 0; line-height: 1.3;">${p.descripcion}</p>` 
+        const descripcionHTML = (p.descripcion && p.descripcion!== null) 
+            ? `<p class="descripcion-prod" style="font-size: 0.85em; color: #777; margin: 4px 0 8px 0; line-height: 1.4; font-style: italic;">${p.descripcion}</p>` 
             : '';
 
         let opcionesHTML = '';
@@ -148,8 +148,7 @@ function renderizarProductos() {
                 <div class="producto-info">
                     <div>
                         <h3>${p.nombre}</h3>
-                        ${descripcionHTML} 
-                        <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
+                        ${descripcionHTML} <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
                         ${selectorHTML}
                         ${opcionesHTML}    
                     </div>
