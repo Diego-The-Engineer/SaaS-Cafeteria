@@ -8,6 +8,7 @@ let categoriaActiva = "Todos";
 
 window.onload = () => { cargarMenu(); };
 
+// --- CARGA INICIAL ---
 async function cargarMenu() {
     const contenedor = document.getElementById("menu-contenedor");
 
@@ -147,9 +148,11 @@ function renderizarProductos() {
                 <div class="producto-info">
                     <div>
                         <h3>${p.nombre}</h3>
-                        ${descripcionHTML} <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
+                        ${descripcionHTML} 
+                        <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
                         ${selectorHTML}
-                        ${opcionesHTML}    </div>
+                        ${opcionesHTML}    
+                    </div>
                     
                     <div style="margin-top: 10px;">
                         <button class="btn-add" style="width: 100%;"
@@ -273,7 +276,7 @@ function actualizarCarrito() {
 // --- LÓGICA DE PAGO ---
 async function procesarPago() {
     const btnPagar = document.getElementById("btn-pagar"); 
-    btnPagar.innerText = "Encriptando tarjeta...";
+    btnPagar.innerText = "Procesando pedido...";
     btnPagar.disabled = true;
 
     try {
@@ -281,50 +284,55 @@ async function procesarPago() {
         const apellido = document.getElementById("apellido").value;
         const email = document.getElementById("email").value;
         const telefono = document.getElementById("telefono").value;
-        
-        const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
-        const cardMonth = document.getElementById("card-month").value;
-        const cardYear = document.getElementById("card-year").value;
-        const cardCvc = document.getElementById("card-cvc").value;       
-        
-        const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{
-            method: "POST"
-        }); 
-        
-        if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
-        const datosToken = await respuestaToken.json();
-        const miToken = datosToken.token;
-        
-        const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${miToken}`
-            },
-            body: JSON.stringify({
-                name: nombre + " " + apellido,
-                number: cardNum,
-                exp_month: cardMonth,
-                exp_year: "20" + cardYear,
-                cvc: cardCvc
-            })
-        });
+        const metodoPagoInput = document.getElementById("metodo-pago");
+        const metodoPago = metodoPagoInput ? metodoPagoInput.value : "Tarjeta"; 
+        const totalPedido = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+        let tokenSeguro = "N/A"; 
 
-        if (!tokenResponse.ok) {
-            throw new Error("Datos de tarjeta inválidos");
+        // Solo conectamos con eCartPay si eligieron Tarjeta
+        if (metodoPago === "Tarjeta") {
+            btnPagar.innerText = "Encriptando tarjeta...";
+            const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
+            const cardMonth = document.getElementById("card-month").value;
+            const cardYear = document.getElementById("card-year").value;
+            const cardCvc = document.getElementById("card-cvc").value;       
+            
+            const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{ method: "POST" }); 
+            if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
+            const miToken = (await respuestaToken.json()).token;
+            
+            const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${miToken}`
+                },
+                body: JSON.stringify({
+                    name: nombre + " " + apellido,
+                    number: cardNum,
+                    exp_month: cardMonth,
+                    exp_year: "20" + cardYear,
+                    cvc: cardCvc
+                })
+            });
+
+            if (!tokenResponse.ok) throw new Error("Datos de tarjeta inválidos");
+            const tokenData = await tokenResponse.json();
+            tokenSeguro = tokenData.id || tokenData.token; 
         }
 
-        const tokenData = await tokenResponse.json();
-        const tokenSeguro = tokenData.id || tokenData.token; 
-        btnPagar.innerText = "Procesando cobro...";
+        btnPagar.innerText = "Confirmando pedido...";
      
+        // Preparamos el payload incluyendo método de pago y el total
         const pedidoData = {
             items: carrito, 
             first_name: nombre,
             last_name: apellido,
             email: email,
             phone: telefono,
-            token_tarjeta: tokenSeguro 
+            token_tarjeta: tokenSeguro,
+            metodo_pago: metodoPago,
+            total: totalPedido
         };
 
         const backendResponse = await fetch(`${API_URL}/pedidos`, {
@@ -338,26 +346,23 @@ async function procesarPago() {
             throw new Error(errorBack.detail || "Error procesando el pedido en el servidor");
         }
 
-        alert("¡Pago exitoso! Tu pedido ha sido confirmado.");
+        alert("¡Pedido confirmado con éxito! " + (metodoPago === 'Efectivo' ? 'Puedes pagar en caja.' : ''));
 
+        // Limpieza final
         carrito = [];
         const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
-        modal.hide();
+        if (modal) modal.hide();
         cargarMenu();
         actualizarCarrito();
         document.getElementById("form-checkout").reset();
 
     } catch (error) {
         Toastify({
-            text: "Pago rechazado: " + error.message,
+            text: "Aviso: " + error.message,
             duration: 3000,
             gravity: "top",
             position: "right",
-            style: {
-                background: "#D96C6C",
-                color: "white",
-                borderRadius: "8px"
-            }
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
         }).showToast();
     } finally {
         btnPagar.innerText = "Confirmar y Pagar";
