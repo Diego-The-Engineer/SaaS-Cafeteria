@@ -422,7 +422,7 @@ async function agregarProducto() {
     const descripcionIn = document.getElementById("prod-desc").value;
     const categoriaId = document.getElementById("prod-categoria").value; 
     const stock = parseInt(document.getElementById("prod-stock").value) || 0;
-    const descripcion = (descripcionIn && descripcionIn.value) ? descripcionIn.value.trim() : "";
+    const descripcion = descripcionIn ? descripcionIn.trim() : null;
     const imgInput = document.getElementById("prod-imagen");
     const imagenUrl = imgInput ? imgInput.value.trim() : null; 
 
@@ -463,7 +463,7 @@ async function agregarProducto() {
 
     const payload = { 
         nombre: nombre, 
-        descripcion: descripcion ? descripcion: null,
+        descripcion: descripcion !== " " ? descripcion: null,
         cantidad: stock,
         categoria_id: categoriaId, 
         variantes: variantes, 
