@@ -103,7 +103,18 @@ function renderizarProductos() {
 
         let selectorHTML = '';
         let tieneVariantes = p.variantes && p.variantes.length > 0;
-
+        let saboresHTML = '';
+        if (p.sabores && p.sabores.length > 0) {
+            saboresHTML = `<select id="sabor-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
+            saboresHTML += `<option value="" disabled selected>Elige un sabor...</option>`; 
+            
+            p.sabores.forEach(sab => {
+                if (sab.disponible) {
+                    saboresHTML += `<option value="${sab.nombre}">${sab.nombre}</option>`;
+                }
+            });
+            saboresHTML += `</select>`;
+        }
         if (tieneVariantes) {
             selectorHTML = `<select id="variante-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
             p.variantes.forEach(v => {
@@ -139,15 +150,7 @@ function renderizarProductos() {
             opcionesHTML += `</div>`;
         }
 
-        let saboresHTML = '';
-        if (p.sabores && p.sabores.length > 0) {
-            saboresHTML = `<select id="sabor-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
-            saboresHTML += `<option value="">Selecciona un sabor...</option>`;
-            p.sabores.forEach(sab => {
-                saboresHTML += `<option value="${sab.nombre}">${sab.nombre}</option>`;
-            });
-            saboresHTML += `</select>`;
-        }
+        
 
         const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x200/E8D5C4/8B5E34?text=S%C3%A9ptima+Caf%C3%A9";
 
@@ -160,6 +163,7 @@ function renderizarProductos() {
                         <h3>${p.nombre}</h3>
                         ${descripcionHTML} <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
                         ${selectorHTML}
+                        ${saboresHTML}
                         ${opcionesHTML}    
                     </div>
                     
@@ -182,28 +186,36 @@ function renderizarProductos() {
 function agregarAlCarrito(id, nombre) {
     const select = document.getElementById(`variante-${id}`);
     if (!select) return;
-    const selectSabor = document.getElementById(`sabor-${id}`);
-    let saborElegido = selectSabor && selectSabor.value !== "" ? selectSabor.value : null;
-
-    if (saborElegido) {
-        opcionesElegidas.push(`Sabor: ${saborElegido}`);
-    }
     const [tamano, precioString] = select.value.split('|');
-  
     let precio = parseFloat(precioString); 
+    const selectSabor = document.getElementById(`sabor-${id}`);
+    let saborElegido = "";
+    if (selectSabor) {
+        if (selectSabor.value === "") {
+            alert("Por favor, selecciona un sabor antes de agregarlo al carrito.");
+            return; 
+        }
+        saborElegido = selectSabor.value;
+    }
+
     const checkboxes = document.querySelectorAll(`.opcion-chk-${id}:checked`);
     let opcionesElegidas = [];
+    if (saborElegido !== "") {
+        opcionesElegidas.push(`Sabor ${saborElegido}`);
+    }
 
+    // Leemos los checkboxes (extras)
     checkboxes.forEach(chk => {
         opcionesElegidas.push(chk.value); 
         precio += parseFloat(chk.getAttribute('data-precio') || 0); 
     });
+
     let nombreFinal = nombre;
     let sufijoOpciones = ""; 
     
     if (opcionesElegidas.length > 0) {
         sufijoOpciones = opcionesElegidas.join(', ');
-        nombreFinal = `${nombre} (con ${sufijoOpciones})`;
+        nombreFinal = `${nombre} (${sufijoOpciones})`;
     }
 
     const idUnico = `${id}-${tamano}-${sufijoOpciones}`;
