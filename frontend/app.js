@@ -139,6 +139,16 @@ function renderizarProductos() {
             opcionesHTML += `</div>`;
         }
 
+        let saboresHTML = '';
+        if (p.sabores && p.sabores.length > 0) {
+            saboresHTML = `<select id="sabor-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
+            saboresHTML += `<option value="">Selecciona un sabor...</option>`;
+            p.sabores.forEach(sab => {
+                saboresHTML += `<option value="${sab.nombre}">${sab.nombre}</option>`;
+            });
+            saboresHTML += `</select>`;
+        }
+
         const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x200/E8D5C4/8B5E34?text=S%C3%A9ptima+Caf%C3%A9";
 
         contenedor.innerHTML += `
@@ -172,7 +182,12 @@ function renderizarProductos() {
 function agregarAlCarrito(id, nombre) {
     const select = document.getElementById(`variante-${id}`);
     if (!select) return;
+    const selectSabor = document.getElementById(`sabor-${id}`);
+    let saborElegido = selectSabor && selectSabor.value !== "" ? selectSabor.value : null;
 
+    if (saborElegido) {
+        opcionesElegidas.push(`Sabor: ${saborElegido}`);
+    }
     const [tamano, precioString] = select.value.split('|');
   
     let precio = parseFloat(precioString); 

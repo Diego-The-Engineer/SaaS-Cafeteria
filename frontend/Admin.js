@@ -383,6 +383,17 @@ async function cargarInventario() {
     } catch (error) { console.error("Error al cargar inventario", error); }
 }
 
+function agregarFilaSabor() {
+    const contenedor = document.getElementById("contenedor-sabores");
+    const fila = document.createElement("div");
+    fila.className = "d-flex gap-2 mb-2 fila-sabor align-items-center"; 
+    fila.innerHTML = `
+        <input type="text" class="form-control form-control-sm sab-nombre" placeholder="Ej. Avellana">
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()" title="Eliminar sabor">X</button>
+    `;
+    contenedor.appendChild(fila);
+}
+
 function agregarFilaOpcion() {
     const contenedor = document.getElementById("contenedor-opciones");
     const fila = document.createElement("div");
@@ -456,6 +467,18 @@ async function agregarProducto() {
         }
     });
 
+    const sabores = [];
+    const filasSabores = document.querySelectorAll(".fila-sabor");
+    filasSabores.forEach(fila => {
+        const nombreSabor = fila.querySelector(".sab-nombre").value.trim();
+        if (nombreSabor !== "") {
+            sabores.push({
+                nombre: nombreSabor,
+                disponible: true
+            });
+        }
+    });
+
     if(!nombre || !categoriaId || !formularioValido || variantes.length === 0) {
         alert("Por favor llena todos los campos, selecciona una categoría y revisa los precios.");
         return;
@@ -469,7 +492,8 @@ async function agregarProducto() {
         variantes: variantes, 
         disponible: true,
         imagen: imagenUrl ? imagenUrl : null,
-        opciones: opciones 
+        opciones: opciones,
+        sabores: sabores
     };
 
     try {
