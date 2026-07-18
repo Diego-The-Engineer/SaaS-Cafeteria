@@ -31,11 +31,6 @@ class Opcion(BaseModel):
        precio_extra: Optional[float] = None
        disponible: bool = True
 
-class Response_producto(Model_producto):
-        id: str
-        descripcion: Optional[str] = None
-        opciones: list[Opcion] = []
-
 class Item_pedido(BaseModel):
         idUnico: str
         producto_id: str
@@ -95,3 +90,8 @@ class Model_producto(BaseModel):
     opciones: list[Opcion] = []
     destacado: bool = False
     sabores: list[Sabores] = []
+
+class Response_producto(Model_producto):
+        id: str
+        descripcion: Optional[str] = None
+        opciones: list[Opcion] = []
