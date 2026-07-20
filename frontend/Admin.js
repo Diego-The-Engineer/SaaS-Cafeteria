@@ -651,7 +651,6 @@ async function cargarYeditar(id) {
     const token = localStorage.getItem("token");
     try {
         const res = await fetch (`${API_URL}/productos/${id}`, {
-            method: "PUT",
             headers: {
                 "Authorization" : `Bearer ${token}`
             }
