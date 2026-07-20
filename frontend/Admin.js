@@ -370,12 +370,14 @@ async function cargarInventario() {
                         </div>
                     </td>
                     <td>${estadoHtml}</td>
-                    <td>${nombreCategoria}</td> <!-- ACTUALIZADO -->
+                    <td>${nombreCategoria}</td> 
                     <td>
                         <button class="btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible})">
                             ${p.disponible ? 'Ocultar' : 'Activar'}
                         </button>
+                        <button class="btn-accion btn-editar" onclick="cargarYeditar('${p.id}')"> Editar</button>
                         <button class="btn-accion btn-delete" onclick="eliminarProducto('${p.id}')">Borrar</button>
+                        
                     </td>
                 </tr>
             `;
@@ -402,7 +404,7 @@ function agregarFilaOpcion() {
         <input type="text" class="form-control form-control-sm op-nombre" placeholder="Ej. Leche de Almendras">
         <input type="number" class="form-control form-control-sm op-precio" placeholder="Precio Extra (Deja vacío si es gratis)" step="0.5">
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()" title="Eliminar opción">
-            X
+            
         </button>
     `;
     
@@ -527,6 +529,191 @@ async function agregarProducto() {
         }
     } catch (error) { 
         alert("Error de conexión"); 
+    }
+}
+
+async function editarProducto(id) {
+    const nombre = document.getElementById("prod-nombre").value;
+    const categoriaId = document.getElementById("prod-categoria").value;
+    const stock = parseInt(document.getElementById("prod-stock").value) || 0;
+
+    const descRaw = document.getElementById("prod-desc").value;
+    const descripcion = descRaw ? descRaw.trim() : "";
+
+    const imgInput = document.getElementById("prod-imagen");
+    const imagenUrl = imgInput ? imgInput.value.trim() : null;
+
+    const opciones = [];
+    const filasOpciones = document.querySelectorAll(".fila-opcion");
+    filasOpciones.forEach(fila => {
+        const nombreStr = fila.querySelector(".op-nombre").value.trim();
+        const precioRaw = fila.querySelector(".op-precio").value;
+        if (nombreStr !== "") {
+            opciones.push({
+                nombre: nombreStr,
+                precio_extra: precioRaw !== "" ? parseFloat(precioRaw) : null,
+                disponible: true
+            });
+        }
+    });
+
+    const sabores = [];
+    const filasSabores = document.querySelectorAll(".fila-sabor");
+    filasSabores.forEach(fila => {
+        const nombreSabor = fila.querySelector(".sab-nombre").value.trim();
+        if (nombreSabor !== "") {
+            sabores.push({
+                nombre: nombreSabor,
+                disponible: true
+            });
+        }
+    });
+    const variantes = [];
+    const filas = document.querySelectorAll(".variante-row");
+    let formularioValido = true;
+
+    filas.forEach(fila => {
+        const tamano = fila.querySelector(".var-tamano").value.trim();
+        const precio = parseFloat(fila.querySelector(".var-precio").value);
+
+        if (!tamano || isNaN(precio)) {
+            formularioValido = false;
+        } else {
+            variantes.push({ tamaño: tamano, precio: precio, disponible: true });
+        }
+    });
+
+    if (!nombre || !categoriaId || !formularioValido || variantes.length === 0) {
+        alert("Por favor llena todos los campos, selecciona una categoría y revisa los precios.");
+        return;
+    }
+    const payload = {
+        nombre: nombre,
+        descripcion: descripcion !== "" ? descripcion : null,
+        cantidad: stock,
+        categoria_id: categoriaId,
+        variantes: variantes,
+        disponible: true,
+        imagen: imagenUrl ? imagenUrl : null,
+        opciones: opciones,
+        sabores: sabores
+    };
+
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`${API_URL}/productos/${id}`, {
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${token}` 
+            },
+            body: JSON.stringify(payload) 
+        });
+
+        if (res.ok) {
+            alert("¡Producto actualizado exitosamente!");
+            const botonGuardar = document.querySelector('button[onclick^="function() { editarProducto"]');
+            if (botonGuardar) {
+                botonGuardar.innerText = "Guardar Producto";
+                botonGuardar.onclick = agregarProducto;
+                botonGuardar.style.backgroundColor = ""; 
+            }
+            document.getElementById("prod-nombre").value = "";
+            document.getElementById("prod-categoria").value = "";
+            document.getElementById("prod-stock").value = "";
+            document.getElementById("prod-desc").value = "";
+            const contOpciones = document.getElementById("contenedor-opciones");
+            if (contOpciones) contOpciones.innerHTML = "";
+            
+            const contSabores = document.getElementById("contenedor-sabores");
+            if (contSabores) contSabores.innerHTML = "";
+            
+            if (imgInput) imgInput.value = "";
+
+            document.getElementById("variantes-container").innerHTML = `
+                <div class="variante-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" class="var-tamano" placeholder="Tamaño (Ej. M)" style="flex: 1;">
+                    <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
+                    <button class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
+                </div>
+            `;
+            cargarInventario();
+        } else {
+            const errorData = await res.json();
+            alert(`Error al guardar en el servidor: ${errorData.detail || 'Desconocido'}`);
+        }
+    } catch (error) {
+        alert("Error de conexión");
+    }
+}
+
+async function cargarYeditar(id) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch (`${API_URL}/productos/${id}`, {
+            method: "PUT",
+            headers: {
+                "Authorization" : `Bearer ${token}`
+            }
+        });
+        if (!res.ok) throw new Error("No se pudo cargar el producto");
+        const p = await res.json();
+        
+        document.getElementById("prod-nombre").value = p.nombre;
+        document.getElementById("prod-categoria").value = p.categoria_id;
+        document.getElementById("prod-stock").value = p.cantidad || 0;
+        document.getElementById("prod-desc").value = p.descripcion || "";
+
+        const varContainer = document.getElementById("variantes-container");
+        varContainer.innerHTML = ""; 
+        if (p.variantes) {
+            p.variantes.forEach(v => {
+                varContainer.innerHTML += `
+                    <div class="variante-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" class="var-tamano" value="${v.tamaño}" style="flex: 1;">
+                        <input type="number" class="var-precio" value="${v.precio}" style="flex: 1;" step="0.01">
+                        <button class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
+                    </div>
+                `;
+            });
+        }
+        const contOpciones = document.getElementById("contenedor-opciones");
+        contOpciones.innerHTML = "";
+        if (p.opciones) {
+            p.opciones.forEach(opc => {
+                contOpciones.innerHTML += `
+                    <div class="d-flex gap-2 mb-2 fila-opcion align-items-center">
+                        <input type="text" class="form-control form-control-sm op-nombre" value="${opc.nombre}">
+                        <input type="number" class="form-control form-control-sm op-precio" value="${opc.precio_extra || ''}" step="0.5">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">X</button>
+                    </div>
+                `;
+            });
+        }
+        const contSabores = document.getElementById("contenedor-sabores");
+        if (contSabores) {
+            contSabores.innerHTML = "";
+            if (p.sabores) {
+                p.sabores.forEach(sab => {
+                    contSabores.innerHTML += `
+                        <div class="d-flex gap-2 mb-2 fila-sabor align-items-center">
+                            <input type="text" class="form-control form-control-sm sab-nombre" value="${sab.nombre}">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">X</button>
+                        </div>
+                    `;
+                });
+            }
+        }
+        const botonActualizar = document.querySelector('button[onclick="agregarProducto()"]');
+        if (botonActualizar){
+            botonActualizar.innerText = "Actualizar Producto";
+            botonActualizar.onclick = function(){editarProducto(id)};
+            botonActualizar.style.backgroundColor = "#f39c12";
+        }
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    catch(error){
+        alert("Error de conexion al servidor");
     }
 }
 

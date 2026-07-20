@@ -1,4 +1,4 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:venv",
-    "liveServer.settings.port": 5502
+    "liveServer.settings.port": 5503
 }
