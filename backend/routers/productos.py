@@ -40,6 +40,16 @@ async def eliminar_producto_real(id: str, current_user: Annotated[User, Depends(
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"msg": "Producto eliminado correctamente"}
 
+@router.get("/{id}", response_model= Response_producto)
+async def obtener_productoMongo(id: str):
+    oid = ObjectId(id.strip('"'))
+    producto = await db["productos"].find_one({"_id": oid})
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    producto["id"] = str(producto["_id"])
+    return producto
+
+
 @router.put("/{id}", response_model= Response_producto)
 async def actualizar_producto_completo(
     id: str,
