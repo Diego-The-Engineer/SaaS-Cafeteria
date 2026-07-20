@@ -324,6 +324,38 @@ async function eliminarCategoriaSeleccionada() {
 }
 
 
+function cancelarEdicion() {
+    document.getElementById("prod-nombre").value = "";
+    document.getElementById("prod-categoria").value = "";
+    document.getElementById("prod-stock").value = "";
+    document.getElementById("prod-desc").value = "";
+    
+    const imgInput = document.getElementById("prod-imagen");
+    if (imgInput) imgInput.value = "";
+
+    const contOpciones = document.getElementById("contenedor-opciones");
+    if (contOpciones) contOpciones.innerHTML = "";
+    
+    const contSabores = document.getElementById("contenedor-sabores");
+    if (contSabores) contSabores.innerHTML = "";
+
+    document.getElementById("variantes-container").innerHTML = `
+        <div class="variante-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" class="var-tamano" placeholder="Tamaño (Ej. M)" style="flex: 1;">
+            <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
+            <button class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
+        </div>
+    `;
+    const btnPrincipal = document.getElementById("btn-guardar-principal");
+    if (btnPrincipal) {
+        btnPrincipal.innerText = "Guardar Producto";
+        btnPrincipal.onclick = agregarProducto;
+        btnPrincipal.style.backgroundColor = ""; 
+    }
+
+    document.getElementById("btn-cancelar").style.display = "none";
+}
+
 async function cargarInventario() {
     const token = localStorage.getItem("token");
     try {
@@ -612,31 +644,7 @@ async function editarProducto(id) {
 
         if (res.ok) {
             alert("¡Producto actualizado exitosamente!");
-            const botonGuardar = document.querySelector('button[onclick^="function() { editarProducto"]');
-            if (botonGuardar) {
-                botonGuardar.innerText = "Guardar Producto";
-                botonGuardar.onclick = agregarProducto;
-                botonGuardar.style.backgroundColor = ""; 
-            }
-            document.getElementById("prod-nombre").value = "";
-            document.getElementById("prod-categoria").value = "";
-            document.getElementById("prod-stock").value = "";
-            document.getElementById("prod-desc").value = "";
-            const contOpciones = document.getElementById("contenedor-opciones");
-            if (contOpciones) contOpciones.innerHTML = "";
-            
-            const contSabores = document.getElementById("contenedor-sabores");
-            if (contSabores) contSabores.innerHTML = "";
-            
-            if (imgInput) imgInput.value = "";
-
-            document.getElementById("variantes-container").innerHTML = `
-                <div class="variante-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="text" class="var-tamano" placeholder="Tamaño (Ej. M)" style="flex: 1;">
-                    <input type="number" class="var-precio" placeholder="Precio ($)" style="flex: 1;" step="0.01">
-                    <button class="btn-outline-danger" onclick="eliminarFila(this)" style="padding: 0 15px; border-radius: 8px;">X</button>
-                </div>
-            `;
+            cancelarEdicion();
             cargarInventario();
         } else {
             const errorData = await res.json();
@@ -703,12 +711,14 @@ async function cargarYeditar(id) {
                 });
             }
         }
-        const botonActualizar = document.querySelector('button[onclick="agregarProducto()"]');
+        const botonActualizar = document.getElementById("btn-guardar-principal");
         if (botonActualizar){
             botonActualizar.innerText = "Actualizar Producto";
             botonActualizar.onclick = function(){editarProducto(id)};
             botonActualizar.style.backgroundColor = "#f39c12";
         }
+        const btnCancelar = document.getElementById("btn-cancelar");
+        if (btnCancelar) btnCancelar.style.display = "inline-block";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
     catch(error){
