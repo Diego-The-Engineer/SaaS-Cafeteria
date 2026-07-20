@@ -662,7 +662,7 @@ async function cargarYeditar(id) {
         document.getElementById("prod-categoria").value = p.categoria_id;
         document.getElementById("prod-stock").value = p.cantidad || 0;
         document.getElementById("prod-desc").value = p.descripcion || "";
-
+        document.getElementById("prod-imagen").value = p.imagen;
         const varContainer = document.getElementById("variantes-container");
         varContainer.innerHTML = ""; 
         if (p.variantes) {
@@ -714,6 +714,7 @@ async function cargarYeditar(id) {
     catch(error){
         alert("Error de conexion al servidor");
     }
+    finally {cargarInventario();}
 }
 
 async function eliminarProducto(id) {
