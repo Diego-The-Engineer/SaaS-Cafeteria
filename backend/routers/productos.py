@@ -40,20 +40,23 @@ async def eliminar_producto_real(id: str, current_user: Annotated[User, Depends(
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"msg": "Producto eliminado correctamente"}
 
-@router.put("/{id}")
+@router.put("/{id}", response_model= Response_producto)
 async def actualizar_producto_completo(
     id: str,
     producto: dict = Body(...),
     current_user: Annotated[User, Depends(get_current_active_user)] = None
 ):
     oid = ObjectId(id.strip('"'))
+
     resultado = await db["productos"].update_one(
         {"_id": oid},
         {"$set": producto}
     )
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return {"msg": "Producto actualizado"}
+    producto_actualizado = await db["productos"].find_one({"_id" : oid})
+    producto_actualizado["id"] = str(producto_actualizado.pop("_id"))
+    return producto_actualizado
 
 @router.patch("/{id}")
 async def editar_stock(
