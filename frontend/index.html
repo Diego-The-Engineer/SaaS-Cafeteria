@@ -18,10 +18,23 @@
         <p>Pide en línea y recoge en mostrador</p>
     </div>
 
-    <div id="categorias-filtro" class="filtros-container"></div>
     <div class="main-layout">
+
+        <div class="filtros-container">
+            <div class="buscador-wrapper">
+                <input 
+                    type="text" 
+                    id="buscador-menu" 
+                    class="buscador-input" 
+                    placeholder="Buscar producto..." 
+                    onkeyup="buscarProducto()"
+                >
+            </div>
+            <div id="categorias-filtro" class="categorias-wrapper"></div>
+        </div>
         <div class="menu-container" id="menu-contenedor">
         </div>
+
         <div class="carrito-container">
             <h2>Tu Pedido</h2>
             <div id="lista-carrito">
@@ -38,7 +51,8 @@
             </button>
         </div>
 
-    </div>
+    </div> 
+
 
     <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

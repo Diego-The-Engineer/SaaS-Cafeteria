@@ -1,5 +1,5 @@
-const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "192.168.56.101");
-const API_URL = esLocal ? "http://localhost:5500" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
+const API_URL = esLocal ? "http://localhost:5503" : "https://sep7ima-cafeteria-f7z2.onrender.com";
 
 let carrito = [];
 let productosGlobales = []; 
@@ -418,4 +418,17 @@ function scrollToCart() {
     if (carritoSeccion) {
         carritoSeccion.scrollIntoView({ behavior: 'smooth' });
     }
+}
+
+function buscarProducto() {
+    const input = document.getElementById("buscador-menu").value.toLowerCase();
+    const tarjetas = document.querySelectorAll(".producto-card");
+    tarjetas.forEach(tarjeta => {
+        const nombreProducto = tarjeta.querySelector("h3").innerText.toLowerCase();
+        if (nombreProducto.includes(input)) {
+            tarjeta.style.display = "flex"; 
+        } else {
+            tarjeta.style.display = "none";
+        }
+    });
 }

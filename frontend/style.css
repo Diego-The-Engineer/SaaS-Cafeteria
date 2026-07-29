@@ -110,8 +110,46 @@ body {
     max-width: 1200px;
     margin: 0 auto 20px auto;
     padding: 0; 
+    position: sticky; 
+    top: 0;
+    z-index: 100;
+    background-color: var(--bg-color);
 }
 
+.buscador-wrapper {
+    padding: 0 20px 15px 20px; 
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    position: sticky; 
+    top: 0;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.buscador-input {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 25px; 
+    border: 1px solid var(--primary-light);
+    background-color: var(--card-bg);
+    color: var(--text-dark);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(139, 94, 52, 0.05);
+}
+
+.buscador-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(196, 154, 108, 0.4);
+}
+@media (min-width: 768px) {
+    .buscador-wrapper {
+        padding: 0 0 15px 0; /
+    }
+}
 .categorias-wrapper {
     display: flex;
     overflow-x: auto;
@@ -287,21 +325,42 @@ body {
 }
 
 @media (min-width: 768px) {
-    .categorias-wrapper {
-        justify-content: center; 
-    }
-
     .main-layout {
         flex-direction: row;
         align-items: flex-start; 
+        max-width: 1300px; 
+        width: 100%;
+        gap: 30px; 
+        margin: 0 auto;
     }
 
+    .filtros-container {
+        width: 200px; 
+        flex-shrink: 0; 
+        position: sticky; 
+        top: 20px; 
+        margin: 0; 
+        padding: 0;
+        background-color: transparent;
+    }
+
+    .categorias-wrapper {
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 0; 
+        gap: 15px; 
+    }
+
+    .btn-categoria {
+        width: 100%; 
+    }
     .menu-container {
+        flex: 1; 
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
-    
+
     .carrito-container {
-        width: 350px; 
+        width: 350px;
         flex-shrink: 0; 
         position: sticky;
         top: 20px; 
