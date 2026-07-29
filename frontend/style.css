@@ -417,3 +417,26 @@ body {
         display: none !important;
     }
 }
+
+.producto-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 2. La imagen NUNCA puede rebasar la tarjeta */
+.producto-card img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 220px; /* Alto fijo para que todas las fotos se vean parejitas */
+    object-fit: cover; /* Recorta bonito la foto si no es cuadrada */
+    border-radius: 8px; /* Mantiene el estilo elegante */
+    display: block;
+}
+
+/* 3. Evitar que el contenedor del menú empuje la pantalla */
+.menu-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
