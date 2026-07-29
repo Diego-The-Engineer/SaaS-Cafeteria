@@ -86,7 +86,6 @@ async def post_pedidos(pedidos: Create_pedido):
         
         payload_ecart = {
             "currency": "MXN",
-            "email": pedidos.email,
             "first_name": pedidos.first_name,
             "last_name": pedidos.last_name,
             "phone": pedidos.phone,
@@ -132,7 +131,6 @@ async def post_pedidos(pedidos: Create_pedido):
     ticket = {
         "fecha": datetime.utcnow(),
         "cliente_nombre": f"{pedidos.first_name} {pedidos.last_name}",
-        "email": pedidos.email,
         "items": items_detallados,
         "total_pagado": total,
         "Metodo_pago": pedidos.metodo_pago,

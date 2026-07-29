@@ -43,7 +43,6 @@ class Create_pedido(BaseModel):
         items: list[Item_pedido]
         first_name: str
         last_name: str
-        email: str
         phone: str
         metodo_pago: MetodoPago
         estado: EstadoCliente.pendiente
