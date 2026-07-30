@@ -39,7 +39,13 @@ async function login() {
             errorMsg.style.display = "block";
         }
     } catch (error) {
-        alert("Error de red conectando al servidor");
+        Toastify({
+            text: "Error de red, conectando al servidor",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
     }
 }
 
@@ -71,12 +77,24 @@ async function entregarPedido(pedidoId) {
         }
 
         const data = await res.json();
-        alert(data.message); 
+        Toastify({
+            text: "Aviso: " + data.message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
         cargarPedidosPendientes(); 
         
     } catch (error) {
         console.error("Error:", error);
-        alert(error.message);
+        Toastify({
+            text: "Aviso: " + error.message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
     }
 }
 
@@ -98,14 +116,25 @@ async function cancelarPedido(pedidoId) {
             const errorData = await res.json();
             throw new Error(errorData.detail || "Error al cancelar el pedido");
         }
-
-        alert("Pedido cancelado. Inventario restaurado.");
+        Toastify({
+            text: "Aviso: Pedido cancelado. Inventario restaurado",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
         
         cargarPedidosPendientes(); 
         
     } catch (error) {
         console.error("Error:", error);
-        alert(error.message);
+        Toastify({
+            text: "Aviso: " + error.message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
     }
 }
 
@@ -134,7 +163,13 @@ function eliminarFila(boton){
     if(totalFilas > 1) {
         fila.remove();
     }else{
-        alert("El producto debe tener un tamaño al menos");
+        Toastify({
+            text: "Aviso: El producto debe tener un tamaño al menos",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
     }
 }
 
@@ -215,8 +250,13 @@ async function borrar_stats(){
         }
 
     } catch (error) {
-        console.error("Fallo de conexión:", error);
-        alert("Error: No se pudo conectar con el servidor.");
+        Toastify({
+            text: "Error: No se puede conectar al servidor ",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
     }
 }
 
@@ -266,10 +306,32 @@ async function agregarNuevaCategoria() {
         });
 
         if(res.ok) {
-            alert("Categoría creada.");
+            Toastify({
+            text: "Categoria creada",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#add96c", color: "white", borderRadius: "8px" }
+        }).showToast();
             await cargarCategorias(); 
-        } else { alert("Error al guardar."); }
-    } catch (error) { alert("Error de red."); }
+        } else {
+            Toastify({
+            text: "Aviso: Error al guardar" ,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast(); 
+        }
+    } catch (error) { 
+        Toastify({
+            text: "Aviso: Error en la red",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
+    }
 }
 
 async function editarCategoriaSeleccionada() {

@@ -198,7 +198,13 @@ function agregarAlCarrito(id, nombre) {
     let saborElegido = "";
     if (selectSabor) {
         if (selectSabor.value === "") {
-            alert("Por favor, selecciona un sabor antes de agregarlo al carrito.");
+            Toastify({
+            text: "Alerta: Por favor, selecciona un sabor",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
             return; 
         }
         saborElegido = selectSabor.value;
@@ -375,8 +381,13 @@ async function procesarPago() {
             const errorBack = await backendResponse.json();
             throw new Error(errorBack.detail || "Error procesando el pedido en el servidor");
         }
-
-        alert("¡Pedido confirmado con éxito! " + (metodoPago === 'Efectivo' ? 'Puedes pagar en caja.' : ''));
+        Toastify({
+            text: "¡Pedido confirmado con éxito! " + (metodoPago === 'Efectivo' ? 'Puedes pagar en caja.' : ''),
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#a8d96c", color: "white", borderRadius: "8px" }
+        }).showToast();
         carrito = [];
         const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
         if (modal) modal.hide();
@@ -436,6 +447,11 @@ function buscarProducto() {
 }
 
 // PEDIDOS //
+
+function initMapa(){
+    let x = 10;
+}
+
 function iniciarCheckout() {
     const modalEntrega = new bootstrap.Modal(document.getElementById('modal-tipo-entrega'));
     modalEntrega.show();
@@ -456,6 +472,13 @@ function seleccionarEntrega(tipo){
 
 function abrirModalResumenPago() {
     if (datosPedido.tipoEntrega === 'domicilio' && document.getElementById('input-calle').value === "") {
+        Toastify({
+            text: "Alerta: Por favor, rellene los datos de su domicilio",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
         btnPagar.disabled = true;
     }
     const modalEntregaEl = document.getElementById('modal-tipo-entrega');
@@ -480,6 +503,12 @@ function abrirModalPago(metodo) {
         modalTarjeta.show();
         
     } else if (metodo === 'transferencia') {
-        alert("Opcion de transferencia en construcción");
+        Toastify({
+            text: "Opcion de transferencia en desarrollo",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
     }
 }
