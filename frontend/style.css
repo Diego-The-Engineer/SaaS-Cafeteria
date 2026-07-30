@@ -424,19 +424,58 @@ body {
     box-sizing: border-box;
 }
 
-/* 2. La imagen NUNCA puede rebasar la tarjeta */
 .producto-card img {
     width: 100% !important;
     max-width: 100% !important;
-    height: 220px; /* Alto fijo para que todas las fotos se vean parejitas */
-    object-fit: cover; /* Recorta bonito la foto si no es cuadrada */
-    border-radius: 8px; /* Mantiene el estilo elegante */
+    height: 220px; 
+    object-fit: cover; 
+    border-radius: 8px; 
     display: block;
 }
-
-/* 3. Evitar que el contenedor del menú empuje la pantalla */
 .menu-container {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+}
+@media (max-width: 930px) and (orientation: landscape) {
+    .main-layout {
+        flex-direction: row;
+        align-items: flex-start; 
+        max-width: 1300px; 
+        width: 100%;
+        gap: 30px; 
+        margin: 0 auto;
+    }
+
+    .filtros-container {
+        width: 200px; 
+        flex-shrink: 0; 
+        position: sticky; 
+        top: 20px; 
+        margin: 0; 
+        padding: 0;
+        background-color: transparent;
+    }
+
+    .categorias-wrapper {
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 0; 
+        gap: 15px; 
+    }
+
+    .btn-categoria {
+        width: 100%; 
+    }
+    .menu-container {
+        flex: 1; 
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .carrito-container {
+        width: 350px;
+        flex-shrink: 0; 
+        position: sticky;
+        top: 20px; 
+    }
 }

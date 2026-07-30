@@ -47,6 +47,8 @@ class Create_pedido(BaseModel):
         metodo_pago: MetodoPago
         estado: EstadoCliente.pendiente
         total: float
+        monto: float
+        cambio: float
         fecha: datetime = Field(default_factory=datetime.utcnow)
         token_tarjeta: str
 

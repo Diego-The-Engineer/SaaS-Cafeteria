@@ -806,7 +806,7 @@ async function cargarPedidosPendientes() {
         const pedidos = await res.json();
         
         if (pedidos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No hay pedidos pendientes por el momento. ¡A limpiar la barra! 🧹</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No hay pedidos pendientes por el momento. ¡A limpiar la barra! </td></tr>`;
             return;
         }
 

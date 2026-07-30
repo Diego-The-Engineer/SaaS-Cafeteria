@@ -38,7 +38,7 @@
         <div class="carrito-container">
             <h2>Tu Pedido</h2>
             <div id="lista-carrito">
-                <p style="color: var(--text-muted); font-size: 14px;"> 🛒... El carrito está vacío.</p>
+                <p style="color: var(--text-muted); font-size: 14px;">El carrito está vacío.</p>
             </div>
             
             <div class="total-container">
@@ -46,12 +46,61 @@
                 <span id="total-precio">$0.00</span>
             </div>
 
-            <button type="button" class="btn btn-primary w-100" id="btn-enviar" data-bs-toggle="modal" data-bs-target="#staticBackdrop" disabled>
+            <button type="button" class="btn btn-primary w-100" id="btn-enviar" onclick="iniciarCheckout()" disabled>
                 Confirmar Pedido
             </button>
         </div>
 
     </div> 
+<div class="modal fade" id="modal-resumen-pago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Verifica tu pedido</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="lista-resumen-pedido" class="mb-4"></div>
+                <h6 class="text-center text-muted mb-3">¿Cómo deseas pagar?</h6>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-outline-success" onclick="abrirModalPago('efectivo')">Efectivo</button>
+                    <button class="btn btn-outline-primary" onclick="abrirModalPago('tarjeta')">Tarjeta (Pago Seguro)</button>
+                    <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')"> Transferencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-efectivo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Pago en Efectivo</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h4 class="text-center mb-3">Total: $<span id="total-efectivo">0.00</span></h4>
+                
+                <div class="d-flex justify-content-center mb-3">
+                    <button class="btn btn-success" onclick="marcarPagoExacto()">Pago Exacto</button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Monto recibido</label>
+                    <input type="number" class="form-control" id="input-monto-recibido" placeholder="$0.00" onkeyup="calcularCambio()">
+                </div>
+
+                <div class="alert alert-info text-center">
+                    <strong>Cambio a devolver: </strong> $<span id="label-cambio">0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="finalizarPedidoEfectivo()">Confirmar Pedido</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
     <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -118,5 +167,49 @@
         </div>
         <span id="flotante-total">$0.00</span>
     </div>
+
+<div class="modal fade" id="modal-tipo-entrega" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Detalles de Entrega</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="d-flex justify-content-center gap-3 mb-4" id="botones-entrega">
+                    <button class="btn btn-outline-primary" onclick="seleccionarEntrega('mostrador')">Recoger en Mostrador</button>
+                    <button class="btn btn-outline-success" onclick="seleccionarEntrega('domicilio')">Envío a Domicilio</button>
+                </div>
+                <div id="seccion-domicilio" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div id="mapa-google" style="height: 300px; width: 100%; background-color: #e9ecef; border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <label class="form-label">Calle y Número</label>
+                                <input type="text" class="form-control" id="input-calle" placeholder="Ej. Av. Universidad 123">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Colonia</label>
+                                <input type="text" class="form-control" id="input-colonia" placeholder="Ej. Centro">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Referencias</label>
+                                <textarea class="form-control" id="input-referencias" rows="2" placeholder="Casa blanca con portón negro..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btn-continuar-pago" onclick="abrirModalResumenPago()" disabled>Continuar al Pago</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

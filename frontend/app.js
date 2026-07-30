@@ -5,7 +5,13 @@ let carrito = [];
 let productosGlobales = []; 
 let categoriasGlobales = [];
 let categoriaActiva = "Todos"; 
-
+let datosPedido = {
+    tipoEntrega: "", 
+    direccion: {},
+    metodoPago: "",
+    montoRecibido: 0,
+    cambio: 0
+};
 window.onload = () => { cargarMenu(); };
 
 // --- CARGA INICIAL ---
@@ -308,7 +314,6 @@ async function procesarPago() {
     try {
         const nombre = document.getElementById("nombre").value;
         const apellido = document.getElementById("apellido").value;
-        const email = document.getElementById("email").value;
         const telefono = document.getElementById("telefono").value;
         const metodoPagoInput = document.getElementById("metodo-pago");
         const metodoPago = metodoPagoInput ? metodoPagoInput.value : "Tarjeta"; 
@@ -348,17 +353,16 @@ async function procesarPago() {
         }
 
         btnPagar.innerText = "Confirmando pedido...";
-     
-        // Preparamos el payload incluyendo método de pago y el total
         const pedidoData = {
             items: carrito, 
             first_name: nombre,
             last_name: apellido,
-            email: email,
             phone: telefono,
             token_tarjeta: tokenSeguro,
             metodo_pago: metodoPago,
-            total: totalPedido
+            total: totalPedido,
+            monto_recibido: montoRecibido,
+            cambio: cambio
         };
 
         const backendResponse = await fetch(`${API_URL}/pedidos`, {
@@ -373,8 +377,6 @@ async function procesarPago() {
         }
 
         alert("¡Pedido confirmado con éxito! " + (metodoPago === 'Efectivo' ? 'Puedes pagar en caja.' : ''));
-
-        // Limpieza final
         carrito = [];
         const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
         if (modal) modal.hide();
@@ -431,4 +433,53 @@ function buscarProducto() {
             tarjeta.style.display = "none";
         }
     });
+}
+
+// PEDIDOS //
+function iniciarCheckout() {
+    const modalEntrega = new bootstrap.Modal(document.getElementById('modal-tipo-entrega'));
+    modalEntrega.show();
+}
+
+function seleccionarEntrega(tipo){
+    datosPedido.tipoEntrega = tipo;
+    const seccionDomicilio = document.getElementById("seccion-domicilio");
+    const btnContinuar = document.getElementById("btn-continuar-pago");
+
+    if (tipo === 'domicilio') {
+        seccionDomicilio.style.display = "block"; 
+        //initMapa();
+    } else seccionDomicilio.style.display = "none"; 
+
+    btnContinuar.disabled = false;
+}
+
+function abrirModalResumenPago() {
+    if (datosPedido.tipoEntrega === 'domicilio' && document.getElementById('input-calle').value === "") {
+        btnPagar.disabled = true;
+    }
+    const modalEntregaEl = document.getElementById('modal-tipo-entrega');
+    const modalEntrega = bootstrap.Modal.getInstance(modalEntregaEl);
+    modalEntrega.hide();
+    const modalResumen = new bootstrap.Modal(document.getElementById('modal-resumen-pago'));
+    modalResumen.show();
+}
+
+function abrirModalPago(metodo) {
+    datosPedido.metodoPago = metodo;
+    const modalResumenEl = document.getElementById('modal-resumen-pago');
+    const modalResumen = bootstrap.Modal.getInstance(modalResumenEl);
+    modalResumen.hide();
+    if (metodo === 'efectivo') {
+        const modalEfectivo = new bootstrap.Modal(document.getElementById('modal-efectivo'));
+        modalEfectivo.show();
+        // PISTA: Aquí puedes inyectar el total en el HTML del modal de efectivo para que el usuario lo vea.
+        
+    } else if (metodo === 'tarjeta') {
+        const modalTarjeta = new bootstrap.Modal(document.getElementById('staticBackdrop'));
+        modalTarjeta.show();
+        
+    } else if (metodo === 'transferencia') {
+        alert("Opcion de transferencia en construcción");
+    }
 }
