@@ -469,6 +469,7 @@ function initMapa(){
         position: sucursal_lat,
         map: mapa,
         title: "Tu ubicación de entrega",
+        icon: "http://google.com",
         draggable: true,
         animation: google.maps.Animation.DROP
     });
@@ -523,13 +524,14 @@ function traducirCoordenadasADireccion(latLng) {
             results[0].address_components.forEach(componente => {
                 if (componente.types.includes("route")) calle = componente.long_name;
                 if (componente.types.includes("street_number")) numero = componente.long_name;
-
+                if(componente.types.includes("postal_code")) cp = componente.long_name;
                 if (componente.types.includes("sublocality") || componente.types.includes("neighborhood")) colonia = componente.long_name;
             });
             let direccionFinal = calle;
             if (numero) direccionFinal += " #" + numero;
             document.getElementById("input-calle").value = direccionFinal;
             document.getElementById("input-colonia").value = colonia;
+            document.getElementById("input-cp").value = cp;
             datosPedido.direccion.coordenadas = { lat: latLng.lat(), lng: latLng.lng() };
 
         } else {
@@ -622,10 +624,10 @@ function abrirModalResumenPago() {
 function actualizarMapaDesdeTexto() {
     const calle = document.getElementById("input-calle").value;
     const colonia = document.getElementById("input-colonia").value;
-
+    const cp = document.getElementById("input-cp").value;
     if (calle !== "" || colonia !== "") {
-        // Juntamos la calle, colonia, y forzamos la ciudad/estado para que Google no se confunda
-        const direccionCompleta = `${calle}, ${colonia}, Oaxaca, Mexico`; 
+
+        const direccionCompleta = `${calle}, ${colonia}, ${cp},Oaxaca, Mexico`; 
         
         geocoder.geocode({ address: direccionCompleta }, (results, status) => {
             if (status === "OK") {
@@ -633,6 +635,7 @@ function actualizarMapaDesdeTexto() {
                 const nuevaUbicacion = results[0].geometry.location;
                 mapa.setCenter(nuevaUbicacion);
                 marcador.setPosition(nuevaUbicacion);
+                datosPedido.direccion.coordenadas = {lat: nuevaUbicacion.lat(), lng: nuevaUbicacion.lng()};
             } else {
                 console.log("Google no encontró la dirección escrita: " + status);
             }

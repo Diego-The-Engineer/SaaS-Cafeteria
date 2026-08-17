@@ -67,7 +67,7 @@
                 <h6 class="text-center text-muted mb-3">¿Cómo deseas pagar?</h6>
                 <div class="d-flex flex-column gap-2">
                     <button class="btn btn-outline-success" onclick="abrirModalPago('efectivo')">Efectivo</button>
-                    <button class="btn btn-outline-primary" onclick="abrirModalPago('tarjeta')">Tarjeta (Pago Seguro)</button>
+                    <button class="btn btn-outline-primary" onclick="abrirModalPago('tarjeta')">Tarjeta bancaria</button>
                     <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')"> Transferencia</button>
                 </div>
             </div>
@@ -83,7 +83,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <h4 class="text-center mb-3">Total: $<span id="total-precio">0.00</span></h4>
+                <h4 class="text-center mb-3">Total: <span id="flotante-total">0.00</span></h4>
                 
                 <div class="d-flex justify-content-center mb-3">
                     <button class="btn btn-success" onclick="marcarPagoExacto()">Pago Exacto</button>
