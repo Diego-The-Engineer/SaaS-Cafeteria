@@ -34,7 +34,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="strict",
         max_age=18000
     )
