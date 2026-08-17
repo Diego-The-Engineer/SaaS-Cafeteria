@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Annotated
-from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter
+from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
 from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg
@@ -30,5 +30,13 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    Response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=False,
+        samesite="strict",
+        max_age=18000
+    )
     return Token(access_token=access_token, token_type="bearer")
 

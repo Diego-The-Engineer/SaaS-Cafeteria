@@ -2,16 +2,24 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
 let myChart = null;
 let categoriasGlobales = []; 
 window.onload = async () => {
-    const token = localStorage.getItem("token");
-    if(token) {
-        mostrarPanel();
-        await cargarCategorias(); 
-        cargarInventario();
-        cargarEstadisticas();
+    try {
+        const res = await fetch(`${API_URL}/token`, {
+        method: 'GET',
+        credentials: 'include'
+        });
+        if(res.ok) {
+            mostrarPanel();
+            await cargarCategorias(); 
+            cargarInventario();
+            cargarEstadisticas();
+        }else{
+            login();
+        }
     }
+    catch(error) {alert("Usuario no identificado");}
 };
 
-async function login() {
+async function login() {    
     const user = document.getElementById("username").value;
     const pass = document.getElementById("password").value;
     const errorMsg = document.getElementById("login-error");
@@ -35,6 +43,7 @@ async function login() {
             await cargarCategorias();
             cargarInventario();
             cargarEstadisticas();
+            localStorage.removeItem("token");
         } else {
             errorMsg.style.display = "block";
         }

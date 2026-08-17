@@ -631,7 +631,6 @@ function actualizarMapaDesdeTexto() {
         
         geocoder.geocode({ address: direccionCompleta }, (results, status) => {
             if (status === "OK") {
-                // Sacamos las nuevas coordenadas y movemos el mapa y el pin
                 const nuevaUbicacion = results[0].geometry.location;
                 mapa.setCenter(nuevaUbicacion);
                 marcador.setPosition(nuevaUbicacion);
@@ -650,9 +649,7 @@ function abrirModalPago(metodo) {
     modalResumen.hide();
     if (metodo === 'efectivo') {
         const modalEfectivo = new bootstrap.Modal(document.getElementById('modal-efectivo'));
-        modalEfectivo.show();
-        // PISTA: Aquí puedes inyectar el total en el HTML del modal de efectivo para que el usuario lo vea.
-        
+        modalEfectivo.show();   
     } else if (metodo === 'tarjeta') {
         const modalTarjeta = new bootstrap.Modal(document.getElementById('staticBackdrop'));
         modalTarjeta.show();
@@ -666,4 +663,20 @@ function abrirModalPago(metodo) {
             style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
         }).showToast();
     }
+}
+
+function marcarPagoExacto (){
+    total = document.getElementById("flotante-total").value;
+    return total;
+}
+
+function calcularCambio(){
+    total = document.getElementById("flotante-total").value;
+    price = document.getElementById("input-monto-recibido").value;
+    if(price < total){
+        alert("Este monto es menor al total");
+    }
+    cambio = total - price;
+    document.getElementById("label-cambio") = cambio;
+    
 }
