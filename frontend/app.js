@@ -1,16 +1,20 @@
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
 const API_URL = esLocal ? "http://localhost:5503" : "https://sep7ima-cafeteria-f7z2.onrender.com";
-
+let mapa;
+let sucursal;
+let autocomplete;
+let geocoder;
 let carrito = [];
 let productosGlobales = []; 
 let categoriasGlobales = [];
 let categoriaActiva = "Todos"; 
 let datosPedido = {
-    tipoEntrega: "", 
-    direccion: {},
-    metodoPago: "",
-    montoRecibido: 0,
-    cambio: 0
+    tipoEntrega: null,
+    latitudCliente: null,
+    longitudCliente: null,
+    direccionTexto: null,
+    distanciaKm: null,
+    costoEnvio: 0
 };
 window.onload = () => { cargarMenu(); };
 
@@ -449,7 +453,133 @@ function buscarProducto() {
 // PEDIDOS //
 
 function initMapa(){
-    let x = 10;
+    const sucursal_lat = {
+        lat:17.078399006698426, 
+        lng: -96.72288414676025 
+    };
+
+    mapa = new google.maps.Map(document.getElementById("mapa-google"), {
+        center: sucursal_lat,
+        zoom: 15,
+    });
+
+    geocoder = new google.maps.Geocoder();
+
+     marcador = new google.maps.Marker({
+        position: sucursal_lat,
+        map: mapa,
+        title: "Tu ubicación de entrega",
+        draggable: true,
+        animation: google.maps.Animation.DROP
+    });
+
+    marcador.addListener("dragend", (event) => {
+        const nuevaPosicion = event.latLng;
+        traducirCoordenadasADireccion(nuevaPosicion);
+    });
+
+const inputCalle = document.getElementById("input-calle");
+    autocomplete = new google.maps.places.Autocomplete(inputCalle, {
+        types: ["address"],
+        componentRestrictions: { country: "mx" }
+    });
+    
+    autocomplete.bindTo("bounds", mapa);
+    autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+
+        if (!place.geometry || !place.geometry.location) {
+            alert("Por favor, selecciona una dirección válida de la lista de sugerencias.");
+            return;
+        }
+
+        const ubicacionCliente = place.geometry.location;
+        mapa.setCenter(ubicacionCliente);
+        mapa.setZoom(16);
+        marcador.setPosition(ubicacionCliente);
+        datosPedido.latitudCliente = ubicacionCliente.lat();
+        datosPedido.longitudCliente = ubicacionCliente.lng();
+        datosPedido.direccionTexto = place.formatted_address;
+        document.getElementById("input-colonia").value = "";
+        if (place.address_components) {
+            const componenteColonia = place.address_components.find(c => c.types.includes("sublocality") || c.types.includes("neighborhood"));
+            if (componenteColonia) {
+                document.getElementById("input-colonia").value = componenteColonia.long_name;
+            }
+        }
+
+        calcularDistanciaEntrega(ubicacionCliente);
+    });
+
+}
+
+function traducirCoordenadasADireccion(latLng) {
+    geocoder.geocode({ location: latLng }, (results, status) => {
+        if (status === "OK" && results[0]) {
+            let calle = "";
+            let numero = "";
+            let colonia = "";
+            let cp = "";
+            results[0].address_components.forEach(componente => {
+                if (componente.types.includes("route")) calle = componente.long_name;
+                if (componente.types.includes("street_number")) numero = componente.long_name;
+
+                if (componente.types.includes("sublocality") || componente.types.includes("neighborhood")) colonia = componente.long_name;
+            });
+            let direccionFinal = calle;
+            if (numero) direccionFinal += " #" + numero;
+            document.getElementById("input-calle").value = direccionFinal;
+            document.getElementById("input-colonia").value = colonia;
+            datosPedido.direccion.coordenadas = { lat: latLng.lat(), lng: latLng.lng() };
+
+        } else {
+            console.log("No se pudo leer la calle de esas coordenadas.");
+        }
+    });
+}
+
+function calcularDistanciaEntrega(destinoCliente) {
+    const servicioDistancia = new google.maps.DistanceMatrixService(); 
+    const btnContinuar = document.getElementById("btn-continuar-pago");
+
+    servicioDistancia.getDistanceMatrix({
+        origins: [SUCURSAL_COORDENADAS],
+        destinations: [destinoCliente],
+        travelMode: google.maps.TravelMode.DRIVING, 
+        unitSystem: google.maps.UnitSystem.METRIC
+    }, (response, status) => {
+        if (status !== "OK") {
+            alert("Error al calcular la distancia de envío.");
+            return;
+        }
+
+        const resultado = response.rows[0].elements[0];
+
+        if (resultado.status === "OK") {
+            const distanciaTexto = resultado.distance.text; 
+            const distanciaValorKm = resultado.distance.value / 1000; 
+
+            datosPedido.distanciaKm = distanciaValorKm;
+            if (distanciaValorKm > DISTANCIA_MAXIMA_KM) {
+                alert(`Lo sentimos, la dirección está fuera de nuestra zona de cobertura técnica. Distancia actual: ${distanciaTexto}. Nuestro límite es de ${DISTANCIA_MAXIMA_KM} km.`);
+                btnContinuar.disabled = true; 
+                datosPedido.costoEnvio = 0;
+            } else {
+                btnContinuar.disabled = false; 
+                
+                if (distanciaValorKm <= 5) {
+                    datosPedido.costoEnvio = 30; 
+                } else {
+                    datosPedido.costoEnvio = 60; 
+                }
+                
+                console.log(`Envío autorizado. Distancia: ${distanciaTexto}. Costo de envío: $${datosPedido.costoEnvio}`);
+            }
+        } else {
+            alert("No se pudo calcular una ruta en auto hacia esa dirección.");
+            btnContinuar.disabled = true;
+        }
+    });
 }
 
 function iniciarCheckout() {
@@ -464,28 +594,50 @@ function seleccionarEntrega(tipo){
 
     if (tipo === 'domicilio') {
         seccionDomicilio.style.display = "block"; 
-        //initMapa();
-    } else seccionDomicilio.style.display = "none"; 
-
-    btnContinuar.disabled = false;
+        setTimeout(() => {
+            initMapa();
+        }, 200);
+        btnContinuar.disabled = true; 
+    } else {
+        seccionDomicilio.style.display = "none"; 
+        btnContinuar.disabled = false;
+        datosPedido.costoEnvio = 0;
+    }
 }
 
 function abrirModalResumenPago() {
-    if (datosPedido.tipoEntrega === 'domicilio' && document.getElementById('input-calle').value === "") {
-        Toastify({
-            text: "Alerta: Por favor, rellene los datos de su domicilio",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
-        }).showToast();
-        btnPagar.disabled = true;
+    const modalResumenEl = document.getElementById('modal-resumen-pago');
+    if (!modalResumenEl) {
+        console.error("Falta el HTML de modal-resumen-pago");
+        alert("Falta agregar el HTML del modal de resumen de pago.");
+        return;
     }
     const modalEntregaEl = document.getElementById('modal-tipo-entrega');
-    const modalEntrega = bootstrap.Modal.getInstance(modalEntregaEl);
+    const modalEntrega = bootstrap.Modal.getOrCreateInstance(modalEntregaEl);
     modalEntrega.hide();
-    const modalResumen = new bootstrap.Modal(document.getElementById('modal-resumen-pago'));
+    const modalResumen = bootstrap.Modal.getOrCreateInstance(modalResumenEl);
     modalResumen.show();
+}
+
+function actualizarMapaDesdeTexto() {
+    const calle = document.getElementById("input-calle").value;
+    const colonia = document.getElementById("input-colonia").value;
+
+    if (calle !== "" || colonia !== "") {
+        // Juntamos la calle, colonia, y forzamos la ciudad/estado para que Google no se confunda
+        const direccionCompleta = `${calle}, ${colonia}, Oaxaca, Mexico`; 
+        
+        geocoder.geocode({ address: direccionCompleta }, (results, status) => {
+            if (status === "OK") {
+                // Sacamos las nuevas coordenadas y movemos el mapa y el pin
+                const nuevaUbicacion = results[0].geometry.location;
+                mapa.setCenter(nuevaUbicacion);
+                marcador.setPosition(nuevaUbicacion);
+            } else {
+                console.log("Google no encontró la dirección escrita: " + status);
+            }
+        });
+    }
 }
 
 function abrirModalPago(metodo) {
