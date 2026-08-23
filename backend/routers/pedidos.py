@@ -220,18 +220,26 @@ async def cancelar_pedido(
 
     # 3. Restamos el dinero directamente de las estadísticas (Mucho más eficiente)
     # Extraemos los $154 (o el monto que sea) del pedido
-    total_a_restar = pedido_db.get("total_pagado", 0) 
+    pipeline = [
+        {"$match": {"Estado": {"$ne": "Cancelado"}}},
+        {"$group": {
+            "_id": None, 
+            # ifNull asegura que si le llamaste 'total' o 'total_pagado', lo encuentre
+            "total_real": {"$sum": {"$ifNull": ["$total_pagado", "$total"]}}
+        }}
+    ]
+    cursor_ganancias = db["pedidos"].aggregate(pipeline)
+    ganancias_res = await cursor_ganancias.to_list(length=1)
     
-    if total_a_restar > 0:
-        await db["stats"].update_one(
-            {"tipo": "ingresos_globales"},
-            {
-                # Usamos el signo negativo para restar el monto
-                "$inc": {"total_acumulado": -total_a_restar}, 
-                "$set": {"ultima_actualizacion": datetime.utcnow()}
-            },
-            upsert=True 
-        )
+    # Extraemos la suma total. Si no hay pedidos, será 0.
+    nuevo_total = ganancias_res[0]["total_real"] if ganancias_res else 0
+    
+    # Sobrescribimos el total de estadísticas a la fuerza
+    await db["stats"].update_one(
+        {"tipo": "ingresos_globales"},
+        {"$set": {"total_acumulado": nuevo_total, "ultima_actualizacion": datetime.utcnow()}},
+        upsert=True
+    )
 
     return {"message": "Pedido cancelado con éxito, stock devuelto y estadísticas ajustadas"}
 
