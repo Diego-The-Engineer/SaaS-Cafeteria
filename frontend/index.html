@@ -71,6 +71,12 @@
                     <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')"> Transferencia</button>
                 </div>
             </div>
+            <div class="modal-footer d-flex justify-content-between w-100">
+    <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAEntrega()">
+        ⬅ Volver a Entrega
+    </button>
+    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar Pedido</button>
+</div>
         </div>
     </div>
 </div>
@@ -86,21 +92,27 @@
                 <h4 class="text-center mb-3">Total: <span id="total-efectivo">0.00</span></h4>
                 
                 <div class="d-flex justify-content-center mb-3">
-                    <button class="btn btn-success" onclick="marcarPagoExacto()">Pago Exacto</button>
+                    <button class="btn btn-success"  onclick="marcarPagoExacto()">Pago Exacto</button>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Monto recibido</label>
-                    <input type="number" class="form-control" id="input-monto-recibido" placeholder="$0.00" onkeyup="calcularCambio()">
+                    <input type="text"  class="form-control" id="input-monto-recibido" placeholder="$0.00" onkeyup="calcularCambio()">
                 </div>
 
                 <div class="alert alert-info text-center">
                     <strong>Cambio a devolver: </strong> $<span id="label-cambio">0.00</span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="finalizarPedidoEfectivo()">Confirmar Pedido</button>
-            </div>
+             
+                <div class="modal-footer d-flex justify-content-between">
+                       <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAResumenDesde('modal-efectivo')">
+        ⬅ Volver a Métodos de Pago
+    </button>
+                       <button type="button" class="btn btn-primary" onclick="procesarPagoEfectivo()" id="btn-pagar-efectivo">Confirmar Pedido</button>
+ 
+</div>
+
         </div>
     </div>
 </div>
@@ -156,7 +168,10 @@
                     </form>
                 </div>
       
-                <div class="modal-footer">
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAResumenDesde('staticBackdrop')">
+        ⬅ Volver a Métodos de Pago
+    </button>
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="procesarPago()" id="btn-pagar">Confirmar y Pagar</button>
                 </div>

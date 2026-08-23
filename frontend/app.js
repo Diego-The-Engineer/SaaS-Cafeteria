@@ -1,5 +1,6 @@
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
 const API_URL = esLocal ? "http://localhost:5503" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+let totalG;
 let mapa;
 let sucursal;
 let autocomplete;
@@ -297,7 +298,7 @@ function actualizarCarrito() {
         labelTotal.innerText = `$${total.toFixed(2)}`;
         btnEnviar.disabled = false;
     }
-
+    totalG = total;
     const flotanteMovil = document.getElementById('flotante-movil');
     const flotanteTotal = document.getElementById('flotante-total');
     const flotanteCantidad = document.getElementById('flotante-cantidad');
@@ -412,6 +413,8 @@ async function procesarPago() {
         btnPagar.disabled = false;
     }
 }
+
+
 
 // --- UTILIDADES ---
 function iniciarObservadorAnimaciones() {
@@ -641,7 +644,7 @@ function volverSeleccion() {
     const seccionDomicilio = document.getElementById("seccion-domicilio");
     const btnContinuar = document.getElementById("btn-continuar-pago");
     const btnVolver = document.getElementById("btn-volver-entrega");
-    
+
     const contenedorBotones = document.getElementById("botones-entrega");
     const btnMostrador = contenedorBotones.children[0];
     const btnDomicilio = contenedorBotones.children[1];
@@ -656,6 +659,11 @@ function volverSeleccion() {
     btnContinuar.disabled = true;
 }
 
+function volveratras(){
+    datosPedido.tipoEntrega = null;
+    iniciarCheckout();
+}
+
 function abrirModalResumenPago() {
     const modalResumenEl = document.getElementById('modal-resumen-pago');
     if (!modalResumenEl) {
@@ -668,6 +676,42 @@ function abrirModalResumenPago() {
     modalEntrega.hide();
     const modalResumen = bootstrap.Modal.getOrCreateInstance(modalResumenEl);
     modalResumen.show();
+}
+function volverAEntrega() {
+    const modalResumenEl = document.getElementById('modal-resumen-pago');
+    const modalEntregaEl = document.getElementById('modal-tipo-entrega');
+
+    // Escudo: Verificamos que los dos HTML existan
+    if (!modalResumenEl || !modalEntregaEl) return; 
+
+    // Ocultamos el resumen
+    bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
+    
+    // Le damos 150ms a Bootstrap para que limpie la pantalla oscura y abrimos el otro
+    setTimeout(() => {
+        bootstrap.Modal.getOrCreateInstance(modalEntregaEl).show();
+    }, 150);
+}
+
+// 2. Regresar de Efectivo/Tarjeta -> al Resumen
+function volverAResumenDesde(modalActualId) {
+    const modalActualEl = document.getElementById(modalActualId);
+    const modalResumenEl = document.getElementById('modal-resumen-pago');
+
+    // Escudo: Si el ID llegó vacío o mal escrito, te avisamos en lugar de explotar
+    if (!modalActualEl) {
+        console.error("¡Cuidado! No se encontró el modal con el ID:", modalActualId);
+        alert("Falta el ID correcto en el botón de Volver");
+        return;
+    }
+
+    // Ocultamos el método de pago actual
+    bootstrap.Modal.getOrCreateInstance(modalActualEl).hide();
+    
+    // Micro-pausa y revivimos el resumen
+    setTimeout(() => {
+        bootstrap.Modal.getOrCreateInstance(modalResumenEl).show();
+    }, 150);
 }
 
 function actualizarMapaDesdeTexto() {
@@ -696,14 +740,17 @@ function actualizarMapaDesdeTexto() {
 function abrirModalPago(metodo) {
     datosPedido.metodoPago = metodo;
     const modalResumenEl = document.getElementById('modal-resumen-pago');
-    const modalResumen = bootstrap.Modal.getInstance(modalResumenEl);
-    modalResumen.hide();
+
     if (metodo === 'efectivo') {
-        const modalEfectivo = new bootstrap.Modal(document.getElementById('modal-efectivo'));
-        modalEfectivo.show();   
+        bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
+        document.getElementById("total-efectivo").innerText = `$${totalG.toFixed(2)}`;
+        const modalEfectivoEl = document.getElementById('modal-efectivo');
+        bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).show();   
+        
     } else if (metodo === 'tarjeta') {
-        const modalTarjeta = new bootstrap.Modal(document.getElementById('staticBackdrop'));
-        modalTarjeta.show();
+        bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
+        const modalTarjetaEl = document.getElementById('staticBackdrop');
+        bootstrap.Modal.getOrCreateInstance(modalTarjetaEl).show();
         
     } else if (metodo === 'transferencia') {
         Toastify({
@@ -717,16 +764,120 @@ function abrirModalPago(metodo) {
 }
 
 function marcarPagoExacto (){
-    let total = document.getElementById("total-efectivo").value;
-    return total;
+    const montoExacto = document.getElementById("input-monto-recibido");
+    montoExacto.value = totalG;
+    calcularCambio();
+}
+function calcularCambio(){
+    let monto = parseFloat(document.getElementById("input-monto-recibido").value);
+    let cambio = Math.abs(totalG - monto);
+    const labelCambio1 = document.getElementById("label-cambio");
+    labelCambio1.innerText = `${cambio.toFixed(2)}`;
+
+    if(monto < totalG){
+        labelCambio1.innerText = `Monto inválido`;
+    }
 }
 
-function calcularCambio(precio){
-    let total = document.getElementById("total-efectivo").value;
-    if(precio < total){
-        alert("Este monto es menor al total");
-    }
-    let cambio = total - precio;
-    document.getElementById("label-cambio") = cambio;
+async function procesarPagoEfectivo() {
+    const btnPagarEfectivo = document.getElementById("btn-pagar-efectivo"); 
     
+    // 1. Validamos que el monto sea suficiente antes de bloquear nada
+    let montoRecibido = parseFloat(document.getElementById("input-monto-recibido").value) || 0;
+    if (montoRecibido < totalG) {
+        Toastify({
+            text: "El monto recibido es menor al total del pedido.",
+            duration: 3000,
+            gravity: "top", position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
+        return; // Detenemos la función aquí
+    }
+
+    // 2. Bloqueamos el botón y mostramos estado de carga
+    const textoOriginal = btnPagarEfectivo.innerText; // Guardamos el texto original ("Confirmar Pedido")
+    btnPagarEfectivo.innerText = "Procesando pedido...";
+    btnPagarEfectivo.disabled = true;
+
+    // 3. Armamos el objeto con toda la información para tu backend
+    const payload = {
+        cliente_nombre: document.getElementById("nombre").value + " " + document.getElementById("apellido").value,
+        telefono: document.getElementById("telefono").value,
+        tipo_entrega: datosPedido.tipoEntrega, // 'domicilio' o 'mostrador'
+        metodo_pago: "Efectivo",
+        monto_recibido: montoRecibido,
+        cambio_devuelto: montoRecibido - totalG,
+        total_pagado: totalG,
+        
+        // Mapeamos tu variable global del carrito al formato que espera tu API
+        items: carrito.map(item => ({
+            id_producto: item.id,
+            nombre: item.nombre,
+            cantidad: item.cantidad,
+            tamano: item.tamano || 'Regular',
+            precio_unitario: item.precio
+        })),
+
+        // Si es a domicilio, mandamos la dirección
+        direccion: datosPedido.tipoEntrega === 'domicilio' ? {
+            calle: document.getElementById("input-calle").value,
+            colonia: document.getElementById("input-colonia").value,
+            cp: document.getElementById("input-cp").value,
+            referencias: document.getElementById("input-referencias").value
+        } : null
+    };
+
+    try {
+        // 4. Disparamos la petición al backend (Ajusta la ruta de tu endpoint)
+        const res = await fetch(`${API_URL}/pedidos/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            // ¡ÉXITO!
+            Toastify({
+                text: "¡Pedido recibido con éxito! ☕",
+                duration: 4000,
+                gravity: "top", position: "right",
+                style: { background: "#4CAF50", color: "white", borderRadius: "8px" }
+            }).showToast();
+
+            // Ocultamos el modal de efectivo de forma segura
+            const modalEfectivoEl = document.getElementById('modal-efectivo');
+            bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).hide();
+
+            // Limpiamos el carrito visual y lógicamente
+            carrito = [];
+            actualizarCarrito(); // Tu función que repinta el carrito en 0
+            
+            // Opcional: Limpiamos los inputs del formulario para el siguiente cliente
+            document.getElementById("form-checkout").reset();
+            document.getElementById("input-monto-recibido").value = "";
+            document.getElementById("label-cambio").innerText = "0.00";
+
+        } else {
+            // Si el backend responde con error (ej. falta de stock)
+            const errorData = await res.json();
+            throw new Error(errorData.detail || "Error al registrar el pedido");
+        }
+
+    } catch (error) {
+        // Si se cae el internet o falla el servidor
+        Toastify({
+            text: "Error: " + error.message,
+            duration: 4000,
+            gravity: "top", position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
+
+    } finally {
+        // 5. El bloque finally SIEMPRE se ejecuta al final (haya éxito o error).
+        // Aquí revivimos el botón por si el cliente necesita intentar de nuevo.
+        btnPagarEfectivo.innerText = textoOriginal;
+        btnPagarEfectivo.disabled = false;
+    }
 }
