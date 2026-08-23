@@ -182,6 +182,60 @@ async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(
     return {"message": "Pedido entregado con éxito e ingresos registrados"}
 
 @router.patch("/{pedido_id}/cancelar")
+async def cancelar_pedido(
+    pedido_id: str, 
+    payload: dict = Body(default=None), 
+    current_user: Annotated[User, Depends(get_current_active_user)] = None
+):
+    pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
+    if not pedido_db:
+        raise HTTPException(status_code=404, detail="El pedido no existe")
+        
+    if pedido_db.get("Estado") == "Cancelado":
+        raise HTTPException(status_code=400, detail="Este pedido ya fue cancelado previamente")
+    if pedido_db.get("Estado") == "Entregado":
+        raise HTTPException(status_code=400, detail="No se puede volver a cancelar un producto ya enviado y cobrado")
+        
+    # 1. Regresamos el stock al inventario
+    for item in pedido_db.get("items", []):
+        producto_id = item["producto_id"]
+        devolucion = item["cantidad"]
+        
+        await db["productos"].update_one(
+            {"_id":  ObjectId(producto_id)},
+            {
+                "$inc": {"cantidad": devolucion},
+                "$set": {"disponible": True}
+             }
+        )
+        
+    # 2. Marcamos el pedido como Cancelado
+    resultado = await db["pedidos"].update_one(
+        {"_id": ObjectId(pedido_id)}, 
+        {"$set": {"Estado": "Cancelado"}}
+    )
+
+    if resultado.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
+
+    # 3. Restamos el dinero directamente de las estadísticas (Mucho más eficiente)
+    # Extraemos los $154 (o el monto que sea) del pedido
+    total_a_restar = pedido_db.get("total_pagado", 0) 
+    
+    if total_a_restar > 0:
+        await db["stats"].update_one(
+            {"tipo": "ingresos_globales"},
+            {
+                # Usamos el signo negativo para restar el monto
+                "$inc": {"total_acumulado": -total_a_restar}, 
+                "$set": {"ultima_actualizacion": datetime.utcnow()}
+            },
+            upsert=True 
+        )
+
+    return {"message": "Pedido cancelado con éxito, stock devuelto y estadísticas ajustadas"}
+
+@router.patch("/{pedido_id}/enviar")
 async def cancelar_pedido(pedido_id: str, payload: dict = Body(default=None), current_user: Annotated[User, Depends(get_current_active_user)] = None):
     pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
     if not pedido_db:
@@ -190,18 +244,10 @@ async def cancelar_pedido(pedido_id: str, payload: dict = Body(default=None), cu
         raise HTTPException(status_code=400, detail="Este pedido ya fue cancelado previamente")
     if pedido_db.get("Estado") == "Entregado":
         raise HTTPException(status_code=400, detail="No se puede volver a cancelar un producto ya enviado y cobrado")
-    for item in pedido_db.get("items", []):
-        producto_id = item["producto_id"]
-        devolucion = item["cantidad"]
+    if pedido_db.get("Estado") == "Enviando":
+            raise HTTPException(status_code=400, detail="No se puede volver a enviar un producto ya enviado y cobrado")
 
-        await db["productos"].update_one(
-            {"_id":  ObjectId(producto_id)},
-            {
-                "$inc": {"cantidad": devolucion},
-                "$set": {"disponible": True}
-             }
-        )
-    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"Estado": "Cancelado"}})
+    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"Estado": "Enviando"}})
 
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")

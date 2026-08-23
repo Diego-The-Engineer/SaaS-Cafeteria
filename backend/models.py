@@ -57,7 +57,7 @@ Create_pedido.model_rebuild()
 class Response_pedido(BaseModel):
         id: str
         items: List[dict]
-        fecha: datetime
+        fecha: datetime.utcnow
         total_pagado: float
 
 class Response_msg(BaseModel):

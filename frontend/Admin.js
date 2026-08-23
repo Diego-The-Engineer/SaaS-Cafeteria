@@ -426,6 +426,7 @@ async function cargarPedidosPendientes() {
                         <div class="d-flex flex-column gap-2">
                             <button class="btn btn-sm btn-success" onclick="entregarPedido('${idPedido}')">Entregar</button>
                             <button class="btn btn-sm btn-danger" onclick="cancelarPedido('${idPedido}')">Cancelar</button>
+                            <button class="btn btn-sm btn-warning" onclick="enviarPedido('${idPedido}')">Enviar</button>
                         </div>
                     </td>
                 </tr>
@@ -462,6 +463,21 @@ async function cancelarPedido(pedidoId) {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
         if (!res.ok) throw new Error("Error al cancelar el pedido");
+        cargarPedidosPendientes(); 
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+async function enviarPedido(pedidoId) {
+    if (!confirm("¿Estás seguro de enviar este pedido?")) return;
+    try {
+        const token = sessionStorage.getItem("token"); 
+        const res = await fetch(`${API_URL}/pedidos/${pedidoId}/enviar`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error("Error al enviar el pedido");
         cargarPedidosPendientes(); 
     } catch (error) {
         alert(error.message);
