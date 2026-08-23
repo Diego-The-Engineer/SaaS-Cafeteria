@@ -273,7 +273,6 @@ function actualizarCarrito() {
     const lista = document.getElementById("lista-carrito");
     const btnEnviar = document.getElementById("btn-enviar");
     const labelTotal = document.getElementById("total-precio");
-
     lista.innerHTML = "";
     let total = 0;
 
@@ -313,6 +312,7 @@ function actualizarCarrito() {
             flotanteMovil.classList.remove('mostrar'); 
         }
     }
+    
 }
 
 // --- LÓGICA DE PAGO ---
@@ -453,6 +453,7 @@ function buscarProducto() {
 // PEDIDOS //
 
 function initMapa(){
+    const btnContinuar = document.getElementById("btn-continuar-pago");
     const sucursal_lat = {
         lat:17.078399006698426, 
         lng: -96.72288414676025 
@@ -469,8 +470,7 @@ function initMapa(){
         position: sucursal_lat,
         map: mapa,
         title: "Tu ubicación de entrega",
-        icon: "http://google.com",
-        draggable: true,
+        Draggable: true,
         animation: google.maps.Animation.DROP
     });
 
@@ -508,13 +508,14 @@ const inputCalle = document.getElementById("input-calle");
                 document.getElementById("input-colonia").value = componenteColonia.long_name;
             }
         }
-
+        btnContinuar.disabled = false;
         calcularDistanciaEntrega(ubicacionCliente);
     });
-
+    
 }
 
 function traducirCoordenadasADireccion(latLng) {
+    const btnContinuar = document.getElementById("btn-continuar-pago");
     geocoder.geocode({ location: latLng }, (results, status) => {
         if (status === "OK" && results[0]) {
             let calle = "";
@@ -533,11 +534,11 @@ function traducirCoordenadasADireccion(latLng) {
             document.getElementById("input-colonia").value = colonia;
             document.getElementById("input-cp").value = cp;
             datosPedido.direccion.coordenadas = { lat: latLng.lat(), lng: latLng.lng() };
-
         } else {
             console.log("No se pudo leer la calle de esas coordenadas.");
         }
     });
+    btnContinuar.disabled = false;
 }
 
 function calcularDistanciaEntrega(destinoCliente) {
@@ -602,7 +603,6 @@ function seleccionarEntrega(tipo){
         btnContinuar.disabled = true; 
     } else {
         seccionDomicilio.style.display = "none"; 
-        btnContinuar.disabled = false;
         datosPedido.costoEnvio = 0;
     }
 }
@@ -666,12 +666,12 @@ function abrirModalPago(metodo) {
 }
 
 function marcarPagoExacto (){
-    total = document.getElementById("flotante-total").value;
+    total = document.getElementById("total-efectivo").value;
     return total;
 }
 
 function calcularCambio(){
-    total = document.getElementById("flotante-total").value;
+    total = document.getElementById("total-efectivo").value;
     price = document.getElementById("input-monto-recibido").value;
     if(price < total){
         alert("Este monto es menor al total");
