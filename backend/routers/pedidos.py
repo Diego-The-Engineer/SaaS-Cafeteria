@@ -161,15 +161,15 @@ async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(
     pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
     if not pedido_db:
         raise HTTPException(status_code=404, detail="El pedido no existe")
-    if pedido_db.get("estado") == "Entregado":
+    if pedido_db.get("Estado") == "Entregado":
         raise HTTPException(status_code=400, detail="Este pedido ya fue entregado previamente")
-    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"estado": "Entregado"}})
+    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"Estado": "Entregado"}})
 
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     pipeline_ganancias = [
-                {"$match": {"estado": "Entregado"}},
-                {"$group": {"_id": None, "total": {"$sum": "$total_pagado" }}}
+                {"$match": {"Estado": "Entregado"}},
+                {"$group": {"_id": None, "total_pagado": {"$sum": "$total_pagado" }}}
         ]
     cursor_ganancias = db["pedidos"].aggregate(pipeline_ganancias)
     ganancias_res = await cursor_ganancias.to_list(length=1)
@@ -186,9 +186,9 @@ async def cancelar_pedido(pedido_id: str, payload: dict = Body(...), current_use
     pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
     if not pedido_db:
         raise HTTPException(status_code=404, detail="El pedido no existe")
-    if pedido_db.get("estado") == "Cancelado":
+    if pedido_db.get("Estado") == "Cancelado":
         raise HTTPException(status_code=400, detail="Este pedido ya fue cancelado previamente")
-    if pedido_db.get("estado") == "Entregado":
+    if pedido_db.get("Estado") == "Entregado":
         raise HTTPException(status_code=400, detail="No se puede volver a cancelar un producto ya enviado y cobrado")
     for item in pedido_db.get("items", []):
         producto_id = item["producto_id"]
@@ -201,7 +201,7 @@ async def cancelar_pedido(pedido_id: str, payload: dict = Body(...), current_use
                 "$set": {"disponible": True}
              }
         )
-    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"estado": "Cancelado"}})
+    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"Estado": "Cancelado"}})
 
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
