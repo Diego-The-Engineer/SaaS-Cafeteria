@@ -800,41 +800,31 @@ async function procesarPagoEfectivo() {
     btnPagarEfectivo.disabled = true;
 
     // 3. Armamos el objeto con toda la información para tu backend
-    const payload = {
-        cliente_nombre: document.getElementById("nombre").value + " " + document.getElementById("apellido").value,
-        telefono: document.getElementById("telefono").value,
-        tipo_entrega: datosPedido.tipoEntrega, // 'domicilio' o 'mostrador'
+    // 3. Armamos el objeto con la estructura EXACTA que espera tu Pydantic
+    const payload_efectivo = {
+        first_name: document.getElementById("nombre").value,
+        last_name: document.getElementById("apellido").value,
+        phone: document.getElementById("telefono").value,
         metodo_pago: "Efectivo",
-        monto_recibido: montoRecibido,
-        cambio_devuelto: montoRecibido - totalG,
-        total_pagado: totalG,
-        
-        // Mapeamos tu variable global del carrito al formato que espera tu API
+        total: totalG,
+        monto: montoRecibido,
+        cambio: montoRecibido - totalG,
+        token_tarjeta: "N/A", 
         items: carrito.map(item => ({
-            id_producto: item.id,
+            idUnico: item.idUnico || (item.id + Date.now()), 
+            producto_id: item.id,
             nombre: item.nombre,
-            cantidad: item.cantidad,
             tamano: item.tamano || 'Regular',
-            precio_unitario: item.precio
-        })),
-
-        // Si es a domicilio, mandamos la dirección
-        direccion: datosPedido.tipoEntrega === 'domicilio' ? {
-            calle: document.getElementById("input-calle").value,
-            colonia: document.getElementById("input-colonia").value,
-            cp: document.getElementById("input-cp").value,
-            referencias: document.getElementById("input-referencias").value
-        } : null
+            precio: item.precio,
+            cantidad: item.cantidad
+        }))
     };
 
     try {
-        // 4. Disparamos la petición al backend (Ajusta la ruta de tu endpoint)
-        const res = await fetch(`${API_URL}/pedidos/`, {
+        const res = await fetch(`${API_URL}/pedidos`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload_efectivo)
         });
 
         if (res.ok) {

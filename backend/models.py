@@ -40,17 +40,19 @@ class Item_pedido(BaseModel):
         cantidad: int
 
 class Create_pedido(BaseModel):
-        items: list[Item_pedido]
+        items: List[Item_pedido]
         first_name: str
         last_name: str
         phone: str
         metodo_pago: MetodoPago
-        estado: EstadoCliente.pendiente
+        estado: EstadoCliente = EstadoCliente.pendiente
         total: float
         monto: float
         cambio: float
         fecha: datetime = Field(default_factory=datetime.utcnow)
         token_tarjeta: str
+
+Create_pedido.model_rebuild()
 
 class Response_pedido(BaseModel):
         id: str
