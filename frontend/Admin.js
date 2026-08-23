@@ -2,21 +2,32 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
 let myChart = null;
 let categoriasGlobales = []; 
 window.onload = async () => {
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+        document.getElementById("login-section").style.display = "flex";
+        document.getElementById("admin-panel").style.display = "none";
+        return;
+    }
+
     try {
-        const res = await fetch(`${API_URL}/token`, {
-        method: 'GET',
-        credentials: 'include'
+        const res = await fetch(`${API_URL}/stats/estadistica`, {
+            method: 'GET',
+            headers: { "Authorization": `Bearer ${token}` }
         });
+
         if(res.ok) {
             mostrarPanel();
             await cargarCategorias(); 
             cargarInventario();
             cargarEstadisticas();
-        }else{
-            login();
+        } else {
+            cerrarSesion();
         }
     }
-    catch(error) {alert("Usuario no identificado");}
+    catch(error) {
+        cerrarSesion();
+    }
 };
 
 async function login() {    
@@ -37,13 +48,12 @@ async function login() {
 
         if (res.ok) {
             const data = await res.json();
-            localStorage.setItem("token", data.access_token);
+            sessionStorage.setItem("token", data.access_token);
             errorMsg.style.display = "none";
             mostrarPanel();
             await cargarCategorias();
             cargarInventario();
             cargarEstadisticas();
-            localStorage.removeItem("token");
         } else {
             errorMsg.style.display = "block";
         }
@@ -59,7 +69,7 @@ async function login() {
 }
 
 function cerrarSesion() {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     document.getElementById("admin-panel").style.display = "none";
     document.getElementById("admin-header").style.display = "none";
     document.getElementById("login-section").style.display = "flex";
@@ -69,8 +79,7 @@ async function entregarPedido(pedidoId) {
     if (!confirm("¿Confirmas que este pedido ya fue entregado y cobrado?")) return;
 
     try {
-
-        const token = localStorage.getItem("token"); 
+        const token = sessionStorage.getItem("token"); 
         
         const res = await fetch(`${API_URL}/pedidos/${pedidoId}/entregar`, {
             method: 'PATCH',
@@ -111,7 +120,7 @@ async function cancelarPedido(pedidoId) {
     if (!confirm("¿Estás seguro de cancelar este pedido? Los productos regresarán al inventario.")) return;
 
     try {
-        const token = localStorage.getItem("token"); 
+        const token = sessionStorage.getItem("token"); 
         
         const res = await fetch(`${API_URL}/pedidos/${pedidoId}/cancelar`, {
             method: 'PATCH',
@@ -183,7 +192,7 @@ function eliminarFila(boton){
 }
 
 async function cargarEstadisticas() {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     try {
         const res = await fetch(`${API_URL}/stats/estadistica`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -229,12 +238,11 @@ async function borrar_stats(){
     const confirmacion = confirm("ATENCION: ¿Estás completamente seguro de que quieres reiniciar TODAS las estadísticas y pedidos? Esta acción borrará el historial y no se puede deshacer.");
 
     if (!confirmacion) {
-        console.log("Operación de borrado cancelada por el usuario.");
         return; 
     }
 
     try {
-        const token = localStorage.getItem("token"); 
+        const token = sessionStorage.getItem("token"); 
 
         if (!token) {
             alert("Error de sesión: No tienes permisos para hacer esto.");
@@ -273,7 +281,7 @@ async function borrar_stats(){
 // --- NUEVAS FUNCIONES DE CATEGORÍAS ---
 
 async function cargarCategorias() {
-    const token = localStorage.getItem("token"); 
+    const token = sessionStorage.getItem("token"); 
     try {
         const res = await fetch(`${API_URL}/categorias/lista`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -304,7 +312,7 @@ async function agregarNuevaCategoria() {
     const nombreNuevaCat = prompt("Escribe el nombre de la nueva categoría:");
     if (!nombreNuevaCat || nombreNuevaCat.trim() === "") return;
     
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const payload = { nombre: nombreNuevaCat.trim(), image: null, disponible: true, orden: 0, color: null };
 
     try {
@@ -353,7 +361,7 @@ async function editarCategoriaSeleccionada() {
     const nuevoNombre = prompt("Edita el nombre:", categoriaNombreActual);
     if (!nuevoNombre || nuevoNombre.trim() === "" || nuevoNombre.trim() === categoriaNombreActual) return; 
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const payload = { nombre: nuevoNombre.trim(), image: null, disponible: true, orden: 0, color: null };
 
     try {
@@ -378,7 +386,7 @@ async function eliminarCategoriaSeleccionada() {
     if (!categoriaId) { alert("Selecciona una categoría."); return; }
     if (!confirm("¿Seguro que deseas eliminar esta categoría?")) return;
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     try {
         const res = await fetch(`${API_URL}/categorias/lista/${categoriaId}`, {
@@ -428,7 +436,7 @@ function cancelarEdicion() {
 }
 
 async function cargarInventario() {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     try {
         const res = await fetch(`${API_URL}/productos/lista`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -542,7 +550,7 @@ async function agregarProducto() {
     const imgInput = document.getElementById("prod-imagen");
     const imagenUrl = imgInput ? imgInput.value.trim() : null; 
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const variantes = [];
     const opciones = [];
     const filasOpciones = document.querySelectorAll(".fila-opcion");
@@ -702,7 +710,7 @@ async function editarProducto(id) {
         sabores: sabores
     };
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     try {
         const res = await fetch(`${API_URL}/productos/${id}`, {
             method: "PUT",
@@ -727,7 +735,7 @@ async function editarProducto(id) {
 }
 
 async function cargarYeditar(id) {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     try {
         const res = await fetch (`${API_URL}/productos/${id}`, {
             headers: {
@@ -800,7 +808,7 @@ async function cargarYeditar(id) {
 
 async function eliminarProducto(id) {
     if(!confirm("¿Seguro que quieres eliminar este producto para siempre?")) return;
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     try {
         const res = await fetch(`${API_URL}/productos/${id}`, {
             method: "DELETE",
@@ -813,7 +821,7 @@ async function eliminarProducto(id) {
 }
 
 async function toggleDisponibilidad(id, estadoActual, nombre, precio, stock) {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const payload = {
         nombre: nombre,
         precio_unitario: precio,
@@ -837,7 +845,7 @@ async function toggleDisponibilidad(id, estadoActual, nombre, precio, stock) {
 }
 
 async function modificarStock(id, cantidadCambio) {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     
     const payload = {
         cantidad: cantidadCambio
@@ -867,7 +875,7 @@ async function cargarPedidosPendientes() {
     const tbody = document.getElementById('tabla-pedidos-body');
     
     try {
-        const token = localStorage.getItem("token"); 
+        const token = sessionStorage.getItem("token"); 
         const res = await fetch(`${API_URL}/pedidos/pendientes`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }

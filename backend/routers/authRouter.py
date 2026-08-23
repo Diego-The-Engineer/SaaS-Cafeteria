@@ -40,3 +40,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     )
     return Token(access_token=access_token, token_type="bearer")
 
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("access_token", httponly=True, secure=True, samesite="strict")
+    return {"mensaje": "Sesión cerrada"}
