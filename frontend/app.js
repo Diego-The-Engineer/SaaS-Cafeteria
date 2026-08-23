@@ -812,7 +812,7 @@ async function procesarPagoEfectivo() {
         token_tarjeta: "N/A", 
         items: carrito.map(item => ({
             idUnico: item.idUnico || (item.id + Date.now()), 
-            producto_id: item.id,
+            producto_id: item.producto_id || item.id || item._id || item.idProducto,
             nombre: item.nombre,
             tamano: item.tamano || 'Regular',
             precio: item.precio,
@@ -821,6 +821,7 @@ async function procesarPagoEfectivo() {
     };
 
     try {
+
         const res = await fetch(`${API_URL}/pedidos`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
