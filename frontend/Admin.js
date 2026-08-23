@@ -11,9 +11,8 @@ window.onload = async () => {
     const token = sessionStorage.getItem("token");
 
     if (!token) {
-        document.getElementById("login-section").style.display = "flex";
-        document.getElementById("admin-panel").style.display = "none";
-        document.getElementById("admin-header").style.setProperty("display", "none", "important");
+        // Si no hay llave, ejecutamos cerrarSesion para que limpie la pantalla
+        cerrarSesion();
         return;
     }
 
@@ -77,15 +76,27 @@ async function login() {
 
 function cerrarSesion() {
     sessionStorage.removeItem("token");
-    document.getElementById("admin-panel").style.display = "none";
-    document.getElementById("admin-header").style.setProperty("display", "none", "important");
-    document.getElementById("login-section").style.display = "flex";
+    const header = document.getElementById("admin-header");
+    header.classList.remove("d-flex");
+    header.classList.add("d-none");
+    const panel = document.getElementById("admin-panel");
+    panel.classList.remove("d-block");
+    panel.classList.add("d-none");
+    const login = document.getElementById("login-section");
+    login.classList.remove("d-none");
+    login.classList.add("d-flex");
 }
 
 function mostrarPanel() {
-    document.getElementById("login-section").style.display = "none";
-    document.getElementById("admin-header").style.setProperty("display", "flex", "important");
-    document.getElementById("admin-panel").style.display = "block";
+    const login = document.getElementById("login-section");
+    login.classList.remove("d-flex");
+    login.classList.add("d-none");
+    const header = document.getElementById("admin-header");
+    header.classList.remove("d-none");
+    header.classList.add("d-flex");
+    const panel = document.getElementById("admin-panel");
+    panel.classList.remove("d-none");
+    panel.classList.add("d-block");
 }
 
 // ==========================================
