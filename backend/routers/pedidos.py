@@ -60,7 +60,9 @@ async def post_pedidos(pedidos: Create_pedido):
         stock = producto_db.get("cantidad", 0)
         if (stock - item.cantidad) < 0:
             raise HTTPException(status_code=400, detail=f"Stock insuficiente para {producto_db['nombre']}")
+        
         variante_db = next((v for v in producto_db.get("variantes", []) if v["tamaño"] == item.tamano), None)
+
         if variante_db and variante_db.get("disponible") is False:
             raise HTTPException(status_code=400, detail=f"Producto no disponible")
         subtotal = float(item.precio) * item.cantidad
@@ -207,7 +209,7 @@ async def cancelar_pedido(pedido_id: str, payload: dict = Body(...), current_use
 
 @router.get("/pendientes")
 async def get_pedidos_pendientes(current_user: Annotated[User, Depends(get_current_active_user)] = None):
-    cursor = db["pedidos"].find({"estado": "Pendiente"})
+    cursor = db["pedidos"].find({"Estado": "Pendiente"})
     
     pedidos_activos = []
     async for pedido in cursor:

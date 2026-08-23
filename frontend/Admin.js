@@ -373,42 +373,59 @@ async function cargarPedidosPendientes() {
     const tbody = document.getElementById('tabla-pedidos-body');
     try {
         const token = sessionStorage.getItem("token"); 
+        console.log("Token actual:", token); // 🕵️‍♂️ Verificamos si hay token
+
         const res = await fetch(`${API_URL}/pedidos/pendientes`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!res.ok) throw new Error("Error de conexión");
-        const pedidos = await res.json();
+        console.log("Estado de la respuesta de pedidos:", res.status); // 🕵️‍♂️ ¿Fue 200, 401, 404?
+
+        if (!res.ok) throw new Error("Error de conexión o token inválido");
         
-        if (pedidos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No hay pedidos pendientes por el momento. ¡A limpiar la barra! </td></tr>`;
+        const pedidos = await res.json();
+        console.log("Pedidos recibidos desde el servidor:", pedidos); // 🕵️‍♂️ ¿Llega una lista vacía o con datos?
+        
+        if (!pedidos || pedidos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No hay pedidos pendientes por el momento. ¡A limpiar la barra! ☕</td></tr>`;
             return;
         }
 
         let html = '';
         pedidos.forEach(pedido => {
-            const fecha = new Date(pedido.fecha);
+            const fecha = new Date(pedido.fecha || Date.now());
             const horaStr = fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const folio = pedido.id.slice(-4).toUpperCase(); 
-            const listaProductos = pedido.items.map(item => 
-                `<li><strong>${item.cantidad}x</strong> ${item.nombre} <small class="text-muted">(${item.tamano})</small></li>`
+            
+            const idPedido = pedido.id || pedido._id || '';
+            const folio = idPedido.slice(-4).toUpperCase(); 
+            
+            const nombreCliente = pedido.cliente_nombre || `${pedido.first_name || ''} ${pedido.last_name || ''}`.trim() || 'Cliente Mostrador';
+            const telefonoCliente = pedido.phone || pedido.telefono || '';
+            
+            const totalPedido = pedido.total_pagado ?? pedido.total ?? 0;
+            const metodoPago = pedido.metodo_pago || pedido.Metodo_pago || 'Efectivo';
+            const estadoPedido = pedido.estado || pedido.Estado || 'Pendiente';
+
+            const listaProductos = (pedido.items || []).map(item => 
+                `<li><strong>${item.cantidad}x</strong> ${item.nombre} <small class="text-muted">(${item.tamano || item.tamaño || 'Regular'})</small></li>`
             ).join('');
-            const alertaCobro = pedido.metodo_pago === 'Efectivo' 
+
+            const alertaCobro = metodoPago === 'Efectivo' 
                 ? '<small class="text-danger fw-bold"><i class="fas fa-hand-holding-usd"></i> Cobrar Efectivo</small>'
-                : `<small class="text-success"><i class="fas fa-check-circle"></i> ${pedido.metodo_pago}</small>`;
+                : `<small class="text-success"><i class="fas fa-check-circle"></i> ${metodoPago}</small>`;
 
             html += `
                 <tr>
                     <td><strong>${horaStr}</strong><br><small class="text-muted">#${folio}</small></td>
-                    <td><strong>${pedido.cliente_nombre}</strong><br><small class="text-muted">${pedido.telefono || ''}</small></td>
+                    <td><strong>${nombreCliente}</strong><br><small class="text-muted">${telefonoCliente}</small></td>
                     <td><ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em;">${listaProductos}</ul></td>
-                    <td><strong>$${pedido.total_pagado.toFixed(2)}</strong><br>${alertaCobro}</td>
-                    <td><span class="badge bg-warning text-dark">${pedido.estado.toUpperCase()}</span></td>
+                    <td><strong>$${Number(totalPedido).toFixed(2)}</strong><br>${alertaCobro}</td>
+                    <td><span class="badge bg-warning text-dark">${estadoPedido.toUpperCase()}</span></td>
                     <td>
                         <div class="d-flex flex-column gap-2">
-                            <button class="btn btn-sm btn-success" onclick="entregarPedido('${pedido.id}')">Entregar</button>
-                            <button class="btn btn-sm btn-danger" onclick="cancelarPedido('${pedido.id}')">Cancelar</button>
+                            <button class="btn btn-sm btn-success" onclick="entregarPedido('${idPedido}')">Entregar</button>
+                            <button class="btn btn-sm btn-danger" onclick="cancelarPedido('${idPedido}')">Cancelar</button>
                         </div>
                     </td>
                 </tr>
@@ -416,9 +433,10 @@ async function cargarPedidosPendientes() {
         });
         tbody.innerHTML = html;
     } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Hubo un error al cargar los pedidos. Revisa tu conexión.</td></tr>`;
+        console.error("Error atrapado en cargarPedidosPendientes:", error);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Hubo un error al cargar los pedidos. Revisa la consola.</td></tr>`;
     }
-}   
+}
 
 async function entregarPedido(pedidoId) {
     if (!confirm("¿Confirmas que este pedido ya fue entregado y cobrado?")) return;
