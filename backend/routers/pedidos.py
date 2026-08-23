@@ -156,8 +156,8 @@ async def delete_pedido(current_user: Annotated[User, Depends(get_current_active
         return {"msg": "Pedido eliminado correctamente"}
     raise HTTPException(status_code=404, detail="Pedido no encontrado")
 
-@router.patch("/pedidos/{pedido_id}/entregar")
-async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = None, payload: dict = Body(...),):
+@router.patch("/{pedido_id}/entregar")
+async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(get_current_active_user)] = None, payload: dict = Body(default=None),):
     pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
     if not pedido_db:
         raise HTTPException(status_code=404, detail="El pedido no existe")
@@ -173,7 +173,7 @@ async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(
         ]
     cursor_ganancias = db["pedidos"].aggregate(pipeline_ganancias)
     ganancias_res = await cursor_ganancias.to_list(length=1)
-    ganancia_total = ganancias_res[0]["total"] if ganancias_res else 0
+    ganancia_total = ganancias_res[0]["total_pagado"] if ganancias_res else 0
     await db["stats"].update_one(
         {"tipo": "ingresos_globales"},
         {"$set": {"total_acumulado": ganancia_total, "ultima_actualizacion": datetime.utcnow()}},
@@ -181,8 +181,8 @@ async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(
     )
     return {"message": "Pedido entregado con éxito e ingresos registrados"}
 
-@router.patch("/pedidos/{pedido_id}/cancelar")
-async def cancelar_pedido(pedido_id: str, payload: dict = Body(...), current_user: Annotated[User, Depends(get_current_active_user)] = None):
+@router.patch("/{pedido_id}/cancelar")
+async def cancelar_pedido(pedido_id: str, payload: dict = Body(default=None), current_user: Annotated[User, Depends(get_current_active_user)] = None):
     pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
     if not pedido_db:
         raise HTTPException(status_code=404, detail="El pedido no existe")
@@ -195,7 +195,7 @@ async def cancelar_pedido(pedido_id: str, payload: dict = Body(...), current_use
         devolucion = item["cantidad"]
 
         await db["productos"].update_one(
-            {"_id":  ObjectId(pedido_id)},
+            {"_id":  ObjectId(producto_id)},
             {
                 "$inc": {"cantidad": devolucion},
                 "$set": {"disponible": True}
