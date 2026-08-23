@@ -75,7 +75,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modal-efectivo" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modal-efectivo"  tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -179,12 +179,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             
-            <div class="modal-body">
-                <div class="d-flex justify-content-center gap-3 mb-4" id="botones-entrega">
-                    <button class="btn btn-outline-primary" onclick="seleccionarEntrega('mostrador')">Recoger en Mostrador</button>
-                    <button class="btn btn-outline-success" onclick="seleccionarEntrega('domicilio')">Envío a Domicilio</button>
-                </div>
-                <div id="seccion-domicilio" style="display: none;">
+            <div class="d-flex justify-content-center gap-3 mb-4" id="botones-entrega">
+                <button class="btn btn-outline-primary btn-animado" onclick="seleccionarEntrega('mostrador')">Recoger en Mostrador</button>
+                <button class="btn btn-outline-success btn-animado" onclick="seleccionarEntrega('domicilio')">Envío a Domicilio</button>
+            </div>
+                <div id="seccion-domicilio" class="fade-anim" style="display: none;">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div id="mapa-google" style="height: 300px; width: 100%; background-color: #e9ecef; border-radius: 8px;">
@@ -193,15 +192,15 @@
                         <div class="col-md-6">
                             <div class="mb-2">
                                 <label class="form-label">Calle y Número</label>
-                                <input type="text" class="form-control" id="input-calle" placeholder="Ej. Av. Universidad 123" onblur="actualizarMapaDesdeTexto()">
+                                <input type="text" class="form-control" id="input-calle" placeholder="Ej. Av. Universidad 123" onblur="actualizarMapaDesdeTexto()" oninput="validarCamposDomicilio()">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Colonia</label>
-                                <input type="text" class="form-control" id="input-colonia" placeholder="Ej. Centro" onblur="actualizarMapaDesdeTexto()">
+                                <input type="text" class="form-control" id="input-colonia" placeholder="Ej. Centro" onblur="actualizarMapaDesdeTexto()" oninput="validarCamposDomicilio()">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Código Postal</label>
-                                <input type="text" class="form-control" id="input-cp" placeholder="XXXXX" onblur="actualizarMapaDesdeTexto()">
+                                <input type="text" class="form-control" id="input-cp" placeholder="XXXXX" onblur="actualizarMapaDesdeTexto()" oninput="validarCamposDomicilio()" maxlength="5" minlength="5">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Referencias</label>
@@ -210,10 +209,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="modal-footer">
+                <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" id="btn-volver-entrega" style="display: none;" onclick="volverSeleccion()">
+        ⬅ Volver
+                </button>
                 <button type="button" class="btn btn-primary" id="btn-continuar-pago" onclick="abrirModalResumenPago()" disabled>Continuar al Pago</button>
+            </div>
             </div>
         </div>
     </div>

@@ -541,6 +541,18 @@ function traducirCoordenadasADireccion(latLng) {
     btnContinuar.disabled = false;
 }
 
+function validarCamposDomicilio() {
+    const calle = document.getElementById("input-calle").value.trim();
+    const colonia = document.getElementById("input-colonia").value.trim();
+    const cp = document.getElementById("input-cp").value.trim();
+    const btnContinuar = document.getElementById("btn-continuar-pago");
+    if (calle !== "" && colonia !== "" && cp !== "") {
+        btnContinuar.disabled = false;
+    } else {
+        btnContinuar.disabled = true;
+    }
+}
+
 function calcularDistanciaEntrega(destinoCliente) {
     const servicioDistancia = new google.maps.DistanceMatrixService(); 
     const btnContinuar = document.getElementById("btn-continuar-pago");
@@ -590,21 +602,58 @@ function iniciarCheckout() {
     modalEntrega.show();
 }
 
-function seleccionarEntrega(tipo){
+function seleccionarEntrega(tipo) {
     datosPedido.tipoEntrega = tipo;
+    
     const seccionDomicilio = document.getElementById("seccion-domicilio");
     const btnContinuar = document.getElementById("btn-continuar-pago");
+    const btnVolver = document.getElementById("btn-volver-entrega");
+    const contenedorBotones = document.getElementById("botones-entrega");
+    const btnMostrador = contenedorBotones.children[0];
+    const btnDomicilio = contenedorBotones.children[1];
 
     if (tipo === 'domicilio') {
-        seccionDomicilio.style.display = "block"; 
+        btnMostrador.classList.add('btn-oculto');
+        btnDomicilio.classList.remove('btn-oculto');
+        
         setTimeout(() => {
-            initMapa();
-        }, 200);
-        btnContinuar.disabled = true; 
+            seccionDomicilio.style.display = "block";
+            initMapa(); 
+            setTimeout(() => seccionDomicilio.style.opacity = "1", 10);
+        }, 300);
+        
     } else {
-        seccionDomicilio.style.display = "none"; 
-        datosPedido.costoEnvio = 0;
+        btnDomicilio.classList.add('btn-oculto');
+        btnMostrador.classList.remove('btn-oculto');
+        
+        seccionDomicilio.style.opacity = "0";
+        setTimeout(() => {
+            seccionDomicilio.style.display = "none";
+        }, 300);
+          btnContinuar.disabled = false;
     }
+    btnVolver.style.display = "block";
+}
+
+function volverSeleccion() {
+    datosPedido.tipoEntrega = null;
+    
+    const seccionDomicilio = document.getElementById("seccion-domicilio");
+    const btnContinuar = document.getElementById("btn-continuar-pago");
+    const btnVolver = document.getElementById("btn-volver-entrega");
+    
+    const contenedorBotones = document.getElementById("botones-entrega");
+    const btnMostrador = contenedorBotones.children[0];
+    const btnDomicilio = contenedorBotones.children[1];
+    seccionDomicilio.style.opacity = "0";
+    
+    setTimeout(() => {
+        seccionDomicilio.style.display = "none";
+        btnMostrador.classList.remove('btn-oculto');
+        btnDomicilio.classList.remove('btn-oculto');
+    }, 300);
+    btnVolver.style.display = "none";
+    btnContinuar.disabled = true;
 }
 
 function abrirModalResumenPago() {
@@ -622,6 +671,7 @@ function abrirModalResumenPago() {
 }
 
 function actualizarMapaDesdeTexto() {
+    const btnContinuar = document.getElementById("boton-continuar-pago");
     const calle = document.getElementById("input-calle").value;
     const colonia = document.getElementById("input-colonia").value;
     const cp = document.getElementById("input-cp").value;
@@ -640,6 +690,7 @@ function actualizarMapaDesdeTexto() {
             }
         });
     }
+    btnContinuar.disabled = false;
 }
 
 function abrirModalPago(metodo) {
@@ -666,17 +717,16 @@ function abrirModalPago(metodo) {
 }
 
 function marcarPagoExacto (){
-    total = document.getElementById("total-efectivo").value;
+    let total = document.getElementById("total-efectivo").value;
     return total;
 }
 
-function calcularCambio(){
-    total = document.getElementById("total-efectivo").value;
-    price = document.getElementById("input-monto-recibido").value;
-    if(price < total){
+function calcularCambio(precio){
+    let total = document.getElementById("total-efectivo").value;
+    if(precio < total){
         alert("Este monto es menor al total");
     }
-    cambio = total - price;
+    let cambio = total - precio;
     document.getElementById("label-cambio") = cambio;
     
 }

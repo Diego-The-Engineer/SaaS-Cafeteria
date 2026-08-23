@@ -479,3 +479,27 @@ body {
         top: 20px; 
     }
 }
+
+/* Transición fluida para los botones que ya tienes */
+.btn-animado {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* La clase que reduce a cero el botón no elegido */
+.btn-oculto {
+    opacity: 0 !important;
+    width: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    border-width: 0 !important;
+    transform: scale(0);
+}
+
+/* Para que tu mapa no aparezca de golpe */
+.fade-anim {
+    transition: opacity 0.4s ease;
+    opacity: 0;
+}
