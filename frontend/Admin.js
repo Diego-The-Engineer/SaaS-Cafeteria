@@ -1,6 +1,9 @@
 const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
 let myChart = null;
 let categoriasGlobales = []; 
+let productosGlobales = [];
+let paginaActual = 1;       
+const itemsPorPagina = 8;
 window.onload = async () => {
     const token = sessionStorage.getItem("token");
 
@@ -435,6 +438,7 @@ function cancelarEdicion() {
     document.getElementById("btn-cancelar").style.display = "none";
 }
 
+// 1. Solo descarga la información y la guarda en la variable global
 async function cargarInventario() {
     const token = sessionStorage.getItem("token");
     try {
@@ -444,56 +448,131 @@ async function cargarInventario() {
 
         if (res.status === 401) { cerrarSesion(); return; }
 
-        const productos = await res.json();
-        const tbody = document.getElementById("tabla-productos");
-        tbody.innerHTML = "";
-
-        productos.forEach(p => {
-            const stock = p.cantidad !== undefined ? p.cantidad : 0;
-
-            let estadoHtml = '';
-            if (!p.disponible) {
-                estadoHtml = '<span class="badge stock-hidden">Oculto</span>';
-            } else if (stock >= 50) {
-                estadoHtml = '<span class="badge stock-perfect">Excelente</span>';
-            } else if (stock < 50 && stock >= 20){
-                estadoHtml = '<span class="badge stock-ok">Suficiente</span>';
-            } else {
-                estadoHtml = '<span class="badge stock-low">Bajo Stock</span>';
-            }
-            
-            let preciosFormateados = '<span style="color: gray; font-size: 12px;">Sin precios</span>';
-            if(p.variantes && p.variantes.length > 0){
-                preciosFormateados = p.variantes.map(v => `<b>${v.tamaño}</b>: $${v.precio.toFixed(2)}`).join(' | '); 
-            }
-            
-            const nombreCategoria = categoriasGlobales.find(c => c.categoria_id === p.categoria_id)?.nombre || '<span style="color: gray; font-style: italic;">Sin categoría</span>';
-            
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-weight:bold;">${p.nombre}</td>
-                    <td>${preciosFormateados}</td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button class="btn-outline" style="padding: 2px 8px; font-size: 14px; border-radius: 4px;" onclick="modificarStock('${p.id}', -1)">-</button>
-                            <span style="font-weight: bold; min-width: 25px; text-align: center;">${stock}</span>
-                            <button class="btn-outline" style="padding: 2px 8px; font-size: 14px; border-radius: 4px;" onclick="modificarStock('${p.id}', 1)">+</button>
-                        </div>
-                    </td>
-                    <td>${estadoHtml}</td>
-                    <td>${nombreCategoria}</td> 
-                    <td>
-                        <button class="btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible})">
-                            ${p.disponible ? 'Ocultar' : 'Activar'}
-                        </button>
-                        <button class="btn-accion btn-editar" onclick="cargarYeditar('${p.id}')"> Editar</button>
-                        <button class="btn-accion btn-delete" onclick="eliminarProducto('${p.id}')">Borrar</button>
-                        
-                    </td>
-                </tr>
-            `;
-        });
+        productosGlobales = await res.json();
+        
+        // Llamamos a la función que dibuja la página actual
+        renderizarTablaInventario(); 
+        
     } catch (error) { console.error("Error al cargar inventario", error); }
+}
+
+// 2. "Rebana" la lista y dibuja solo los de la página correspondiente
+function renderizarTablaInventario() {
+    const tbody = document.getElementById("tabla-productos");
+    tbody.innerHTML = "";
+
+    if (productosGlobales.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay productos en el inventario.</td></tr>';
+        renderizarPaginacion();
+        return;
+    }
+
+    // LÓGICA DE CORTE (Paginación)
+    const indexInicio = (paginaActual - 1) * itemsPorPagina;
+    const indexFin = indexInicio + itemsPorPagina;
+    const productosPagina = productosGlobales.slice(indexInicio, indexFin);
+
+    // Dibujamos solo los productos cortados (tu mismo código de siempre)
+    productosPagina.forEach(p => {
+        const stock = p.cantidad !== undefined ? p.cantidad : 0;
+
+        let estadoHtml = '';
+        if (!p.disponible) {
+            estadoHtml = '<span class="badge stock-hidden" style="background:gray; color:white;">Oculto</span>';
+        } else if (stock >= 50) {
+            estadoHtml = '<span class="badge stock-perfect" style="background:#e6f4ea; color:#1e8e3e; border:1px solid #1e8e3e;">EXCELENTE</span>';
+        } else if (stock < 50 && stock >= 20){
+            estadoHtml = '<span class="badge stock-ok" style="background:#e8f0fe; color:#1967d2; border:1px solid #1967d2;">SUFICIENTE</span>';
+        } else {
+            estadoHtml = '<span class="badge stock-low" style="background:#fce8e6; color:#d93025; border:1px solid #d93025;">BAJO STOCK</span>';
+        }
+        
+        let preciosFormateados = '<span style="color: gray; font-size: 12px;">Sin precios</span>';
+        if(p.variantes && p.variantes.length > 0){
+            preciosFormateados = p.variantes.map(v => `<b>${v.tamaño}</b>: $${v.precio.toFixed(2)}`).join(' | '); 
+        }
+        
+        const nombreCategoria = categoriasGlobales.find(c => c.categoria_id === p.categoria_id)?.nombre || '<span style="color: gray; font-style: italic;">Sin categoría</span>';
+        
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight:bold;">${p.nombre}</td>
+                <td>${preciosFormateados}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="modificarStock('${p.id}', -1)">-</button>
+                        <span style="font-weight: bold; min-width: 25px; text-align: center;">${stock}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="modificarStock('${p.id}', 1)">+</button>
+                    </div>
+                </td>
+                <td>${estadoHtml}</td>
+                <td>${nombreCategoria}</td> 
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary btn-accion btn-toggle" onclick="toggleDisponibilidad('${p.id}', ${p.disponible})">
+                        ${p.disponible ? 'Ocultar' : 'Activar'}
+                    </button>
+                    <button class="btn btn-sm btn-warning text-white btn-accion btn-editar" onclick="cargarYeditar('${p.id}')"> Editar</button>
+                    <button class="btn btn-sm btn-danger btn-accion btn-delete" onclick="eliminarProducto('${p.id}')">Borrar</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    // Al final, actualizamos los botoncitos de abajo
+    renderizarPaginacion();
+}
+
+// 3. Dibuja los botoncitos [Anterior] [1] [2] [3] [Siguiente]
+function renderizarPaginacion() {
+    const totalPaginas = Math.ceil(productosGlobales.length / itemsPorPagina);
+    const ulPaginacion = document.getElementById("paginacion-inventario");
+    const infoPaginacion = document.getElementById("info-paginacion");
+    
+    ulPaginacion.innerHTML = "";
+    
+    if (totalPaginas <= 1) {
+        infoPaginacion.innerText = `Mostrando ${productosGlobales.length} productos`;
+        return; // Si solo hay una página, no dibujamos botones
+    }
+
+    // Texto de información "Mostrando 1 - 8 de 25"
+    const indexInicio = (paginaActual - 1) * itemsPorPagina + 1;
+    const indexFin = Math.min(indexInicio + itemsPorPagina - 1, productosGlobales.length);
+    infoPaginacion.innerText = `Mostrando ${indexInicio} - ${indexFin} de ${productosGlobales.length} productos`;
+
+    // Botón "Anterior"
+    ulPaginacion.innerHTML += `
+        <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}, event)">Anterior</a>
+        </li>
+    `;
+
+    // Números de página
+    for (let i = 1; i <= totalPaginas; i++) {
+        ulPaginacion.innerHTML += `
+            <li class="page-item ${paginaActual === i ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPagina(${i}, event)">${i}</a>
+            </li>
+        `;
+    }
+
+    // Botón "Siguiente"
+    ulPaginacion.innerHTML += `
+        <li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}, event)">Siguiente</a>
+        </li>
+    `;
+}
+
+// 4. Cambia la variable de la página y vuelve a dibujar
+function cambiarPagina(nuevaPagina, event) {
+    event.preventDefault(); // Evita que la pantalla brinque hacia arriba
+    const totalPaginas = Math.ceil(productosGlobales.length / itemsPorPagina);
+    
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+        paginaActual = nuevaPagina;
+        renderizarTablaInventario(); // Dibujamos la nueva página
+    }
 }
 
 function agregarFilaSabor() {
