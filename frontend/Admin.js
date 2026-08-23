@@ -438,7 +438,6 @@ function cancelarEdicion() {
     document.getElementById("btn-cancelar").style.display = "none";
 }
 
-// 1. Solo descarga la información y la guarda en la variable global
 async function cargarInventario() {
     const token = sessionStorage.getItem("token");
     try {
@@ -449,14 +448,10 @@ async function cargarInventario() {
         if (res.status === 401) { cerrarSesion(); return; }
 
         productosGlobales = await res.json();
-        
-        // Llamamos a la función que dibuja la página actual
         renderizarTablaInventario(); 
         
     } catch (error) { console.error("Error al cargar inventario", error); }
 }
-
-// 2. "Rebana" la lista y dibuja solo los de la página correspondiente
 function renderizarTablaInventario() {
     const tbody = document.getElementById("tabla-productos");
     tbody.innerHTML = "";
@@ -467,12 +462,9 @@ function renderizarTablaInventario() {
         return;
     }
 
-    // LÓGICA DE CORTE (Paginación)
     const indexInicio = (paginaActual - 1) * itemsPorPagina;
     const indexFin = indexInicio + itemsPorPagina;
     const productosPagina = productosGlobales.slice(indexInicio, indexFin);
-
-    // Dibujamos solo los productos cortados (tu mismo código de siempre)
     productosPagina.forEach(p => {
         const stock = p.cantidad !== undefined ? p.cantidad : 0;
 
@@ -518,11 +510,9 @@ function renderizarTablaInventario() {
         `;
     });
 
-    // Al final, actualizamos los botoncitos de abajo
     renderizarPaginacion();
 }
 
-// 3. Dibuja los botoncitos [Anterior] [1] [2] [3] [Siguiente]
 function renderizarPaginacion() {
     const totalPaginas = Math.ceil(productosGlobales.length / itemsPorPagina);
     const ulPaginacion = document.getElementById("paginacion-inventario");
@@ -532,22 +522,15 @@ function renderizarPaginacion() {
     
     if (totalPaginas <= 1) {
         infoPaginacion.innerText = `Mostrando ${productosGlobales.length} productos`;
-        return; // Si solo hay una página, no dibujamos botones
-    }
-
-    // Texto de información "Mostrando 1 - 8 de 25"
+        return; 
     const indexInicio = (paginaActual - 1) * itemsPorPagina + 1;
     const indexFin = Math.min(indexInicio + itemsPorPagina - 1, productosGlobales.length);
     infoPaginacion.innerText = `Mostrando ${indexInicio} - ${indexFin} de ${productosGlobales.length} productos`;
-
-    // Botón "Anterior"
     ulPaginacion.innerHTML += `
         <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}, event)">Anterior</a>
         </li>
     `;
-
-    // Números de página
     for (let i = 1; i <= totalPaginas; i++) {
         ulPaginacion.innerHTML += `
             <li class="page-item ${paginaActual === i ? 'active' : ''}">
@@ -555,23 +538,19 @@ function renderizarPaginacion() {
             </li>
         `;
     }
-
-    // Botón "Siguiente"
     ulPaginacion.innerHTML += `
         <li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}, event)">Siguiente</a>
         </li>
     `;
 }
-
-// 4. Cambia la variable de la página y vuelve a dibujar
 function cambiarPagina(nuevaPagina, event) {
-    event.preventDefault(); // Evita que la pantalla brinque hacia arriba
+    event.preventDefault(); 
     const totalPaginas = Math.ceil(productosGlobales.length / itemsPorPagina);
     
     if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
         paginaActual = nuevaPagina;
-        renderizarTablaInventario(); // Dibujamos la nueva página
+        renderizarTablaInventario();
     }
 }
 
