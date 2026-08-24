@@ -168,12 +168,19 @@ async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     pipeline_ganancias = [
-                {"$match": {"Estado": "Entregado"}},
-                {"$group": {"_id": None, "total_pagado": {"$sum": "$total_pagado" }}}
-        ]
+        {"$match": {"Estado": "Entregado"}},
+        {"$group": {
+            "_id": None, 
+            # 🌟 El ifNull suma el dinero sin importar con qué nombre se guardó
+            "total_real": {"$sum": {"$ifNull": ["$total_pagado", "$total"]}}
+        }}
+    ]
     cursor_ganancias = db["pedidos"].aggregate(pipeline_ganancias)
     ganancias_res = await cursor_ganancias.to_list(length=1)
-    ganancia_total = ganancias_res[0]["total_pagado"] if ganancias_res else 0
+    
+    # 🌟 Tomamos el total_real
+    ganancia_total = ganancias_res[0]["total_real"] if ganancias_res else 0
+    
     await db["stats"].update_one(
         {"tipo": "ingresos_globales"},
         {"$set": {"total_acumulado": ganancia_total, "ultima_actualizacion": datetime.utcnow()}},
@@ -218,33 +225,11 @@ async def cancelar_pedido(
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
 
-    # 3. Restamos el dinero directamente de las estadísticas (Mucho más eficiente)
-    # Extraemos los $154 (o el monto que sea) del pedido
-    pipeline = [
-        {"$match": {"Estado": {"$ne": "Cancelado"}}},
-        {"$group": {
-            "_id": None, 
-            # ifNull asegura que si le llamaste 'total' o 'total_pagado', lo encuentre
-            "total_real": {"$sum": {"$ifNull": ["$total_pagado", "$total"]}}
-        }}
-    ]
-    cursor_ganancias = db["pedidos"].aggregate(pipeline)
-    ganancias_res = await cursor_ganancias.to_list(length=1)
-    
-    # Extraemos la suma total. Si no hay pedidos, será 0.
-    nuevo_total = ganancias_res[0]["total_real"] if ganancias_res else 0
-    
-    # Sobrescribimos el total de estadísticas a la fuerza
-    await db["stats"].update_one(
-        {"tipo": "ingresos_globales"},
-        {"$set": {"total_acumulado": nuevo_total, "ultima_actualizacion": datetime.utcnow()}},
-        upsert=True
-    )
-
-    return {"message": "Pedido cancelado con éxito, stock devuelto y estadísticas ajustadas"}
+    # ¡LISTO! Ya no tocamos la colección de stats aquí.
+    return {"message": "Pedido cancelado con éxito y stock devuelto"}
 
 @router.patch("/{pedido_id}/enviar")
-async def cancelar_pedido(pedido_id: str, payload: dict = Body(default=None), current_user: Annotated[User, Depends(get_current_active_user)] = None):
+async def enviar_pedido(pedido_id: str, payload: dict = Body(default=None), current_user: Annotated[User, Depends(get_current_active_user)] = None):
     pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
     if not pedido_db:
         raise HTTPException(status_code=404, detail="El pedido no existe")

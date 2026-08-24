@@ -449,6 +449,7 @@ async function entregarPedido(pedidoId) {
         });
         if (!res.ok) throw new Error("Error al entregar el pedido");
         cargarPedidosPendientes(); 
+        cargarEstadisticas();
     } catch (error) {
         alert(error.message);
     }
@@ -464,6 +465,7 @@ async function cancelarPedido(pedidoId) {
         });
         if (!res.ok) throw new Error("Error al cancelar el pedido");
         cargarPedidosPendientes(); 
+        cargarEstadisticas();
     } catch (error) {
         alert(error.message);
     }
