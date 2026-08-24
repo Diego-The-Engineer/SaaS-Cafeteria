@@ -131,8 +131,10 @@ async def post_pedidos(pedidos: Create_pedido):
         )
 
     ticket = {
-        "fecha": datetime.utcnow(),
-        "cliente_nombre": f"{pedidos.first_name} {pedidos.last_name}",
+       "fecha": datetime.utcnow(),
+        "cliente_nombre": f"{pedidos.first_name} {pedidos.last_name}".strip(),
+        "telefono": pedidos.phone, 
+        "direccion": pedidos.direccion.model_dump() if pedidos.direccion else None,
         "items": items_detallados,
         "total_pagado": total,
         "Metodo_pago": pedidos.metodo_pago,
@@ -246,9 +248,27 @@ async def enviar_pedido(pedido_id: str, payload: dict = Body(default=None), curr
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     return {"message": "Pedido cancelado con éxito y stock devuelto al inventario"}
 
+@router.patch("/{pedido_id}/preparar")
+async def preparar_pedido(pedido_id: str, payload: dict = Body(default=None), current_user: Annotated[User, Depends(get_current_active_user)] = None):
+    pedido_db = await db["pedidos"].find_one({"_id": ObjectId(pedido_id)})
+    if not pedido_db:
+        raise HTTPException(status_code=404, detail="El pedido no existe")
+    if pedido_db.get("Estado") == "Cancelado":
+        raise HTTPException(status_code=400, detail="Este pedido ya fue cancelado previamente")
+    if pedido_db.get("Estado") == "Entregado":
+        raise HTTPException(status_code=400, detail="No se puede volver a cancelar un producto ya enviado y cobrado")
+    if pedido_db.get("Estado") == "Enviando":
+            raise HTTPException(status_code=400, detail="No se puede volver a enviar un producto ya enviado y cobrado")
+
+    resultado = await db["pedidos"].update_one({"_id": ObjectId(pedido_id)}, {"$set": {"Estado": "Preparando"}})
+
+    if resultado.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
+    return {"message": "Pedido cancelado con éxito y stock devuelto al inventario"}
+
 @router.get("/pendientes")
 async def get_pedidos_pendientes(current_user: Annotated[User, Depends(get_current_active_user)] = None):
-    cursor = db["pedidos"].find({"Estado": "Pendiente"})
+    cursor = db["pedidos"].find().sort([("fecha", -1)]).limit(100)
     
     pedidos_activos = []
     async for pedido in cursor:

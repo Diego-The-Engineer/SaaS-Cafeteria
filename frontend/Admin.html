@@ -192,7 +192,27 @@
 
         </div>
     </div>
-    
+    <!-- Modal Detalles del Pedido -->
+<div class="modal fade" id="modalDetallesPedido" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px;">
+      <div class="modal-header" style="background-color: #f8f9fa;">
+        <h5 class="modal-title" style="color: #6d4c41;"><i class="fas fa-address-card"></i> Información de Entrega</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2"><strong>👤 Cliente:</strong> <span id="modal-detalle-nombre"></span></p>
+        <p class="mb-2"><strong>📞 Teléfono:</strong> <span id="modal-detalle-tel"></span></p>
+        <hr>
+        <p class="mb-0"><strong>📍 Dirección de entrega:</strong></p>
+        <p class="text-muted" id="modal-detalle-dir" style="white-space: pre-wrap;"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
     <script src="Admin.js"></script>
 </body>
 </html>

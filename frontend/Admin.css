@@ -10,6 +10,7 @@
     --danger: #962d2d;        /* Rojo quemado para errores y eliminaciones */
     --success: #27ae60;       /* Verde para stock suficiente */
     --warning: #df9b12;       /* Naranja/Amarillo para stock bajo */
+    --preparing: #df7482;
 }
 
 body {

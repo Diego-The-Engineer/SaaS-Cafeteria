@@ -4,6 +4,12 @@ from typing import List, Optional
 from datetime import datetime
 from enum import Enum
 
+class DireccionPedido(BaseModel):
+    calle: Optional[str] = None
+    colonia: Optional[str] = None
+    cp: Optional[str] = None
+    referencias: Optional[str] = None
+
 class MetodoPago(str, Enum):
        efectivo = "Efectivo"
        tarjeta = "Tarjeta"
@@ -40,17 +46,18 @@ class Item_pedido(BaseModel):
         cantidad: int
 
 class Create_pedido(BaseModel):
-        items: List[Item_pedido]
-        first_name: str
-        last_name: str
-        phone: str
-        metodo_pago: MetodoPago
-        estado: EstadoCliente = EstadoCliente.pendiente
-        total: float
-        monto: float
-        cambio: float
-        fecha: datetime = Field(default_factory=datetime.utcnow)
-        token_tarjeta: str
+    items: List[Item_pedido]
+    first_name: str
+    last_name: str
+    phone: str
+    metodo_pago: MetodoPago
+    estado: EstadoCliente = EstadoCliente.pendiente
+    total: float
+    monto: float
+    cambio: float
+    fecha: datetime = Field(default_factory=datetime.utcnow)
+    token_tarjeta: str
+    direccion: Optional[DireccionPedido] = None
 
 Create_pedido.model_rebuild()
 

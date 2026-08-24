@@ -1,6 +1,7 @@
 const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
 let myChart = null;
 let categoriasGlobales = []; 
+let pedidosGlobalesAdmin = [];
 
 // Variables para Paginación
 let productosGlobales = []; 
@@ -373,22 +374,18 @@ async function cargarPedidosPendientes() {
     const tbody = document.getElementById('tabla-pedidos-body');
     try {
         const token = sessionStorage.getItem("token"); 
-        console.log("Token actual:", token); // 🕵️‍♂️ Verificamos si hay token
-
         const res = await fetch(`${API_URL}/pedidos/pendientes`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        console.log("Estado de la respuesta de pedidos:", res.status); // 🕵️‍♂️ ¿Fue 200, 401, 404?
-
-        if (!res.ok) throw new Error("Error de conexión o token inválido");
+        if (!res.ok) throw new Error("Error de conexión");
         
         const pedidos = await res.json();
-        console.log("Pedidos recibidos desde el servidor:", pedidos); // 🕵️‍♂️ ¿Llega una lista vacía o con datos?
+        pedidosGlobalesAdmin = pedidos; // Guardamos en la variable global
         
         if (!pedidos || pedidos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No hay pedidos pendientes por el momento. ¡A limpiar la barra! ☕</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No hay historial de pedidos recientes.</td></tr>`;
             return;
         }
 
@@ -399,13 +396,9 @@ async function cargarPedidosPendientes() {
             
             const idPedido = pedido.id || pedido._id || '';
             const folio = idPedido.slice(-4).toUpperCase(); 
-            
-            const nombreCliente = pedido.cliente_nombre || `${pedido.first_name || ''} ${pedido.last_name || ''}`.trim() || 'Cliente Mostrador';
-            const telefonoCliente = pedido.phone || pedido.telefono || '';
-            
             const totalPedido = pedido.total_pagado ?? pedido.total ?? 0;
             const metodoPago = pedido.metodo_pago || pedido.Metodo_pago || 'Efectivo';
-            const estadoPedido = pedido.estado || pedido.Estado || 'Pendiente';
+            const estadoPedido = (pedido.estado || pedido.Estado || 'Pendiente').toUpperCase();
 
             const listaProductos = (pedido.items || []).map(item => 
                 `<li><strong>${item.cantidad}x</strong> ${item.nombre} <small class="text-muted">(${item.tamano || item.tamaño || 'Regular'})</small></li>`
@@ -415,27 +408,54 @@ async function cargarPedidosPendientes() {
                 ? '<small class="text-danger fw-bold"><i class="fas fa-hand-holding-usd"></i> Cobrar Efectivo</small>'
                 : `<small class="text-success"><i class="fas fa-check-circle"></i> ${metodoPago}</small>`;
 
+            // 🌟 1. LÓGICA PARA DESHABILITAR BOTONES
+            let botonesAcciones = '';
+            if (estadoPedido === 'PENDIENTE' || estadoPedido === 'ENVIANDO') {
+                botonesAcciones = `
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-sm btn-success" onclick="entregarPedido('${idPedido}')">Entregar</button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelarPedido('${idPedido}')">Cancelar</button>
+                        <button class="btn btn-sm btn-warning" onclick="enviarPedido('${idPedido}')">Enviar</button>
+                    </div>
+                `;
+            } else {
+                // Si ya está cancelado o entregado, bloqueamos los botones
+                botonesAcciones = `
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-sm btn-secondary opacity-50" disabled>Entregar</button>
+                        <button class="btn btn-sm btn-secondary opacity-50" disabled>Cancelar</button>
+                        <button class="btn btn-sm btn-secondary opacity-50" disabled>Enviar</button>
+                    </div>
+                `;
+            }
+
+            // 🌟 2. COLORES PARA LOS ESTADOS
+            let badgeClass = "bg-warning text-dark"; // Por defecto PENDIENTE
+            if (estadoPedido === 'ENTREGADO') badgeClass = "bg-success text-white";
+            if (estadoPedido === 'CANCELADO') badgeClass = "bg-danger text-white";
+            if (estadoPedido === 'ENVIANDO') badgeClass = "bg-info text-dark";
+
             html += `
-                <tr>
+                <tr style="${estadoPedido === 'CANCELADO' ? 'opacity: 0.7; background-color: #f8f9fa;' : ''}">
                     <td><strong>${horaStr}</strong><br><small class="text-muted">#${folio}</small></td>
-                    <td><strong>${nombreCliente}</strong><br><small class="text-muted">${telefonoCliente}</small></td>
+                    
+                    <!-- 🌟 3. BOTÓN DE VER MÁS (OJITO) -->
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalles('${idPedido}')">
+                            <i class="fas fa-eye"></i> Ver más
+                        </button>
+                    </td>
+                    
                     <td><ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em;">${listaProductos}</ul></td>
                     <td><strong>$${Number(totalPedido).toFixed(2)}</strong><br>${alertaCobro}</td>
-                    <td><span class="badge bg-warning text-dark">${estadoPedido.toUpperCase()}</span></td>
-                    <td>
-                        <div class="d-flex flex-column gap-2">
-                            <button class="btn btn-sm btn-success" onclick="entregarPedido('${idPedido}')">Entregar</button>
-                            <button class="btn btn-sm btn-danger" onclick="cancelarPedido('${idPedido}')">Cancelar</button>
-                            <button class="btn btn-sm btn-warning" onclick="enviarPedido('${idPedido}')">Enviar</button>
-                        </div>
-                    </td>
+                    <td><span class="badge ${badgeClass}">${estadoPedido}</span></td>
+                    <td>${botonesAcciones}</td>
                 </tr>
             `;
         });
         tbody.innerHTML = html;
     } catch (error) {
-        console.error("Error atrapado en cargarPedidosPendientes:", error);
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Hubo un error al cargar los pedidos. Revisa la consola.</td></tr>`;
+        console.error("Error cargando pedidos:", error);
     }
 }
 
@@ -480,6 +500,21 @@ async function enviarPedido(pedidoId) {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
         if (!res.ok) throw new Error("Error al enviar el pedido");
+        cargarPedidosPendientes(); 
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+async function prepararPedido(pedidoId) {
+    if (!confirm("¿Estás seguro de enviar este pedido?")) return;
+    try {
+        const token = sessionStorage.getItem("token"); 
+        const res = await fetch(`${API_URL}/pedidos/${pedidoId}/preparar`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error("Error al preparar el pedido");
         cargarPedidosPendientes(); 
     } catch (error) {
         alert(error.message);
@@ -766,4 +801,35 @@ async function editarProducto(id) {
         });
         if (res.ok) { alert("¡Actualizado!"); cancelarEdicion(); cargarInventario(); } 
     } catch (error) { alert("Error de conexión"); }
+}
+
+function abrirModalDetalles(idPedido) {
+    const pedido = pedidosGlobalesAdmin.find(p => (p.id || p._id) === idPedido);
+    if(!pedido) return;
+    
+    const nombreCliente = pedido.cliente_nombre || 'Cliente Anónimo';
+    const telefono = pedido.telefono || pedido.phone || 'No proporcionado';
+    
+    let direccionFormateada = 'Mostrador (Entregar en sucursal) 🏪';
+    
+    // Si existe la dirección y es un objeto (porque tiene calle, colonia, referencias)
+    if (pedido.direccion && typeof pedido.direccion === 'object') {
+        const calle = pedido.direccion.calle || '';
+        const colonia = pedido.direccion.colonia || '';
+        const cp = pedido.direccion.codigo_postal || pedido.direccion.cp || '';
+        const referencias = pedido.direccion.referencias || 'Ninguna';
+        
+        direccionFormateada = `📍 ${calle}, Col. ${colonia}, CP: ${cp}\n📝 Referencias: ${referencias}`;
+    } 
+    // Si la dirección existe pero es solo un texto normal
+    else if (pedido.direccion && typeof pedido.direccion === 'string') {
+        direccionFormateada = `📍 ${pedido.direccion}`;
+    }
+    
+    document.getElementById('modal-detalle-nombre').innerText = nombreCliente;
+    document.getElementById('modal-detalle-tel').innerText = telefono;
+    document.getElementById('modal-detalle-dir').innerText = direccionFormateada;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalDetallesPedido'));
+    modal.show();
 }
