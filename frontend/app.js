@@ -373,7 +373,13 @@ async function procesarPago() {
             metodo_pago: metodoPago,
             total: totalPedido,
             monto_recibido: montoRecibido,
-            cambio: cambio
+            cambio: cambio,
+            direccion: {
+                calle: document.getElementById("input-calle").value, 
+                colonia: document.getElementById("input-colonia").value,
+                cp: document.getElementById("input-cp").value,
+                referencias: document.getElementById("input-ref").value
+            }
         };
 
         const backendResponse = await fetch(`${API_URL}/pedidos`, {
@@ -817,7 +823,13 @@ async function procesarPagoEfectivo() {
             tamano: item.tamano || 'Regular',
             precio: item.precio,
             cantidad: item.cantidad
-        }))
+        })),
+        direccion: {
+            calle: document.getElementById("input-calle").value, 
+            colonia: document.getElementById("input-colonia").value,
+            cp: document.getElementById("input-cp").value,
+            referencias: document.getElementById("input-ref").value
+        }
     };
 
     try {
