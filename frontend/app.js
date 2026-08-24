@@ -378,7 +378,7 @@ async function procesarPago() {
                 calle: document.getElementById("input-calle").value, 
                 colonia: document.getElementById("input-colonia").value,
                 cp: document.getElementById("input-cp").value,
-                referencias: document.getElementById("input-ref").value
+                referencias: document.getElementById("input-referencias").value
             }
         };
 
@@ -828,7 +828,7 @@ async function procesarPagoEfectivo() {
             calle: document.getElementById("input-calle").value, 
             colonia: document.getElementById("input-colonia").value,
             cp: document.getElementById("input-cp").value,
-            referencias: document.getElementById("input-ref").value
+            referencias: document.getElementById("input-referencias").value
         }
     };
 
