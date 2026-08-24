@@ -1,3 +1,4 @@
+@import "tailwindcss";
 :root {
     --primary: #4a3319;       /* Café oscuro profundo para botones principales y títulos */
     --primary-hover: #362410;
@@ -30,7 +31,6 @@ body {
     max-width: 1300px;
 }
 
-/* El header ahora respira con Bootstrap, solo le damos color */
 .header-custom {
     background: rgba(255, 255, 255, 0.9);
     padding: 15px 30px;
@@ -53,10 +53,7 @@ body {
     border: 1px solid rgba(168, 134, 49, 0.2) !important;
     position: relative;
     overflow: hidden;
-    /* 🌟 SE ELIMINÓ EL GRID QUE ROMPÍA TODO 🌟 */
 }
-
-/* Patrón sutil de fondo para las tarjetas simulando el diseño de la imagen */
 .card::before {
     content: "";
     position: absolute;
@@ -117,7 +114,6 @@ h2 {
     box-sizing: border-box;
 }
 
-/* --- SECCIÓN DE LOGIN CON DEGRADADO SEGURO --- */
 .login-card {
     background-color: var(--card-bg);
     border-radius: 16px;
@@ -193,6 +189,8 @@ h2 {
     background-color: var(--primary-hover) !important; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+
 
 .btn-outline {
     background: none;

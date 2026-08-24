@@ -2,8 +2,6 @@ const API_URL = "https://sep7ima-cafeteria-f7z2.onrender.com";
 let myChart = null;
 let categoriasGlobales = []; 
 let pedidosGlobalesAdmin = [];
-
-// Variables para Paginación
 let productosGlobales = []; 
 let paginaActual = 1;       
 const itemsPorPagina = 8; 
@@ -12,7 +10,6 @@ window.onload = async () => {
     const token = sessionStorage.getItem("token");
 
     if (!token) {
-        // Si no hay llave, ejecutamos cerrarSesion para que limpie la pantalla
         cerrarSesion();
         return;
     }
@@ -382,7 +379,7 @@ async function cargarPedidosPendientes() {
         if (!res.ok) throw new Error("Error de conexión");
         
         const pedidos = await res.json();
-        pedidosGlobalesAdmin = pedidos; // Guardamos en la variable global
+        pedidosGlobalesAdmin = pedidos;
         
         if (!pedidos || pedidos.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No hay historial de pedidos recientes.</td></tr>`;
@@ -408,29 +405,27 @@ async function cargarPedidosPendientes() {
                 ? '<small class="text-danger fw-bold"><i class="fas fa-hand-holding-usd"></i> Cobrar Efectivo</small>'
                 : `<small class="text-success"><i class="fas fa-check-circle"></i> ${metodoPago}</small>`;
 
-            // 🌟 1. LÓGICA PARA DESHABILITAR BOTONES
             let botonesAcciones = '';
-            if (estadoPedido === 'PENDIENTE' || estadoPedido === 'ENVIANDO') {
+            if (estadoPedido === 'PENDIENTE' || estadoPedido === 'ENVIANDO' || estadoPedido === 'PREPARANDO') {
                 botonesAcciones = `
                     <div class="d-flex flex-column gap-2">
                         <button class="btn btn-sm btn-success" onclick="entregarPedido('${idPedido}')">Entregar</button>
                         <button class="btn btn-sm btn-danger" onclick="cancelarPedido('${idPedido}')">Cancelar</button>
                         <button class="btn btn-sm btn-warning" onclick="enviarPedido('${idPedido}')">Enviar</button>
+                        <button class="btn btn-sm btn-info" onclick="prepararPedido('${idPedido}')">Preparar</button>
                     </div>
                 `;
             } else {
-                // Si ya está cancelado o entregado, bloqueamos los botones
                 botonesAcciones = `
                     <div class="d-flex flex-column gap-2">
                         <button class="btn btn-sm btn-secondary opacity-50" disabled>Entregar</button>
                         <button class="btn btn-sm btn-secondary opacity-50" disabled>Cancelar</button>
                         <button class="btn btn-sm btn-secondary opacity-50" disabled>Enviar</button>
+                         <button class="btn btn-sm btn-secondary opacity-50" disabled>Preparar</button>
                     </div>
                 `;
             }
-
-            // 🌟 2. COLORES PARA LOS ESTADOS
-            let badgeClass = "bg-warning text-dark"; // Por defecto PENDIENTE
+            let badgeClass = "bg-warning text-dark"; 
             if (estadoPedido === 'ENTREGADO') badgeClass = "bg-success text-white";
             if (estadoPedido === 'CANCELADO') badgeClass = "bg-danger text-white";
             if (estadoPedido === 'ENVIANDO') badgeClass = "bg-info text-dark";
@@ -438,8 +433,6 @@ async function cargarPedidosPendientes() {
             html += `
                 <tr style="${estadoPedido === 'CANCELADO' ? 'opacity: 0.7; background-color: #f8f9fa;' : ''}">
                     <td><strong>${horaStr}</strong><br><small class="text-muted">#${folio}</small></td>
-                    
-                    <!-- 🌟 3. BOTÓN DE VER MÁS (OJITO) -->
                     <td class="text-center">
                         <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalles('${idPedido}')">
                             <i class="fas fa-eye"></i> Ver más
@@ -810,18 +803,17 @@ function abrirModalDetalles(idPedido) {
     const nombreCliente = pedido.cliente_nombre || 'Cliente Anónimo';
     const telefono = pedido.telefono || pedido.phone || 'No proporcionado';
     
-    let direccionFormateada = 'Mostrador (Entregar en sucursal) 🏪';
-    
-    // Si existe la dirección y es un objeto (porque tiene calle, colonia, referencias)
+    let direccionFormateada;
     if (pedido.direccion && typeof pedido.direccion === 'object') {
-        const calle = pedido.direccion.calle || '';
-        const colonia = pedido.direccion.colonia || '';
+        const calle = pedido.direccion.calle;
+        const colonia = pedido.direccion.colonia;
         const cp = pedido.direccion.codigo_postal || pedido.direccion.cp || '';
         const referencias = pedido.direccion.referencias || 'Ninguna';
         
         direccionFormateada = `📍 ${calle}, Col. ${colonia}, CP: ${cp}\n📝 Referencias: ${referencias}`;
+        if(calle == '' && colonia == '' && cp == '') 
+            direccionFormateada = 'Mostrador (Entregar en sucursal) ';
     } 
-    // Si la dirección existe pero es solo un texto normal
     else if (pedido.direccion && typeof pedido.direccion === 'string') {
         direccionFormateada = `📍 ${pedido.direccion}`;
     }

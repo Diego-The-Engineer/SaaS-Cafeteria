@@ -173,14 +173,12 @@ async def entregar_pedido(pedido_id: str, current_user: Annotated[User, Depends(
         {"$match": {"Estado": "Entregado"}},
         {"$group": {
             "_id": None, 
-            # 🌟 El ifNull suma el dinero sin importar con qué nombre se guardó
             "total_real": {"$sum": {"$ifNull": ["$total_pagado", "$total"]}}
         }}
     ]
     cursor_ganancias = db["pedidos"].aggregate(pipeline_ganancias)
     ganancias_res = await cursor_ganancias.to_list(length=1)
     
-    # 🌟 Tomamos el total_real
     ganancia_total = ganancias_res[0]["total_real"] if ganancias_res else 0
     
     await db["stats"].update_one(
@@ -204,8 +202,7 @@ async def cancelar_pedido(
         raise HTTPException(status_code=400, detail="Este pedido ya fue cancelado previamente")
     if pedido_db.get("Estado") == "Entregado":
         raise HTTPException(status_code=400, detail="No se puede volver a cancelar un producto ya enviado y cobrado")
-        
-    # 1. Regresamos el stock al inventario
+
     for item in pedido_db.get("items", []):
         producto_id = item["producto_id"]
         devolucion = item["cantidad"]
@@ -217,8 +214,7 @@ async def cancelar_pedido(
                 "$set": {"disponible": True}
              }
         )
-        
-    # 2. Marcamos el pedido como Cancelado
+
     resultado = await db["pedidos"].update_one(
         {"_id": ObjectId(pedido_id)}, 
         {"$set": {"Estado": "Cancelado"}}
@@ -226,8 +222,6 @@ async def cancelar_pedido(
 
     if resultado.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
-
-    # ¡LISTO! Ya no tocamos la colección de stats aquí.
     return {"message": "Pedido cancelado con éxito y stock devuelto"}
 
 @router.patch("/{pedido_id}/enviar")

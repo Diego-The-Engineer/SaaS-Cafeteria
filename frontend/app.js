@@ -686,35 +686,22 @@ function abrirModalResumenPago() {
 function volverAEntrega() {
     const modalResumenEl = document.getElementById('modal-resumen-pago');
     const modalEntregaEl = document.getElementById('modal-tipo-entrega');
-
-    // Escudo: Verificamos que los dos HTML existan
     if (!modalResumenEl || !modalEntregaEl) return; 
-
-    // Ocultamos el resumen
     bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
-    
-    // Le damos 150ms a Bootstrap para que limpie la pantalla oscura y abrimos el otro
     setTimeout(() => {
         bootstrap.Modal.getOrCreateInstance(modalEntregaEl).show();
     }, 150);
 }
 
-// 2. Regresar de Efectivo/Tarjeta -> al Resumen
 function volverAResumenDesde(modalActualId) {
     const modalActualEl = document.getElementById(modalActualId);
     const modalResumenEl = document.getElementById('modal-resumen-pago');
-
-    // Escudo: Si el ID llegó vacío o mal escrito, te avisamos en lugar de explotar
     if (!modalActualEl) {
         console.error("¡Cuidado! No se encontró el modal con el ID:", modalActualId);
         alert("Falta el ID correcto en el botón de Volver");
         return;
     }
-
-    // Ocultamos el método de pago actual
     bootstrap.Modal.getOrCreateInstance(modalActualEl).hide();
-    
-    // Micro-pausa y revivimos el resumen
     setTimeout(() => {
         bootstrap.Modal.getOrCreateInstance(modalResumenEl).show();
     }, 150);
@@ -797,16 +784,11 @@ async function procesarPagoEfectivo() {
             gravity: "top", position: "right",
             style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
         }).showToast();
-        return; // Detenemos la función aquí
+        return; 
     }
-
-    // 2. Bloqueamos el botón y mostramos estado de carga
-    const textoOriginal = btnPagarEfectivo.innerText; // Guardamos el texto original ("Confirmar Pedido")
+    const textoOriginal = btnPagarEfectivo.innerText; 
     btnPagarEfectivo.innerText = "Procesando pedido...";
     btnPagarEfectivo.disabled = true;
-
-    // 3. Armamos el objeto con toda la información para tu backend
-    // 3. Armamos el objeto con la estructura EXACTA que espera tu Pydantic
     const payload_efectivo = {
         first_name: document.getElementById("nombre").value,
         last_name: document.getElementById("apellido").value,
@@ -841,35 +823,26 @@ async function procesarPagoEfectivo() {
         });
 
         if (res.ok) {
-            // ¡ÉXITO!
             Toastify({
-                text: "¡Pedido recibido con éxito! ☕",
+                text: "¡Pedido recibido con éxito! ",
                 duration: 4000,
                 gravity: "top", position: "right",
                 style: { background: "#4CAF50", color: "white", borderRadius: "8px" }
             }).showToast();
-
-            // Ocultamos el modal de efectivo de forma segura
             const modalEfectivoEl = document.getElementById('modal-efectivo');
             bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).hide();
-
-            // Limpiamos el carrito visual y lógicamente
             carrito = [];
-            actualizarCarrito(); // Tu función que repinta el carrito en 0
-            
-            // Opcional: Limpiamos los inputs del formulario para el siguiente cliente
+            actualizarCarrito(); 
             document.getElementById("form-checkout").reset();
             document.getElementById("input-monto-recibido").value = "";
             document.getElementById("label-cambio").innerText = "0.00";
 
         } else {
-            // Si el backend responde con error (ej. falta de stock)
             const errorData = await res.json();
             throw new Error(errorData.detail || "Error al registrar el pedido");
         }
 
     } catch (error) {
-        // Si se cae el internet o falla el servidor
         Toastify({
             text: "Error: " + error.message,
             duration: 4000,
@@ -878,8 +851,6 @@ async function procesarPagoEfectivo() {
         }).showToast();
 
     } finally {
-        // 5. El bloque finally SIEMPRE se ejecuta al final (haya éxito o error).
-        // Aquí revivimos el botón por si el cliente necesita intentar de nuevo.
         btnPagarEfectivo.innerText = textoOriginal;
         btnPagarEfectivo.disabled = false;
     }
