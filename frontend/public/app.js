@@ -759,18 +759,17 @@ function calcularDistanciaEntrega(destinoCliente) {
                 btnContinuar.disabled = false; 
                 
                 if(distanciaValorKm <= 1){
-                    datosPedido.costoEnvio = 0;
+                    datosPedido.costoEnvio = 10;
                 }
                 else if(distanciaValorKm <= 3){
-                    datosPedido.costoEnvio =15;
+                    datosPedido.costoEnvio =20;
                 }
                 else if (distanciaValorKm <= 6) {
-                    datosPedido.costoEnvio = 30; 
+                    datosPedido.costoEnvio = 40; 
                 } else {
-                    datosPedido.costoEnvio = 60; 
+                    datosPedido.costoEnvio = 80; 
                 }
-                
-                console.log(`Envío autorizado. Distancia: ${distanciaTexto}. Costo de envío: $${datosPedido.costoEnvio}`);
+            
             }
         } else {
             alert("No se pudo calcular una ruta en auto hacia esa dirección.");
