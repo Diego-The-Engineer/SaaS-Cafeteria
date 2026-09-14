@@ -222,7 +222,6 @@ function agregarAlCarrito(id, nombre) {
         opcionesElegidas.push(`Sabor ${saborElegido}`);
     }
 
-    // Leemos los checkboxes (extras)
     checkboxes.forEach(chk => {
         opcionesElegidas.push(chk.value); 
         precio += parseFloat(chk.getAttribute('data-precio') || 0); 
@@ -329,10 +328,9 @@ async function procesarPago() {
         const telefono = document.getElementById("telefono").value;
         const metodoPagoInput = document.getElementById("metodo-pago");
         const metodoPago = metodoPagoInput ? metodoPagoInput.value : "Tarjeta"; 
-        const totalPedido = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+        const totalFinal = obtenerTotalConEnvio();
         let tokenSeguro = "N/A"; 
 
-        // Solo conectamos con eCartPay si eligieron Tarjeta
         if (metodoPago === "Tarjeta") {
             btnPagar.innerText = "Encriptando tarjeta...";
             const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
@@ -364,7 +362,16 @@ async function procesarPago() {
             tokenSeguro = tokenData.id || tokenData.token; 
         }
 
+        const esDomicilio = datosPedido.tipoEntrega === 'domicilio';
+        const direccionPayload = esDomicilio ? {
+            calle: document.getElementById("input-calle").value,
+            colonia: document.getElementById("input-colonia").value,
+            cp: document.getElementById("input-cp").value,
+            referencias: document.getElementById("input-referencias").value
+        } : { calle: "", colonia: "", cp: "", referencias: "" }; 
+
         btnPagar.innerText = "Confirmando pedido...";
+
         const pedidoData = {
             items: carrito, 
             first_name: nombre,
@@ -372,9 +379,10 @@ async function procesarPago() {
             phone: telefono,
             token_tarjeta: tokenSeguro,
             metodo_pago: metodoPago,
-            total: totalFinal,
-            monto_recibido: montoRecibido,
-            cambio: montoRecibido - totalFinal,                  
+            total: totalFinal,          
+            monto_recibido: totalFinal, 
+            monto: totalFinal,          
+            cambio: 0,                              
             direccion: direccionPayload
         };
 
@@ -386,10 +394,15 @@ async function procesarPago() {
 
         if (!backendResponse.ok) {
             const errorBack = await backendResponse.json();
+            if (Array.isArray(errorBack.detail)) {
+                const mensajes = errorBack.detail.map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`);
+                throw new Error("Faltan datos: " + mensajes.join(', '));
+            }
             throw new Error(errorBack.detail || "Error procesando el pedido en el servidor");
         }
+        
         Toastify({
-            text: "¡Pedido confirmado con éxito! " + (metodoPago === 'Efectivo' ? 'Puedes pagar en caja.' : ''),
+            text: "¡Pedido confirmado con éxito! ",
             duration: 3000,
             gravity: "top",
             position: "right",
@@ -416,6 +429,103 @@ async function procesarPago() {
     }
 }
 
+async function procesarPagoEfectivo() {
+    const btnPagarEfectivo = document.getElementById("btn-pagar-efectivo"); 
+    let montoRecibido = parseFloat(document.getElementById("input-monto-recibido").value) || 0;
+    
+    // 1. Calculamos el total real con envío
+    const totalFinal = obtenerTotalConEnvio();
+
+    // 2. Validamos contra el totalFinal, NO contra totalG
+    if (montoRecibido < totalFinal) {
+        Toastify({
+            text: "El monto recibido es menor al total del pedido.",
+            duration: 3000,
+            gravity: "top", position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
+        return; 
+    }
+
+    const nombreInput = document.getElementById("nombre");
+    const apellidoInput = document.getElementById("apellido");
+    const telefonoInput = document.getElementById("telefono");
+
+    const nombre = nombreInput ? nombreInput.value : "Cliente";
+    const apellido = apellidoInput ? apellidoInput.value : "";
+    const telefono = telefonoInput ? telefonoInput.value : "Sin teléfono";
+
+    const textoOriginal = btnPagarEfectivo.innerText; 
+    btnPagarEfectivo.innerText = "Procesando pedido...";
+    btnPagarEfectivo.disabled = true;
+    
+    const esDomicilio = datosPedido.tipoEntrega === 'domicilio';
+    const direccionPayload = esDomicilio ? {
+        calle: document.getElementById("input-calle").value,
+        colonia: document.getElementById("input-colonia").value,
+        cp: document.getElementById("input-cp").value,
+        referencias: document.getElementById("input-referencias").value
+    } : { calle: "", colonia: "", cp: "", referencias: "" }; 
+
+    // 3. Objeto de Efectivo blindado
+    const pedidoData = {
+            items: carrito, 
+            first_name: nombre,
+            last_name: apellido,
+            phone: telefono,
+            token_tarjeta: 'N/A',
+            metodo_pago: "Efectivo",
+            total: totalFinal,                  // Total real
+            monto_recibido: montoRecibido,      // Lo que dio el cliente
+            monto: montoRecibido,               // Parche para Render
+            cambio: montoRecibido - totalFinal, // Cambio real                
+            direccion: direccionPayload
+        };
+
+    try {
+        const res = await fetch(`${API_URL}/pedidos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pedidoData)
+        });
+
+        if (res.ok) {
+            Toastify({
+                text: "¡Pedido recibido con éxito! ",
+                duration: 4000,
+                gravity: "top", position: "right",
+                style: { background: "#4CAF50", color: "white", borderRadius: "8px" }
+            }).showToast();
+            const modalEfectivoEl = document.getElementById('modal-efectivo');
+            bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).hide();
+            carrito = [];
+            actualizarCarrito(); 
+            document.getElementById("form-checkout").reset();
+            document.getElementById("input-monto-recibido").value = "";
+            document.getElementById("label-cambio").innerText = "0.00";
+
+        } else {
+            const errorData = await res.json();
+            if (Array.isArray(errorData.detail)) {
+                const mensajes = errorData.detail.map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`);
+                throw new Error("Faltan datos: " + mensajes.join(', '));
+            }
+            throw new Error(errorData.detail || "Error al registrar el pedido");
+        }
+
+    } catch (error) {
+        Toastify({
+            text: "Error: " + error.message,
+            duration: 4000,
+            gravity: "top", position: "right",
+            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
+        }).showToast();
+
+    } finally {
+        btnPagarEfectivo.innerText = textoOriginal;
+        btnPagarEfectivo.disabled = false;
+    }
+}
 
 
 // --- UTILIDADES ---
@@ -765,100 +875,6 @@ function calcularCambio(){
 
     if(monto < obtenerTotalConEnvio()){
         document.getElementById("label-cambio").innerText = `Monto inválido`;
-    }
-}
-
-async function procesarPagoEfectivo() {
-    const btnPagarEfectivo = document.getElementById("btn-pagar-efectivo"); 
-    let montoRecibido = parseFloat(document.getElementById("input-monto-recibido").value) || 0;
-    
-    if (montoRecibido < totalG) {
-        Toastify({
-            text: "El monto recibido es menor al total del pedido.",
-            duration: 3000,
-            gravity: "top", position: "right",
-            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
-        }).showToast();
-        return; 
-    }
-
-    const nombreInput = document.getElementById("nombre");
-    const apellidoInput = document.getElementById("apellido");
-    const telefonoInput = document.getElementById("telefono");
-
-    const nombre = nombreInput ? nombreInput.value : "Cliente";
-    const apellido = apellidoInput ? apellidoInput.value : "";
-    const telefono = telefonoInput ? telefonoInput.value : "Sin teléfono";
-
-    const textoOriginal = btnPagarEfectivo.innerText; 
-    btnPagarEfectivo.innerText = "Procesando pedido...";
-    btnPagarEfectivo.disabled = true;
-    
-    const esDomicilio = datosPedido.tipoEntrega === 'domicilio';
-    const direccionPayload = esDomicilio ? {
-        calle: document.getElementById("input-calle").value,
-        colonia: document.getElementById("input-colonia").value,
-        cp: document.getElementById("input-cp").value,
-        referencias: document.getElementById("input-referencias").value
-    } : { calle: "", colonia: "", cp: "", referencias: "" }; 
-
-    const pedidoData = {
-            items: carrito, 
-            first_name: nombre,
-            last_name: apellido,
-            phone: telefono,
-            token_tarjeta: 'N/A',
-            metodo_pago: "Efectivo",
-            total: totalG,
-            monto_recibido: montoRecibido,
-            monto: montoRecibido, // <-- PARCHE: Enviamos la variable vieja para satisfacer a Render
-            cambio: montoRecibido - totalG,                  
-            direccion: direccionPayload
-        };
-
-    try {
-        const res = await fetch(`${API_URL}/pedidos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(pedidoData)
-        });
-
-        if (res.ok) {
-            Toastify({
-                text: "¡Pedido recibido con éxito! ",
-                duration: 4000,
-                gravity: "top", position: "right",
-                style: { background: "#4CAF50", color: "white", borderRadius: "8px" }
-            }).showToast();
-            const modalEfectivoEl = document.getElementById('modal-efectivo');
-            bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).hide();
-            carrito = [];
-            actualizarCarrito(); 
-            document.getElementById("form-checkout").reset();
-            document.getElementById("input-monto-recibido").value = "";
-            document.getElementById("label-cambio").innerText = "0.00";
-
-        } else {
-            const errorData = await res.json();
-            // Traductor de errores de FastAPI (Evita el [object Object])
-            if (Array.isArray(errorData.detail)) {
-                const mensajes = errorData.detail.map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`);
-                throw new Error("Faltan datos: " + mensajes.join(', '));
-            }
-            throw new Error(errorData.detail || "Error al registrar el pedido");
-        }
-
-    } catch (error) {
-        Toastify({
-            text: "Error: " + error.message,
-            duration: 4000,
-            gravity: "top", position: "right",
-            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
-        }).showToast();
-
-    } finally {
-        btnPagarEfectivo.innerText = textoOriginal;
-        btnPagarEfectivo.disabled = false;
     }
 }
 
