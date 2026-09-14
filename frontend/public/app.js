@@ -107,7 +107,7 @@ function renderizarProductos() {
     }
 
     if (productosAMostrar.length === 0) {
-        contenedor.innerHTML = `<p style="color: gray; text-align: center; width: 100%; grid-column: 1 / -1;">No hay productos en esta categoría.</p>`;
+        contenedor.innerHTML = `<p style="color: var(--text-muted); text-align: center; width: 100%; grid-column: 1 / -1; font-family: var(--font-heading); font-size: 18px; padding-top: 40px;">No hay productos en esta categoría.</p>`;
         return;
     }
 
@@ -115,14 +115,45 @@ function renderizarProductos() {
         const stock = p.cantidad !== undefined ? p.cantidad : 0;
         const agotado = stock <= 0;
         const prodId = p.id || p._id; 
-
-        let selectorHTML = '';
+        
         let tieneVariantes = p.variantes && p.variantes.length > 0;
+        let selectorOcultoHTML = '';
+        let pillHTML = '';
+        let precioBaseHTML = '';
+
+        if (tieneVariantes) {
+            // Select original oculto (Mantiene tu lógica intacta)
+            selectorOcultoHTML = `<select id="variante-${prodId}" style="display: none;">`;
+            
+            pillHTML = `<div class="size-pills">`;
+            p.variantes.forEach((v, index) => {
+                const valorUnido = `${v.tamaño}|${v.precio}`;
+                const checked = index === 0 ? 'checked' : '';
+                
+                selectorOcultoHTML += `<option value="${valorUnido}" ${checked}>${v.tamaño} - $${v.precio}</option>`;
+                
+                // Las Pills visuales actualizan el select oculto y el precio en pantalla
+                pillHTML += `
+                    <input type="radio" name="pill-${prodId}" id="pill-${prodId}-${index}" value="${valorUnido}" ${checked} 
+                        onchange="document.getElementById('variante-${prodId}').value = this.value; document.getElementById('precio-display-${prodId}').innerText = '$' + parseFloat(${v.precio}).toFixed(2);">
+                    <label for="pill-${prodId}-${index}">${v.tamaño}</label>
+                `;
+            });
+            selectorOcultoHTML += `</select>`;
+            pillHTML += `</div>`;
+            
+            // Precio destacado
+            precioBaseHTML = `<div class="precio" id="precio-display-${prodId}">$${p.variantes[0].precio.toFixed(2)}</div>`;
+        } else {
+            selectorOcultoHTML = `<p style="color: var(--danger); font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
+            precioBaseHTML = `<div class="precio">$0.00</div>`;
+        }
+
+        // Estilización de sabores
         let saboresHTML = '';
         if (p.sabores && p.sabores.length > 0) {
-            saboresHTML = `<select id="sabor-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
+            saboresHTML = `<select id="sabor-${prodId}" class="form-control" style="margin-bottom: 12px; padding: 10px 15px; border-radius: 4px; width: 100%; border: 1px solid var(--primary-light); background-color: var(--card-bg); font-family: var(--font-body); font-size: 13px; color: var(--text-dark);">`;
             saboresHTML += `<option value="" disabled selected>Elige un sabor...</option>`; 
-            
             p.sabores.forEach(sab => {
                 if (sab.disponible) {
                     saboresHTML += `<option value="${sab.nombre}">${sab.nombre}</option>`;
@@ -130,62 +161,68 @@ function renderizarProductos() {
             });
             saboresHTML += `</select>`;
         }
-        if (tieneVariantes) {
-            selectorHTML = `<select id="variante-${prodId}" style="margin: 8px 0; padding: 6px; border-radius: 5px; width: 100%; border: 1px solid #ccc; background-color: #fff;">`;
-            p.variantes.forEach(v => {
-                selectorHTML += `<option value="${v.tamaño}|${v.precio}">${v.tamaño} - $${v.precio.toFixed(2)}</option>`;
-            });
-            selectorHTML += `</select>`;
-        } else {
-            selectorHTML = `<p style="color: red; font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
-        }
-        const descripcionHTML = (p.descripcion && p.descripcion!== null) 
-            ? `<p class="descripcion-prod" style="font-size: 0.85em; color: #777; margin: 4px 0 8px 0; line-height: 1.4; font-style: italic;">${p.descripcion}</p>` 
+
+        const descripcionHTML = (p.descripcion && p.descripcion !== null) 
+            ? `<p class="descripcion-prod" style="font-size: 13px; color: var(--text-muted); margin: 0 0 15px 0; line-height: 1.5;">${p.descripcion}</p>` 
             : '';
 
+        // Estilización de Opciones (Extras)
         let opcionesHTML = '';
         if (p.opciones && p.opciones.length > 0) {
-            opcionesHTML = `<div class="opciones-seleccion" style="margin: 10px 0; text-align: left; background: #faf6f0; padding: 8px; border-radius: 8px; border: 1px solid #ebd9cb;">`;
-            opcionesHTML += `<small style="font-weight: bold; color: #5c4033; display: block; margin-bottom: 5px; font-size: 0.8em;">Personaliza tu bebida:</small>`;
+            opcionesHTML = `<div class="opciones-seleccion" style="margin: 15px 0 10px 0; text-align: left; background: rgba(235, 229, 221, 0.4); padding: 12px; border-radius: 4px; border: 1px solid var(--primary-light);">`;
+            opcionesHTML += `<small style="font-weight: 600; color: var(--primary-dark); display: block; margin-bottom: 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Personaliza tu bebida:</small>`;
             
-            p.opciones.forEach((opc, index) => {
+            p.opciones.forEach((opc) => {
                 const precioBadge = opc.precio_extra ? `+$${opc.precio_extra.toFixed(2)}` : 'Gratis';
-                const colorBadge = opc.precio_extra ? '#a52a2a' : '#4CAF50';
+                const colorBadge = opc.precio_extra ? 'var(--primary-dark)' : 'var(--text-muted)';
                 
                 opcionesHTML += `
-                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85em; margin-bottom: 4px;">
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; width: 100%;">
-                            <input type="checkbox" class="opcion-chk-${prodId}" value="${opc.nombre}" data-precio="${opc.precio_extra || 0}">
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; width: 100%; color: var(--text-dark);">
+                            <input type="checkbox" class="opcion-chk-${prodId}" value="${opc.nombre}" data-precio="${opc.precio_extra || 0}" style="accent-color: var(--primary-dark);">
                             <span>${opc.nombre}</span>
                         </label>
-                        <span style="color: ${colorBadge}; font-weight: 600; font-size: 0.9em; white-space: nowrap; margin-left: 5px;">${precioBadge}</span>
+                        <span style="color: ${colorBadge}; font-weight: 600; font-size: 12px; margin-left: 5px;">${precioBadge}</span>
                     </div>
                 `;
             });
             opcionesHTML += `</div>`;
         }
 
+        const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x500/EBE5DD/2C1E16?text=S%C3%A9ptima";
         
-
-        const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x200/E8D5C4/8B5E34?text=S%C3%A9ptima+Caf%C3%A9";
+        // Clases dinámicas para el badge de stock
+        const badgeClass = agotado ? 'agotado' : 'disponible';
+        const badgeText = agotado ? 'Agotado' : 'Disponible';
 
         contenedor.innerHTML += `
             <div class="producto-card reveal">
                 <img src="${imagenSource}" alt="${p.nombre}" class="producto-img" loading="lazy">
                 
-                <div class="producto-info">
-                    <div>
+                <div class="card-info">
+                    <div class="card-header-row">
                         <h3>${p.nombre}</h3>
-                        ${descripcionHTML} <p class="stock">${agotado ? 'Agotado' : `Disponibles: ${stock}`}</p>
-                        ${selectorHTML}
-                        ${saboresHTML}
-                        ${opcionesHTML}    
+                        <span class="badge-stock ${badgeClass}">${badgeText}</span>
                     </div>
                     
-                    <div style="margin-top: 10px;">
-                        <button class="btn-add" style="width: 100%;"
-                            onclick="agregarAlCarrito('${prodId}', '${p.nombre}')"
-                            ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
+                    ${precioBaseHTML}
+                    ${descripcionHTML}
+                    
+                    ${selectorOcultoHTML}
+                    ${pillHTML}
+                    
+                    ${saboresHTML}
+                    ${opcionesHTML}    
+                    
+                    <div class="action-row" style="margin-top: 15px;">
+                        <div class="qty-selector">
+                            <button type="button" class="btn-qty" onclick="cambiarCantidadLocal('${prodId}', -1)">−</button>
+                            <span class="qty-value" id="qty-${prodId}">1</span>
+                            <button type="button" class="btn-qty" onclick="cambiarCantidadLocal('${prodId}', 1)">+</button>
+                        </div>
+                        
+                        <!-- Usamos la función puente para agregar varios a la vez -->
+                        <button class="btn-add" onclick="agregarAlCarritoMultiple('${prodId}', '${p.nombre}')" ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
                             ${agotado ? 'Sin Stock' : 'Agregar'}
                         </button>
                     </div>
@@ -194,7 +231,32 @@ function renderizarProductos() {
         `;
     });
 
-    iniciarObservadorAnimaciones();
+    if (typeof iniciarObservadorAnimaciones === 'function') {
+        iniciarObservadorAnimaciones();
+    }
+}
+
+// ==========================================
+// FUNCIONES AUXILIARES PARA EL CARRITO (UX)
+// ==========================================
+
+window.cambiarCantidadLocal = function(id, delta) {
+    const span = document.getElementById(`qty-${id}`);
+    if (!span) return;
+    let actual = parseInt(span.innerText) || 1;
+    actual += delta;
+    if (actual < 1) actual = 1;
+    span.innerText = actual;
+}
+
+window.agregarAlCarritoMultiple = function(id, nombre) {
+    const span = document.getElementById(`qty-${id}`);
+    const cantidad = span ? parseInt(span.innerText) : 1;
+    
+    for (let i = 0; i < cantidad; i++) {
+        agregarAlCarrito(id, nombre);
+    }
+    if (span) span.innerText = "1";
 }
 
 // --- LÓGICA DEL CARRITO ---
@@ -696,7 +758,13 @@ function calcularDistanciaEntrega(destinoCliente) {
             } else {
                 btnContinuar.disabled = false; 
                 
-                if (distanciaValorKm <= 5) {
+                if(distanciaValorKm < 2){
+                    datosPedido.costoEnvio = 0;
+                }
+                else if(distanciaValorKm < 5){
+                    datosPedido.costoEnvio =15;
+                }
+                else if (distanciaValorKm <= 8) {
                     datosPedido.costoEnvio = 30; 
                 } else {
                     datosPedido.costoEnvio = 60; 
