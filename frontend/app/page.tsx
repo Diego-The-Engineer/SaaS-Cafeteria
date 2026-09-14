@@ -38,7 +38,7 @@ export default function Page() {
           <p className="eyebrow light">Café de especialidad · desde 2018</p>
           <h1>Un buen café<br /><em>cambia el día.</em></h1>
           <p className="hero-copy">Un espacio para hacer una pausa, disfrutar lo simple y volver a lo esencial.</p>
-          <div className="hero-actions"><a className="button button-light" href="menu.html">Descubre el menú <span>↗</span></a><a className="text-link light" href="#nosotros">Conócenos <span>↓</span></a></div>
+          <div className="hero-actions"><a className="button button-light" href="/menu.html">Descubre el menú <span>↗</span></a><a className="text-link light" href="#nosotros">Conócenos <span>↓</span></a></div>
         </div>
         <div className="hero-note">07° 23' 14.2&quot; N<br /><span>Tu pausa favorita</span></div>
       </section>
