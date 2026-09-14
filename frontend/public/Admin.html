@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Cafetería</title>
+    
+    <!-- LIBRERÍAS QUE FALTABAN (Bootstrap, FontAwesome, Toastify) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <!-- Chart.js y tu CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="Admin.css?v=3">
+</head>
+<body style="background-color: #f5f0e6;">
+
+    <div class="container py-4">
+       <div class="justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm d-none" id="admin-header">
+    <h2 class="m-0" style="color: #4a3b32;"><i class="fas fa-coffee"></i> Dashboard Administrativo</h2>
+    <button class="btn btn-outline-danger" onclick="cerrarSesion()">Cerrar Sesión</button>
+</div>
+
+        <!-- SECCIÓN DE LOGIN -->
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;" id="login-section">
+            <div class="card shadow p-4" style="width: 100%; max-width: 400px; border-radius: 15px;">
+                <h3 class="text-center mb-4" style="color: #4a3b32;">Iniciar Sesión</h3>
+                <div class="mb-3">
+                    <label class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="username" placeholder="Tu usuario">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" placeholder="••••••••">
+                </div>
+                <button class="btn w-100 text-white mb-3" style="background-color: #4a3b32;" onclick="login()">Entrar</button>
+                
+                <div class="alert alert-danger text-center" id="login-error" style="display: none; padding: 10px;">
+                    Credenciales incorrectas. Inténtalo de nuevo.
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL DE ADMINISTRADOR -->
+        <div id="admin-panel" class="d-none">
+            
+            <div class="row g-4 mb-4">
+                <!-- RESUMEN FINANCIERO -->
+                <div class="col-lg-5">
+                    <div class="card h-100 shadow-sm p-4" style="border-radius: 15px;">
+                        <h4 class="mb-3 text-secondary">Resumen Financiero y Ventas</h4>
+                        <div class="text-center mb-4">
+                            <p class="text-muted mb-1 text-uppercase fw-bold" style="letter-spacing: 1px;">Ingresos Brutos</p>
+                            <h1 id="stat-ganancias" class="display-4 text-success fw-bold">$0.00</h1>
+                        </div>
+                        <div class="mb-4">
+                            <canvas id="chartTopProductos"></canvas>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary flex-grow-1" onclick="cargarEstadisticas()"><i class="fas fa-sync-alt"></i> Refrescar</button>
+                            <button class="btn btn-outline-danger" onclick="borrar_stats()"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AGREGAR NUEVO PRODUCTO -->
+                <div class="col-lg-7">
+                    <div class="card h-100 shadow-sm p-4" style="border-radius: 15px;">
+                        <h4 class="mb-4 text-secondary">Agregar Nuevo Producto</h4>
+                        
+                        <form class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nombre del Producto</label>
+                                <input type="text" class="form-control" id="prod-nombre" placeholder="Ej. Frappé">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Descripción</label>
+                                <input type="text" class="form-control" id="prod-desc" placeholder="Ej. Delicioso Frappé...">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Stock</label>
+                                <input type="number" class="form-control" id="prod-stock" placeholder="Ej. 10">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Categoría</label>
+                                <div class="d-flex gap-2">
+                                    <select id="prod-categoria" class="form-select flex-grow-1">
+                                        <option value="">Cargando...</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" onclick="agregarNuevaCategoria()" title="Nueva"><i class="fas fa-plus"></i></button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="editarCategoriaSeleccionada()" title="Editar"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="btn btn-outline-danger" onclick="eliminarCategoriaSeleccionada()" title="Borrar"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">URL de la Imagen (Opcional)</label>
+                                <input type="text" class="form-control" id="prod-imagen" placeholder="Ej. https://misitio.com/frappe.jpg">
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 bg-light h-100">
+                                    <label class="form-label fw-bold text-secondary">Opciones Extra</label>
+                                    <div id="contenedor-opciones" class="mb-2"></div>
+                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="agregarFilaOpcion()">+ Agregar Opción</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 bg-light h-100">
+                                    <label class="form-label fw-bold text-secondary">Sabores Disponibles</label>
+                                    <div id="contenedor-sabores" class="mb-2"></div>
+                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="agregarFilaSabor()">+ Agregar Sabor</button>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Tamaños y Precios</label>
+                                <div id="variantes-container">
+                                    <div class="variante-row d-flex gap-2 mb-2">
+                                        <input type="text" class="form-control var-tamano" placeholder="Tamaño (Ej. M)">
+                                        <input type="number" class="form-control var-precio" placeholder="Precio ($)" step="0.01">
+                                        <button class="btn btn-outline-danger" type="button" onclick="eliminarFila(this)"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary w-100" onclick="agregarFilaVariante()">+ Agregar otro tamaño</button>
+                            </div>
+
+                            <div class="col-12 d-flex gap-2 mt-4">
+                                <button id="btn-guardar-principal" type="button" class="btn flex-grow-1 text-white" style="background-color: #4a3b32; font-weight: bold;" onclick="agregarProducto()">Guardar Producto</button>
+                                <button id="btn-cancelar" type="button" class="btn btn-danger" style="display: none; font-weight: bold;" onclick="cancelarEdicion()">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INVENTARIO -->
+            <div class="card shadow-sm mb-4 p-4" style="border-radius: 15px;">
+                <h4 class="mb-4 text-secondary"><i class="fas fa-box-open"></i> Inventario Actual</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th>Categoría</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-productos">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- CONTROLES DE PAGINACIÓN -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                    <span id="info-paginacion" class="text-muted" style="font-size: 0.9em;"></span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="paginacion-inventario">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- PEDIDOS ACTIVOS -->
+            <div class="card shadow-sm p-4 mb-5" style="border-radius: 15px; background-color: #fffcf8; border: 1px solid #f2e6d9;">
+                <h4 class="mb-4" style="color: #5c4033;"><i class="fas fa-bell text-warning"></i> Pedidos Activos</h4>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead style="border-bottom: 2px solid #eaddcf;">
+                            <tr>
+                                <th>Hora</th>
+                                <th>Detalles</th>
+                                <th>Detalle del Pedido</th>
+                                <th>Total / Pago</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pedidos-body">
+                            <tr><td colspan="6" class="text-center text-muted py-4">Cargando pedidos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Modal Detalles del Pedido -->
+<div class="modal fade" id="modalDetallesPedido" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px;">
+      <div class="modal-header" style="background-color: #f8f9fa;">
+        <h5 class="modal-title" style="color: #6d4c41;"><i class="fas fa-address-card"></i> Información de Entrega</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2"><strong>👤 Cliente:</strong> <span id="modal-detalle-nombre"></span></p>
+        <p class="mb-2"><strong>📞 Teléfono:</strong> <span id="modal-detalle-tel"></span></p>
+        <hr>
+        <p class="mb-0"><strong>📍 Dirección de entrega:</strong></p>
+        <p class="text-muted" id="modal-detalle-dir" style="white-space: pre-wrap;"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+    <script src="Admin.js"></script>
+</body>
+</html>

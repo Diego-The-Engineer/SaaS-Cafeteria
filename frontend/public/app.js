@@ -1,5 +1,5 @@
-const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
-const API_URL = esLocal ? "http://localhost:5503" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:3000" || window.location.hostname === "192.168.56.101");
+const API_URL = esLocal ? "http://localhost:3000" : "https://sep7ima-cafeteria-f7z2.onrender.com";
 const SUCURSAL_COORDENADAS = { lat: 17.078399006698426, lng: -96.72288414676025 };
 const DISTANCIA_MAXIMA_KM = 15;
 let totalG;
