@@ -393,17 +393,28 @@ async function cargarPedidosPendientes() {
             
             const idPedido = pedido.id || pedido._id || '';
             const folio = idPedido.slice(-4).toUpperCase(); 
-            const totalPedido = pedido.total_pagado ?? pedido.total ?? 0;
-            const metodoPago = pedido.metodo_pago || pedido.Metodo_pago || 'Efectivo';
-            const estadoPedido = (pedido.estado || pedido.Estado || 'Pendiente').toUpperCase();
+
 
             const listaProductos = (pedido.items || []).map(item => 
                 `<li><strong>${item.cantidad}x</strong> ${item.nombre} <small class="text-muted">(${item.tamano || item.tamaño || 'Regular'})</small></li>`
             ).join('');
 
-            const alertaCobro = metodoPago === 'Efectivo' 
-                ? '<small class="text-danger fw-bold"><i class="fas fa-hand-holding-usd"></i> Cobrar Efectivo</small>'
-                : `<small class="text-success"><i class="fas fa-check-circle"></i> ${metodoPago}</small>`;
+            const totalPedido = pedido.total_pagado ?? pedido.total ?? 0;
+            const montoRec = pedido.monto_recibido;
+            const cambio = pedido.cambio;
+            const metodoPago = pedido.metodo_pago || pedido.Metodo_pago || 'Efectivo';
+            const estadoPedido = (pedido.estado || pedido.Estado || 'Pendiente').toUpperCase();
+
+            let alertaCobro = '';
+            if (metodoPago === 'Efectivo') {
+                alertaCobro = `<small class="text-danger fw-bold"><i class="fas fa-hand-holding-usd"></i> Cobrar: $${Number(totalPedido).toFixed(2)}</small>`;
+                if (montoRec !== undefined && montoRec !== null) {
+                    alertaCobro += `<br><small class="text-muted" style="font-size: 0.85em;">Cliente pagó: $${Number(montoRec).toFixed(2)}</small>`;
+                    alertaCobro += `<br><small class="text-primary fw-bold" style="font-size: 0.9em;">Dar cambio: $${Number(cambio).toFixed(2)}</small>`;
+                }
+            } else {
+                alertaCobro = `<small class="text-success"><i class="fas fa-check-circle"></i> ${metodoPago}</small>`;
+            }  
 
             let botonesAcciones = '';
             if (estadoPedido === 'PENDIENTE' || estadoPedido === 'ENVIANDO' || estadoPedido === 'PREPARANDO') {

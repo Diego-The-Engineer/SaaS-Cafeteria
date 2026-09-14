@@ -134,9 +134,11 @@ async def post_pedidos(pedidos: Create_pedido):
        "fecha": datetime.utcnow(),
         "cliente_nombre": f"{pedidos.first_name} {pedidos.last_name}".strip(),
         "telefono": pedidos.phone, 
-        "direccion": pedidos.direccion.model_dump() if pedidos.direccion else None,
+        "direccion": pedidos.direccion.model_dump() if pedidos.direccion and pedidos.direccion.calle != "" else None,
         "items": items_detallados,
         "total_pagado": total,
+        "monto_recibido": pedidos.monto_recibido, 
+        "cambio": pedidos.cambio,                 
         "Metodo_pago": pedidos.metodo_pago,
         "Estado": "Pendiente"
     }

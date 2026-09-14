@@ -15,7 +15,8 @@ let datosPedido = {
     longitudCliente: null,
     direccionTexto: null,
     distanciaKm: null,
-    costoEnvio: 0
+    costoEnvio: 0,
+    direccion: {}
 };
 window.onload = () => { cargarMenu(); };
 
@@ -461,11 +462,11 @@ function buscarProducto() {
 
 // PEDIDOS //
 
-function initMapa(){
+window.initMapa = function() {
     const btnContinuar = document.getElementById("btn-continuar-pago");
     const sucursal_lat = {
-        lat:17.078399006698426, 
-        lng: -96.72288414676025 
+        lat: 17.078399006698426,
+        lng: -96.72288414676025
     };
 
     mapa = new google.maps.Map(document.getElementById("mapa-google"), {
@@ -475,7 +476,7 @@ function initMapa(){
 
     geocoder = new google.maps.Geocoder();
 
-     marcador = new google.maps.Marker({
+    marcador = new google.maps.Marker({
         position: sucursal_lat,
         map: mapa,
         title: "Tu ubicación de entrega",
@@ -488,7 +489,7 @@ function initMapa(){
         traducirCoordenadasADireccion(nuevaPosicion);
     });
 
-const inputCalle = document.getElementById("input-calle");
+    const inputCalle = document.getElementById("input-calle");
     autocomplete = new google.maps.places.Autocomplete(inputCalle, {
         types: ["address"],
         componentRestrictions: { country: "mx" }
@@ -511,6 +512,7 @@ const inputCalle = document.getElementById("input-calle");
         datosPedido.longitudCliente = ubicacionCliente.lng();
         datosPedido.direccionTexto = place.formatted_address;
         document.getElementById("input-colonia").value = "";
+        
         if (place.address_components) {
             const componenteColonia = place.address_components.find(c => c.types.includes("sublocality") || c.types.includes("neighborhood"));
             if (componenteColonia) {
@@ -520,8 +522,7 @@ const inputCalle = document.getElementById("input-calle");
         btnContinuar.disabled = false;
         calcularDistanciaEntrega(ubicacionCliente);
     });
-    
-}
+};
 
 function traducirCoordenadasADireccion(latLng) {
     const btnContinuar = document.getElementById("btn-continuar-pago");
@@ -774,9 +775,8 @@ function calcularCambio(){
 
 async function procesarPagoEfectivo() {
     const btnPagarEfectivo = document.getElementById("btn-pagar-efectivo"); 
-    
-    // 1. Validamos que el monto sea suficiente antes de bloquear nada
     let montoRecibido = parseFloat(document.getElementById("input-monto-recibido").value) || 0;
+    
     if (montoRecibido < totalG) {
         Toastify({
             text: "El monto recibido es menor al total del pedido.",
@@ -786,40 +786,46 @@ async function procesarPagoEfectivo() {
         }).showToast();
         return; 
     }
+
+    const nombreInput = document.getElementById("nombre");
+    const apellidoInput = document.getElementById("apellido");
+    const telefonoInput = document.getElementById("telefono");
+
+    const nombre = nombreInput ? nombreInput.value : "Cliente";
+    const apellido = apellidoInput ? apellidoInput.value : "";
+    const telefono = telefonoInput ? telefonoInput.value : "Sin teléfono";
+
     const textoOriginal = btnPagarEfectivo.innerText; 
     btnPagarEfectivo.innerText = "Procesando pedido...";
     btnPagarEfectivo.disabled = true;
-    const payload_efectivo = {
-        first_name: document.getElementById("nombre").value,
-        last_name: document.getElementById("apellido").value,
-        phone: document.getElementById("telefono").value,
-        metodo_pago: "Efectivo",
-        total: totalG,
-        monto: montoRecibido,
-        cambio: montoRecibido - totalG,
-        token_tarjeta: "N/A", 
-        items: carrito.map(item => ({
-            idUnico: item.idUnico || (item.id + Date.now()), 
-            producto_id: item.producto_id || item.id || item._id || item.idProducto,
-            nombre: item.nombre,
-            tamano: item.tamano || 'Regular',
-            precio: item.precio,
-            cantidad: item.cantidad
-        })),
-        direccion: {
-            calle: document.getElementById("input-calle").value, 
-            colonia: document.getElementById("input-colonia").value,
-            cp: document.getElementById("input-cp").value,
-            referencias: document.getElementById("input-referencias").value
-        }
-    };
+    
+    const esDomicilio = datosPedido.tipoEntrega === 'domicilio';
+    const direccionPayload = esDomicilio ? {
+        calle: document.getElementById("input-calle").value,
+        colonia: document.getElementById("input-colonia").value,
+        cp: document.getElementById("input-cp").value,
+        referencias: document.getElementById("input-referencias").value
+    } : { calle: "", colonia: "", cp: "", referencias: "" }; 
+
+    const pedidoData = {
+            items: carrito, 
+            first_name: nombre,
+            last_name: apellido,
+            phone: telefono,
+            token_tarjeta: 'N/A',
+            metodo_pago: "Efectivo",
+            total: totalG,
+            monto_recibido: montoRecibido,
+            monto: montoRecibido, // <-- PARCHE: Enviamos la variable vieja para satisfacer a Render
+            cambio: montoRecibido - totalG,                  
+            direccion: direccionPayload
+        };
 
     try {
-
         const res = await fetch(`${API_URL}/pedidos`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload_efectivo)
+            body: JSON.stringify(pedidoData)
         });
 
         if (res.ok) {
@@ -839,6 +845,11 @@ async function procesarPagoEfectivo() {
 
         } else {
             const errorData = await res.json();
+            // Traductor de errores de FastAPI (Evita el [object Object])
+            if (Array.isArray(errorData.detail)) {
+                const mensajes = errorData.detail.map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`);
+                throw new Error("Faltan datos: " + mensajes.join(', '));
+            }
             throw new Error(errorData.detail || "Error al registrar el pedido");
         }
 
