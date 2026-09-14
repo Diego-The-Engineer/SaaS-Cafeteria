@@ -1,5 +1,7 @@
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
 const API_URL = esLocal ? "http://localhost:5503" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+const SUCURSAL_COORDENADAS = { lat: 17.078399006698426, lng: -96.72288414676025 };
+const DISTANCIA_MAXIMA_KM = 15;
 let totalG;
 let mapa;
 let sucursal;
@@ -18,6 +20,7 @@ let datosPedido = {
     costoEnvio: 0,
     direccion: {}
 };
+
 window.onload = () => { cargarMenu(); };
 
 // --- CARGA INICIAL ---
@@ -633,14 +636,11 @@ function traducirCoordenadasADireccion(latLng) {
     const btnContinuar = document.getElementById("btn-continuar-pago");
     geocoder.geocode({ location: latLng }, (results, status) => {
         if (status === "OK" && results[0]) {
-            let calle = "";
-            let numero = "";
-            let colonia = "";
-            let cp = "";
+            let calle = "", numero = "", colonia = "", cp = "";
             results[0].address_components.forEach(componente => {
                 if (componente.types.includes("route")) calle = componente.long_name;
                 if (componente.types.includes("street_number")) numero = componente.long_name;
-                if(componente.types.includes("postal_code")) cp = componente.long_name;
+                if (componente.types.includes("postal_code")) cp = componente.long_name;
                 if (componente.types.includes("sublocality") || componente.types.includes("neighborhood")) colonia = componente.long_name;
             });
             let direccionFinal = calle;
@@ -649,8 +649,7 @@ function traducirCoordenadasADireccion(latLng) {
             document.getElementById("input-colonia").value = colonia;
             document.getElementById("input-cp").value = cp;
             datosPedido.direccion.coordenadas = { lat: latLng.lat(), lng: latLng.lng() };
-        } else {
-            console.log("No se pudo leer la calle de esas coordenadas.");
+            calcularDistanciaEntrega(latLng);
         }
     });
     btnContinuar.disabled = false;
@@ -839,15 +838,24 @@ function actualizarMapaDesdeTexto() {
 function abrirModalPago(metodo) {
     datosPedido.metodoPago = metodo;
     const modalResumenEl = document.getElementById('modal-resumen-pago');
+    const totalFinal = obtenerTotalConEnvio();
+    const costoEnvio = datosPedido.tipoEntrega === 'domicilio' ? (datosPedido.costoEnvio || 0) : 0;
+    
+    let textoTotal = `$${totalFinal.toFixed(2)}`;
+    if (costoEnvio > 0) {
+        textoTotal += ` <small style="font-size: 0.6em; color: #555; font-weight: normal;">(Incluye $${costoEnvio.toFixed(2)} de envío)</small>`;
+    }
 
     if (metodo === 'efectivo') {
         bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
-        document.getElementById("total-efectivo").innerText = `$${obtenerTotalConEnvio().toFixed(2)}`;
+        document.getElementById("total-efectivo").innerHTML = textoTotal;
         const modalEfectivoEl = document.getElementById('modal-efectivo');
         bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).show();   
         
     } else if (metodo === 'tarjeta') {
         bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
+        document.getElementById("staticBackdropLabel").innerHTML = `Pago con Tarjeta: ${textoTotal}`;
+        
         const modalTarjetaEl = document.getElementById('staticBackdrop');
         bootstrap.Modal.getOrCreateInstance(modalTarjetaEl).show();
         

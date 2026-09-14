@@ -393,17 +393,16 @@ async function cargarPedidosPendientes() {
             
             const idPedido = pedido.id || pedido._id || '';
             const folio = idPedido.slice(-4).toUpperCase(); 
-
+            const totalPedido = pedido.total_pagado ?? pedido.total ?? 0;
+            const montoRec = pedido.monto_recibido;
+            const cambio = pedido.cambio;
+            const costoEnvio = pedido.costo_envio || 0;
+            const metodoPago = pedido.metodo_pago || pedido.Metodo_pago || 'Efectivo';
+            const estadoPedido = (pedido.estado || pedido.Estado || 'Pendiente').toUpperCase();
 
             const listaProductos = (pedido.items || []).map(item => 
                 `<li><strong>${item.cantidad}x</strong> ${item.nombre} <small class="text-muted">(${item.tamano || item.tamaño || 'Regular'})</small></li>`
             ).join('');
-
-            const totalPedido = pedido.total_pagado ?? pedido.total ?? 0;
-            const montoRec = pedido.monto_recibido;
-            const cambio = pedido.cambio;
-            const metodoPago = pedido.metodo_pago || pedido.Metodo_pago || 'Efectivo';
-            const estadoPedido = (pedido.estado || pedido.Estado || 'Pendiente').toUpperCase();
 
             let alertaCobro = '';
             if (metodoPago === 'Efectivo') {
@@ -414,7 +413,12 @@ async function cargarPedidosPendientes() {
                 }
             } else {
                 alertaCobro = `<small class="text-success"><i class="fas fa-check-circle"></i> ${metodoPago}</small>`;
-            }  
+            }
+
+            let envioBadge = '';
+            if (costoEnvio > 0) {
+                envioBadge = `<br><small class="text-muted" style="font-size: 0.8em;"><i class="fas fa-motorcycle"></i> Envío: +$${Number(costoEnvio).toFixed(2)}</small>`;
+            }
 
             let botonesAcciones = '';
             if (estadoPedido === 'PENDIENTE' || estadoPedido === 'ENVIANDO' || estadoPedido === 'PREPARANDO') {
@@ -451,7 +455,7 @@ async function cargarPedidosPendientes() {
                     </td>
                     
                     <td><ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em;">${listaProductos}</ul></td>
-                    <td><strong>$${Number(totalPedido).toFixed(2)}</strong><br>${alertaCobro}</td>
+                    <td><strong>$${Number(totalPedido).toFixed(2)}</strong>${envioBadge}<br>${alertaCobro}</td>
                     <td><span class="badge ${badgeClass}">${estadoPedido}</span></td>
                     <td>${botonesAcciones}</td>
                 </tr>

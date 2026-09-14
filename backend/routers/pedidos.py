@@ -51,7 +51,6 @@ async def post_pedidos(pedidos: Create_pedido):
     total = 0.0
     items_detallados = []
     items_ecart = []    
-
     for item in pedidos.items:
         producto_db = await db["productos"].find_one({"_id": ObjectId(item.producto_id)})
         if not producto_db:
@@ -65,6 +64,7 @@ async def post_pedidos(pedidos: Create_pedido):
 
         if variante_db and variante_db.get("disponible") is False:
             raise HTTPException(status_code=400, detail=f"Producto no disponible")
+            
         subtotal = float(item.precio) * item.cantidad
         total += subtotal
         
@@ -82,6 +82,20 @@ async def post_pedidos(pedidos: Create_pedido):
             "quantity": item.cantidad,
             "price": float(item.precio) 
         })
+
+    costo_envio = 0.0
+    if pedidos.direccion and pedidos.direccion.calle:
+        if pedidos.total > total:
+            costo_envio = round(pedidos.total - total, 2)
+            
+    total_con_envio = round(total + costo_envio, 2)
+
+    if costo_envio > 0:
+        items_ecart.append({
+            "name": "Costo de Envío a Domicilio",
+            "quantity": 1,
+            "price": float(costo_envio)
+        })
     transaccion_id = None
     if pedidos.metodo_pago == "Tarjeta":
         token_pasarela = token_ecartpay() 
@@ -91,7 +105,7 @@ async def post_pedidos(pedidos: Create_pedido):
             "first_name": pedidos.first_name,
             "last_name": pedidos.last_name,
             "phone": pedidos.phone,
-            "items": items_ecart,
+            "items": items_ecart, 
             "token": pedidos.token_tarjeta, 
             "notify_url": "https://sep7ima-cafeteria-f7z2.onrender.com/pagos/webhook"
         }
@@ -104,7 +118,6 @@ async def post_pedidos(pedidos: Create_pedido):
 
         try:
             url_cobro_ecartpay = "https://ecartpay.com/api/orders"
-            
             response_charge = requests.post(url_cobro_ecartpay, json=payload_ecart, headers=headers_charges)
             
             if response_charge.status_code not in [200, 201]:
@@ -120,6 +133,7 @@ async def post_pedidos(pedidos: Create_pedido):
                 
     elif pedidos.metodo_pago not in ["Transferencia", "Efectivo"]:
         raise HTTPException(status_code=400, detail=f"Metodo no encontrado")
+
     for item in pedidos.items:
         producto_db = await db["productos"].find_one({"_id": ObjectId(item.producto_id)})
         stock_final = producto_db.get("cantidad", 0) - item.cantidad
@@ -136,9 +150,10 @@ async def post_pedidos(pedidos: Create_pedido):
         "telefono": pedidos.phone, 
         "direccion": pedidos.direccion.model_dump() if pedidos.direccion and pedidos.direccion.calle != "" else None,
         "items": items_detallados,
-        "total_pagado": total,
-        "monto_recibido": pedidos.monto_recibido, 
-        "cambio": pedidos.cambio,                 
+        "costo_envio": costo_envio,          
+        "total_pagado": total_con_envio,     
+        "monto_recibido": getattr(pedidos, "monto_recibido", None), 
+        "cambio": getattr(pedidos, "cambio", None),                 
         "Metodo_pago": pedidos.metodo_pago,
         "Estado": "Pendiente"
     }
