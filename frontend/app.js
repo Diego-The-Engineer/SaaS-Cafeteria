@@ -372,15 +372,10 @@ async function procesarPago() {
             phone: telefono,
             token_tarjeta: tokenSeguro,
             metodo_pago: metodoPago,
-            total: totalPedido,
+            total: totalFinal,
             monto_recibido: montoRecibido,
-            cambio: cambio,
-            direccion: {
-                calle: document.getElementById("input-calle").value, 
-                colonia: document.getElementById("input-colonia").value,
-                cp: document.getElementById("input-cp").value,
-                referencias: document.getElementById("input-referencias").value
-            }
+            cambio: montoRecibido - totalFinal,                  
+            direccion: direccionPayload
         };
 
         const backendResponse = await fetch(`${API_URL}/pedidos`, {
@@ -737,7 +732,7 @@ function abrirModalPago(metodo) {
 
     if (metodo === 'efectivo') {
         bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
-        document.getElementById("total-efectivo").innerText = `$${totalG.toFixed(2)}`;
+        document.getElementById("total-efectivo").innerText = `$${obtenerTotalConEnvio().toFixed(2)}`;
         const modalEfectivoEl = document.getElementById('modal-efectivo');
         bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).show();   
         
@@ -759,17 +754,17 @@ function abrirModalPago(metodo) {
 
 function marcarPagoExacto (){
     const montoExacto = document.getElementById("input-monto-recibido");
-    montoExacto.value = totalG;
+    montoExacto.value = obtenerTotalConEnvio();
     calcularCambio();
 }
 function calcularCambio(){
     let monto = parseFloat(document.getElementById("input-monto-recibido").value);
-    let cambio = Math.abs(totalG - monto);
+    let cambio = Math.abs(obtenerTotalConEnvio() - monto);
     const labelCambio1 = document.getElementById("label-cambio");
     labelCambio1.innerText = `${cambio.toFixed(2)}`;
 
-    if(monto < totalG){
-        labelCambio1.innerText = `Monto inválido`;
+    if(monto < obtenerTotalConEnvio()){
+        document.getElementById("label-cambio").innerText = `Monto inválido`;
     }
 }
 
@@ -865,4 +860,9 @@ async function procesarPagoEfectivo() {
         btnPagarEfectivo.innerText = textoOriginal;
         btnPagarEfectivo.disabled = false;
     }
+}
+
+function obtenerTotalConEnvio() {
+    const costoEnvio = datosPedido.tipoEntrega === 'domicilio' ? (datosPedido.costoEnvio || 0) : 0;
+    return totalG + costoEnvio;
 }

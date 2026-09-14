@@ -813,17 +813,14 @@ function abrirModalDetalles(idPedido) {
     
     const nombreCliente = pedido.cliente_nombre || 'Cliente Anónimo';
     const telefono = pedido.telefono || pedido.phone || 'No proporcionado';
-    
-    let direccionFormateada;
-    if (pedido.direccion && typeof pedido.direccion === 'object') {
+    let direccionFormateada = 'Mostrador (Entregar en sucursal)';
+    if (pedido.direccion && typeof pedido.direccion === 'object' && pedido.direccion.calle) {
         const calle = pedido.direccion.calle;
         const colonia = pedido.direccion.colonia;
         const cp = pedido.direccion.codigo_postal || pedido.direccion.cp || '';
         const referencias = pedido.direccion.referencias || 'Ninguna';
         
         direccionFormateada = `📍 ${calle}, Col. ${colonia}, CP: ${cp}\n📝 Referencias: ${referencias}`;
-        if(calle == '' && colonia == '' && cp == '') 
-            direccionFormateada = 'Mostrador (Entregar en sucursal) ';
     } 
     else if (pedido.direccion && typeof pedido.direccion === 'string') {
         direccionFormateada = `📍 ${pedido.direccion}`;
