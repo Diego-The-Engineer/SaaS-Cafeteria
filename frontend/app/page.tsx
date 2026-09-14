@@ -2,6 +2,26 @@
 
 import { useState } from 'react'
 
+import React from 'react';
+
+export const MapSection: React.FC = () => {
+  return (
+    <div className="map-container" style={{ width: '100%', height: '450px', borderRadius: '8px', overflow: 'hidden' }}>
+      <iframe
+        title="Ubicación de Séptima Cafetería"
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3814.281827464082!2d-96.72536652391965!3d17.078455783688177!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85c723ee6544649b%3A0xab4ec1ce5d90df14!2sCasa%20Acueducto!5e0!3m2!1ses!2smx!4v1700000000000!5m2!1ses!2smx"
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        allowFullScreen={true}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
+  );
+};
+
+
 const products = [
   { name: 'Latte de la casa', detail: 'Espresso · leche cremosa · caramelo', price: '$4.50', image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=85' },
   { name: 'Croissant de almendras', detail: 'Hojaldre · almendra · azúcar glass', price: '$3.80', image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=900&q=85' },
@@ -33,7 +53,7 @@ export default function Page() {
             <a href="#nosotros" onClick={() => setMenuOpen(false)}>Nosotros</a>
             <a href="#menu" onClick={() => setMenuOpen(false)}>Menú</a>
             <a href="#ubicacion" onClick={() => setMenuOpen(false)}>Ubicación</a>
-            <a className="nav-cta" href="/menu.html" onClick={() => setMenuOpen(false)}>Ver menú <span>↗</span></a>
+            <a className="nav-cta" href="/menu.html" onClick={() => setMenuOpen(false)}>Pide en línea <span>↗</span></a>
           </div>
         </nav>
       </header>
@@ -42,7 +62,7 @@ export default function Page() {
         <div className="hero-photo" aria-hidden="true" />
         <div className="hero-overlay" />
         <div className="container hero-content">
-          <p className="eyebrow light">Café de especialidad · desde 2018</p>
+          <p className="eyebrow light">Café de especialidad · desde 2026</p>
           <h1>Un buen café<br /><em>cambia el día.</em></h1>
           <p className="hero-copy">Un espacio para hacer una pausa, disfrutar lo simple y volver a lo esencial.</p>
           <div className="hero-actions">
@@ -133,12 +153,12 @@ export default function Page() {
             <p className="eyebrow">Visítanos</p>
             <h2>Tu mesa<br /><em>te espera.</em></h2>
             <div className="address">
-              <p>Av. Séptima 142<br />Barrio La Soledad<br />Bogotá, Colombia</p>
-              <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="text-link">Cómo llegar <span>↗</span></a>
+              <p>Av. Séptima 142<br />Barrio La Soledad<br />Oaxaca, México</p>
+              <a href="https://www.google.com/maps/place/Casa+Acueducto/@17.0783836,-96.7228093,20.06z/data=!4m9!3m8!1s0x85c723ee6544649b:0xab4ec1ce5d90df14!5m2!4m1!1i2!8m2!3d17.0784558!4d-96.7227916!16s%2Fg%2F11t5dhtmjz!18m1!1e1?entry=ttu&g_ep=EgoyMDI2MDkwOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noreferrer" className="text-link">Cómo llegar <span>↗</span></a>
             </div>
           </div>
           <div className="map-card">
-            <iframe title="Ubicación de Séptima Cafetería" src="https://www.openstreetmap.org/export/embed.html?bbox=-74.076%2C4.635%2C-74.066%2C4.645&layer=mapnik&marker=4.640%2C-74.071" />
+            <MapSection/>
             <div className="map-label"><span className="map-dot" /> Séptima Cafetería</div>
           </div>
         </div>
@@ -154,7 +174,7 @@ export default function Page() {
           </a>
           <p>Un buen café cambia el día.</p>
           <div className="socials">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram ↗</a>
+            <a href="https://www.instagram.com/septimacafe/" target="_blank" rel="noreferrer">Instagram ↗</a>
             <a href="mailto:hola@septimacafeteria.com">Contacto ↗</a>
           </div>
         </div>

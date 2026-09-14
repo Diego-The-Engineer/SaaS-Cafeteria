@@ -1,7 +1,7 @@
 :root {
     /* Paleta Editorial Séptima */
     --primary: #9C724E;         /* Caramelo suave / Crema de café */
-    --primary-dark: #2C1E16;    /* Negro espresso (casi negro) */
+    --primary-dark: #2C1E16;    /* Negro espresso */
     --primary-light: #EBE5DD;   /* Avena / Lino */
     --bg-color: #F8F6F2;        /* Blanco hueso muy cálido */
     --text-dark: #1A1A1A;       /* Texto principal */
@@ -9,22 +9,19 @@
     --card-bg: #FFFFFF;         /* Blanco puro para contraste */
     --success: #636B54;         /* Verde salvia / Matcha */
     --danger: #A65D5D;          /* Terracota apagado */
-    
-    /* Tipografías */
     --font-heading: 'Playfair Display', serif;
     --font-body: 'Manrope', system-ui, sans-serif;
 }
 
 body {
     font-family: var(--font-body);
-    background-color: var(--bg-color);
+    background-color: var(--primary-dark);
     margin: 0;
     padding: 20px 0; 
     color: var(--text-dark);
     -webkit-font-smoothing: antialiased;
 }
 
-/* Header Minimalista */
 .header {
     width: 100%;
     text-align: center;
@@ -89,7 +86,6 @@ body {
     padding: 0 20px 60px 20px;
 }
 
-/* Buscador Estilo Editorial (Línea simple en lugar de caja gigante) */
 .filtros-container {
     width: 100%;
     position: sticky; 
@@ -124,7 +120,6 @@ body {
     border-bottom: 1px solid var(--primary-dark);
 }
 
-/* Categorías sutiles */
 .categorias-wrapper {
     display: flex;
     overflow-x: auto;
@@ -181,9 +176,9 @@ body {
 
 .producto-card img {
     width: 100% !important;
-    aspect-ratio: 4 / 5; /* Proporción de post de Instagram (vertical) */
+    aspect-ratio: 4 / 5; 
     object-fit: cover; 
-    border-radius: 4px; /* Esquinas casi rectas */
+    border-radius: 4px; 
     display: block;
     margin-bottom: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.04);
@@ -536,9 +531,9 @@ body {
    NUEVOS COMPONENTES UX (Tarjetas y Scroll)
    ========================================= */
 
-/* Indicador de scroll para categorías móvil */
+
 .filtros-container {
-    position: relative;
+    position: sticky;
 }
 .categorias-wrapper::after {
     content: '';
@@ -652,4 +647,37 @@ body {
     padding: 0;
     flex: 1;
     margin: 0;
+}
+
+.btn-flotante-inicio {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-dark);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 990; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-flotante-inicio:hover {
+    transform: scale(1.1) translateY(-3px);
+    background-color: var(--primary);
+    color: white;
+    box-shadow: 0 6px 20px rgba(156, 114, 78, 0.4);
+}
+
+@media (max-width: 767px) {
+    .btn-flotante-inicio {
+        bottom: 95px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+    }
 }
