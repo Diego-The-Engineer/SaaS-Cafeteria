@@ -758,13 +758,13 @@ function calcularDistanciaEntrega(destinoCliente) {
             } else {
                 btnContinuar.disabled = false; 
                 
-                if(distanciaValorKm < 2){
+                if(distanciaValorKm <= 1){
                     datosPedido.costoEnvio = 0;
                 }
-                else if(distanciaValorKm < 5){
+                else if(distanciaValorKm <= 3){
                     datosPedido.costoEnvio =15;
                 }
-                else if (distanciaValorKm <= 8) {
+                else if (distanciaValorKm <= 6) {
                     datosPedido.costoEnvio = 30; 
                 } else {
                     datosPedido.costoEnvio = 60; 
