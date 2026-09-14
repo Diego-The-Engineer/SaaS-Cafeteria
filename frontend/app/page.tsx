@@ -23,9 +23,9 @@ export const MapSection: React.FC = () => {
 
 
 const products = [
-  { name: 'Latte de la casa', detail: 'Espresso · leche cremosa · caramelo', price: '$4.50', image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Croissant de almendras', detail: 'Hojaldre · almendra · azúcar glass', price: '$3.80', image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Pour over de temporada', detail: 'Café de especialidad · notas florales', price: '$5.00', image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=900&q=85' },
+  { name: 'ORCHATA CAFÉ (M)', detail: 'espresso · horchata · leche condensada', price: '$79.00', image: 'https://www.recetasnestle.com.mx/sites/default/files/srh_recipes/c1734ae63859079bd5718ae260980c69.jpg' },
+  { name: 'CARAMEL BANANA (G)', detail: 'plátano · caramelo · leche', price: '$83.00', image: 'https://www.justataste.com/wp-content/uploads/2013/03/banana-pudding-wafers.jpg' },
+  { name: 'MATCHA FRÍO (M)', detail: 'matcha · leche', price: '$75.00', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgvKAooyA8RRM7TY_u7ndvT-GL1nphlLQSNK1F_TT1gJHMOCKjZEGkb4Y&s=10' },
 ]
 
 const values = [
@@ -63,7 +63,7 @@ export default function Page() {
         <div className="hero-overlay" />
         <div className="container hero-content">
           <p className="eyebrow light">Café de especialidad · desde 2026</p>
-          <h1>Un buen café<br /><em>cambia el día.</em></h1>
+          <h1>Sin prisa. Sin ruido<br /><em>Solo café.</em></h1>
           <p className="hero-copy">Un espacio para hacer una pausa, disfrutar lo simple y volver a lo esencial.</p>
           <div className="hero-actions">
             <a className="button button-light" href="/menu.html">Descubre el menú <span>↗</span></a>
@@ -119,7 +119,7 @@ export default function Page() {
             <p className="eyebrow">De nuestra barra</p>
             <h2>Lo que se<br /><em>antoja hoy.</em></h2>
           </div>
-          <a className="text-link" href="/menu.html">Ver menú completo <span>↗</span></a>
+          <a className="text-link" href="/menu.html">Ver y pedir en línea  <span>↗</span></a>
         </div>
         <div className="product-grid">
           {products.map((product) => (
@@ -142,7 +142,7 @@ export default function Page() {
         <div className="menu-banner-content">
           <p className="eyebrow light">Todo lo que hacemos</p>
           <h2>Ven por el café.<br /><em>Quédate por todo.</em></h2>
-          <a className="button button-outline" href="/menu.html">Ver menú <span>↓</span></a>
+          <a className="button button-outline" href="/Menu septima.jpg">Ver menú <span>↓</span></a>
         </div>
       </section>
 
@@ -153,7 +153,7 @@ export default function Page() {
             <p className="eyebrow">Visítanos</p>
             <h2>Tu mesa<br /><em>te espera.</em></h2>
             <div className="address">
-              <p>Av. Séptima 142<br />Barrio La Soledad<br />Oaxaca, México</p>
+              <p> C. José López Alavez 1513 B <br/> Barrio de Xochimilco <br/>Oaxaca, México</p>
               <a href="https://www.google.com/maps/place/Casa+Acueducto/@17.0783836,-96.7228093,20.06z/data=!4m9!3m8!1s0x85c723ee6544649b:0xab4ec1ce5d90df14!5m2!4m1!1i2!8m2!3d17.0784558!4d-96.7227916!16s%2Fg%2F11t5dhtmjz!18m1!1e1?entry=ttu&g_ep=EgoyMDI2MDkwOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noreferrer" className="text-link">Cómo llegar <span>↗</span></a>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function Page() {
             </span>
             <span>Séptima</span>
           </a>
-          <p>Un buen café cambia el día.</p>
+          <p>Sin prisa. Sin ruido. Solo café</p>
           <div className="socials">
             <a href="https://www.instagram.com/septimacafe/" target="_blank" rel="noreferrer">Instagram ↗</a>
             <a href="mailto:hola@septimacafeteria.com">Contacto ↗</a>
@@ -181,9 +181,23 @@ export default function Page() {
         <div className="container footer-bottom">
           <span>© 2026 Séptima Cafetería</span>
           <span>Hecho con calma, servido con amor.</span>
-          <a href="#inicio">Volver arriba ↑</a>
+           <a href="#inicio"> <span> Volver al inicio</span></a>
         </div>
       </footer>
+      <a href="#inicio" className="btn-flotante-inicio" > <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <line x1="12" y1="19" x2="12" y2="5"></line>
+    <polyline points="5 12 12 5 19 12"></polyline>
+  </svg></a>
     </main>
   )
 }
