@@ -897,6 +897,12 @@ function actualizarMapaDesdeTexto() {
     btnContinuar.disabled = false;
 }
 
+const obtenerTotalConEnvio = () => {
+    const constoEnvio = datosPedido.tipoEntrega === 'domicilio' ? (datosPedido.costoEnvio || 0) : 0
+
+    return totalG + constoEnvio
+}
+
 function abrirModalPago(metodo) {
     datosPedido.metodoPago = metodo;
     const modalResumenEl = document.getElementById('modal-resumen-pago');
