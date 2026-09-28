@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from routers import productos, pedidos, authRouter, stats, categorias
 from typing import List, Optional, Annotated
-from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter
+from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
 from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg, Create_stats, Response_stats, Categoria
@@ -44,3 +44,20 @@ app.include_router(pedidos.router)
 app.include_router(authRouter.router)
 app.include_router(stats.router)
 app.include_router(categorias.router)
+
+from fastapi import Request
+
+@app.post("/pagos/webhook")
+async def recibir_webhook_ecartpay(request: Request, hash: str = None):
+    try:
+        payload = await request.json()
+        print("=======================================")
+        print(f"Hash de seguridad: {hash}")
+        print("Datos del pago:", payload)
+        print("=======================================")
+        
+        return {"status": "success", "message": "Webhook recibido correctamente"}
+        
+    except Exception as e:
+        print("Error leyendo el webhook:", e)
+        return {"status": "error", "message": str(e)}
