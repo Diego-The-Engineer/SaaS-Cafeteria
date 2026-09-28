@@ -104,6 +104,7 @@ async def post_pedidos(pedidos: Create_pedido):
             "currency": "MXN",
             "first_name": pedidos.first_name,
             "last_name": pedidos.last_name,
+            "email": "correo@gmail.com",
             "phone": pedidos.phone,
             "items": items_ecart, 
             "token": pedidos.token_tarjeta, 

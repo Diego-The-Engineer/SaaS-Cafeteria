@@ -497,11 +497,7 @@ async function procesarPago() {
 async function procesarPagoEfectivo() {
     const btnPagarEfectivo = document.getElementById("btn-pagar-efectivo"); 
     let montoRecibido = parseFloat(document.getElementById("input-monto-recibido").value) || 0;
-    
-    // 1. Calculamos el total real con envío
     const totalFinal = obtenerTotalConEnvio();
-
-    // 2. Validamos contra el totalFinal, NO contra totalG
     if (montoRecibido < totalFinal) {
         Toastify({
             text: "El monto recibido es menor al total del pedido.",
@@ -532,7 +528,6 @@ async function procesarPagoEfectivo() {
         referencias: document.getElementById("input-referencias").value
     } : { calle: "", colonia: "", cp: "", referencias: "" }; 
 
-    // 3. Objeto de Efectivo blindado
     const pedidoData = {
             items: carrito, 
             first_name: nombre,
@@ -540,10 +535,10 @@ async function procesarPagoEfectivo() {
             phone: telefono,
             token_tarjeta: 'N/A',
             metodo_pago: "Efectivo",
-            total: totalFinal,                  // Total real
-            monto_recibido: montoRecibido,      // Lo que dio el cliente
-            monto: montoRecibido,               // Parche para Render
-            cambio: montoRecibido - totalFinal, // Cambio real                
+            total: totalFinal,                  
+            monto_recibido: montoRecibido,      
+            monto: montoRecibido,               
+            cambio: montoRecibido - totalFinal,         
             direccion: direccionPayload
         };
 
