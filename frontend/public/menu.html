@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -19,9 +19,8 @@
 <body>
 
     <div class="header">
-       
         <h1>MENU SEP7IMA</h1>
-        <p>Nuestros deliciosos productos </p>
+        <p>Nuestros deliciosos productos</p>
     </div>
 
     <div class="main-layout">
@@ -52,7 +51,6 @@
                 <span id="total-precio">$0.00</span>
             </div>
 
-            <!-- Botón actualizado a btn-checkout -->
             <button type="button" class="btn-checkout w-100" id="btn-enviar" onclick="iniciarCheckout()" disabled>
                 Confirmar Pedido
             </button>
@@ -73,20 +71,20 @@
                 <div class="d-flex flex-column gap-2">
                     <button class="btn btn-outline-success" onclick="abrirModalPago('efectivo')">Efectivo</button>
                     <button class="btn btn-outline-primary" onclick="abrirModalPago('tarjeta')">Tarjeta bancaria</button>
-                    <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')"> Transferencia</button>
+                    <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')">Transferencia</button>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-between w-100">
-    <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAEntrega()">
-        ⬅ Volver a Entrega
-    </button>
-    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar Pedido</button>
-</div>
+                <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAEntrega()">
+                    ⬅ Volver a Entrega
+                </button>
+                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar Pedido</button>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modal-efectivo"  tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modal-efectivo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -97,26 +95,29 @@
                 <h4 class="text-center mb-3">Total: <span id="total-efectivo">0.00</span></h4>
                 
                 <div class="d-flex justify-content-center mb-3">
-                    <button class="btn btn-success"  onclick="marcarPagoExacto()">Pago Exacto</button>
+                    <button class="btn btn-success" onclick="marcarPagoExacto()">Pago Exacto</button>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Monto recibido</label>
-                    <input type="text"  class="form-control" id="input-monto-recibido" placeholder="$0.00" onkeyup="calcularCambio()">
+                    <input type="text" class="form-control" id="input-monto-recibido" placeholder="$0.00" onkeyup="calcularCambio()">
                 </div>
 
                 <div class="alert alert-info text-center">
                     <strong>Cambio a devolver: </strong> $<span id="label-cambio">0.00</span>
                 </div>
-            </div>
+                
+                <hr class="my-3">
+                <h6 class="mb-3 text-muted">Datos del cliente</h6>
 
-            <div class="col-md-6 mb-3">
-                <label for="nombre" class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="nombre" placeholder="Ej. Moises" required>
-            </div>
-            <div class="mb-3">
-                <label for="telefono" class="form-label">Teléfono</label>
-                <input type="tel" class="form-control" id="telefono" placeholder="9341024062" required maxlength="10">
+                <div class="col-12 mb-3">
+                    <label for="nombre-efectivo" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre-efectivo" placeholder="Ej. Moises" required>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="telefono-efectivo" class="form-label">Teléfono</label>
+                    <input type="tel" class="form-control" id="telefono-efectivo" placeholder="9341024062" required maxlength="10">
+                </div>
             </div>
              
             <div class="modal-footer d-flex justify-content-between">
@@ -141,18 +142,18 @@
                 <form id="form-checkout">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="nombre" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="nombre" placeholder="Ej. Moises" required>
+                            <label for="nombre-tarjeta" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombre-tarjeta" placeholder="Ej. Moises" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="apellido" class="form-label">Apellido</label>
-                            <input type="text" class="form-control" id="apellido" placeholder="Ej. Garcia" required>
+                            <label for="apellido-tarjeta" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="apellido-tarjeta" placeholder="Ej. Garcia" required>
                         </div>
                     </div>
         
                     <div class="mb-3">
-                        <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="telefono" placeholder="9341024062" required>
+                        <label for="telefono-tarjeta" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="telefono-tarjeta" placeholder="9341024062" required>
                     </div>
         
                     <hr class="my-3">
@@ -244,12 +245,14 @@
         </div>
     </div>
 </div>
+
 <a href="/" class="btn-flotante-inicio" aria-label="Volver al inicio" title="Volver al inicio">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-    </a>
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+</a>
+
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfgTqrdIPSQ07q688NaLY1y4WwxdMIbto&libraries=places,marker&callback=initMapa" async defer></script>
 </body>
 </html>
