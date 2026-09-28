@@ -122,7 +122,6 @@ function renderizarProductos() {
         let precioBaseHTML = '';
 
         if (tieneVariantes) {
-            // Select original oculto (Mantiene tu lógica intacta)
             selectorOcultoHTML = `<select id="variante-${prodId}" style="display: none;">`;
             
             pillHTML = `<div class="size-pills">`;
@@ -132,7 +131,6 @@ function renderizarProductos() {
                 
                 selectorOcultoHTML += `<option value="${valorUnido}" ${checked}>${v.tamaño} - $${v.precio}</option>`;
                 
-                // Las Pills visuales actualizan el select oculto y el precio en pantalla
                 pillHTML += `
                     <input type="radio" name="pill-${prodId}" id="pill-${prodId}-${index}" value="${valorUnido}" ${checked} 
                         onchange="document.getElementById('variante-${prodId}').value = this.value; document.getElementById('precio-display-${prodId}').innerText = '$' + parseFloat(${v.precio}).toFixed(2);">
@@ -142,14 +140,12 @@ function renderizarProductos() {
             selectorOcultoHTML += `</select>`;
             pillHTML += `</div>`;
             
-            // Precio destacado
             precioBaseHTML = `<div class="precio" id="precio-display-${prodId}">$${p.variantes[0].precio.toFixed(2)}</div>`;
         } else {
             selectorOcultoHTML = `<p style="color: var(--danger); font-size: 12px; margin: 8px 0;">Sin tamaños configurados</p>`;
             precioBaseHTML = `<div class="precio">$0.00</div>`;
         }
 
-        // Estilización de sabores
         let saboresHTML = '';
         if (p.sabores && p.sabores.length > 0) {
             saboresHTML = `<select id="sabor-${prodId}" class="form-control" style="margin-bottom: 12px; padding: 10px 15px; border-radius: 4px; width: 100%; border: 1px solid var(--primary-light); background-color: var(--card-bg); font-family: var(--font-body); font-size: 13px; color: var(--text-dark);">`;
@@ -166,7 +162,6 @@ function renderizarProductos() {
             ? `<p class="descripcion-prod" style="font-size: 13px; color: var(--text-muted); margin: 0 0 15px 0; line-height: 1.5;">${p.descripcion}</p>` 
             : '';
 
-        // Estilización de Opciones (Extras)
         let opcionesHTML = '';
         if (p.opciones && p.opciones.length > 0) {
             opcionesHTML = `<div class="opciones-seleccion" style="margin: 15px 0 10px 0; text-align: left; background: rgba(235, 229, 221, 0.4); padding: 12px; border-radius: 4px; border: 1px solid var(--primary-light);">`;
@@ -191,7 +186,6 @@ function renderizarProductos() {
 
         const imagenSource = p.imagen ? p.imagen : "https://via.placeholder.com/400x500/EBE5DD/2C1E16?text=S%C3%A9ptima";
         
-        // Clases dinámicas para el badge de stock
         const badgeClass = agotado ? 'agotado' : 'disponible';
         const badgeText = agotado ? 'Agotado' : 'Disponible';
 
@@ -221,7 +215,6 @@ function renderizarProductos() {
                             <button type="button" class="btn-qty" onclick="cambiarCantidadLocal('${prodId}', 1)">+</button>
                         </div>
                         
-                        <!-- Usamos la función puente para agregar varios a la vez -->
                         <button class="btn-add" onclick="agregarAlCarritoMultiple('${prodId}', '${p.nombre}')" ${(agotado || !tieneVariantes) ? 'disabled' : ''}>
                             ${agotado ? 'Sin Stock' : 'Agregar'}
                         </button>
@@ -378,7 +371,6 @@ function actualizarCarrito() {
             flotanteMovil.classList.remove('mostrar'); 
         }
     }
-    
 }
 
 // --- LÓGICA DE PAGO ---
@@ -388,13 +380,18 @@ async function procesarPago() {
     btnPagar.disabled = true;
 
     try {
-        const nombre = document.getElementById("nombre").value;
-        const apellido = document.getElementById("apellido").value;
-        const telefono = document.getElementById("telefono").value;
+        const nombreInput = document.getElementById("nombre-tarjeta") || document.getElementById("nombre");
+        const apellidoInput = document.getElementById("apellido-tarjeta") || document.getElementById("apellido");
+        const telefonoInput = document.getElementById("telefono-tarjeta") || document.getElementById("telefono");
+
+        const nombre = nombreInput ? nombreInput.value : "Cliente";
+        const apellido = apellidoInput ? apellidoInput.value : "";
+        const telefono = telefonoInput ? telefonoInput.value : "Sin teléfono";
+        
         const metodoPagoInput = document.getElementById("metodo-pago");
         const metodoPago = metodoPagoInput ? metodoPagoInput.value : "Tarjeta"; 
         const totalFinal = obtenerTotalConEnvio();
-        let tokenSeguro = "N/A"; 
+        let tokenSeguro = "N/A";
 
         if (metodoPago === "Tarjeta") {
             btnPagar.innerText = "Encriptando tarjeta...";
@@ -498,6 +495,7 @@ async function procesarPagoEfectivo() {
     const btnPagarEfectivo = document.getElementById("btn-pagar-efectivo"); 
     let montoRecibido = parseFloat(document.getElementById("input-monto-recibido").value) || 0;
     const totalFinal = obtenerTotalConEnvio();
+    
     if (montoRecibido < totalFinal) {
         Toastify({
             text: "El monto recibido es menor al total del pedido.",
@@ -508,12 +506,11 @@ async function procesarPagoEfectivo() {
         return; 
     }
 
-    const nombreInput = document.getElementById("nombre");
-    const apellidoInput = document.getElementById("apellido");
-    const telefonoInput = document.getElementById("telefono");
+    const nombreInput = document.getElementById("nombre-efectivo");
+    const telefonoInput = document.getElementById("telefono-efectivo");
 
     const nombre = nombreInput ? nombreInput.value : "Cliente";
-    const apellido = apellidoInput ? apellidoInput.value : "";
+    const apellido = "";
     const telefono = telefonoInput ? telefonoInput.value : "Sin teléfono";
 
     const textoOriginal = btnPagarEfectivo.innerText; 
@@ -560,9 +557,11 @@ async function procesarPagoEfectivo() {
             bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).hide();
             carrito = [];
             actualizarCarrito(); 
-            document.getElementById("form-checkout").reset();
+            document.getElementById("form-checkout")?.reset();
             document.getElementById("input-monto-recibido").value = "";
             document.getElementById("label-cambio").innerText = "0.00";
+            document.getElementById("nombre-efectivo").value = "";
+            document.getElementById("telefono-efectivo").value = "";
 
         } else {
             const errorData = await res.json();
@@ -850,6 +849,7 @@ function abrirModalResumenPago() {
     const modalResumen = bootstrap.Modal.getOrCreateInstance(modalResumenEl);
     modalResumen.show();
 }
+
 function volverAEntrega() {
     const modalResumenEl = document.getElementById('modal-resumen-pago');
     const modalEntregaEl = document.getElementById('modal-tipo-entrega');
@@ -875,13 +875,13 @@ function volverAResumenDesde(modalActualId) {
 }
 
 function actualizarMapaDesdeTexto() {
-    const btnContinuar = document.getElementById("boton-continuar-pago");
+    const btnContinuar = document.getElementById("btn-continuar-pago");
     const calle = document.getElementById("input-calle").value;
     const colonia = document.getElementById("input-colonia").value;
     const cp = document.getElementById("input-cp").value;
     if (calle !== "" || colonia !== "") {
 
-        const direccionCompleta = `${calle}, ${colonia}, ${cp},Oaxaca, Mexico`; 
+        const direccionCompleta = `${calle}, ${colonia}, ${cp}, Oaxaca, Mexico`; 
         
         geocoder.geocode({ address: direccionCompleta }, (results, status) => {
             if (status === "OK") {
@@ -923,7 +923,7 @@ function abrirModalPago(metodo) {
         
     } else if (metodo === 'transferencia') {
         Toastify({
-            text: "Opcion de transferencia en desarrollo",
+            text: "Opción de transferencia en desarrollo",
             duration: 3000,
             gravity: "top",
             position: "right",
@@ -932,23 +932,19 @@ function abrirModalPago(metodo) {
     }
 }
 
-function marcarPagoExacto (){
+function marcarPagoExacto() {
     const montoExacto = document.getElementById("input-monto-recibido");
     montoExacto.value = obtenerTotalConEnvio();
     calcularCambio();
 }
-function calcularCambio(){
+
+function calcularCambio() {
     let monto = parseFloat(document.getElementById("input-monto-recibido").value);
     let cambio = Math.abs(obtenerTotalConEnvio() - monto);
     const labelCambio1 = document.getElementById("label-cambio");
     labelCambio1.innerText = `${cambio.toFixed(2)}`;
 
-    if(monto < obtenerTotalConEnvio()){
+    if(monto < obtenerTotalConEnvio()) {
         document.getElementById("label-cambio").innerText = `Monto inválido`;
     }
-}
-
-function obtenerTotalConEnvio() {
-    const costoEnvio = datosPedido.tipoEntrega === 'domicilio' ? (datosPedido.costoEnvio || 0) : 0;
-    return totalG + costoEnvio;
 }
