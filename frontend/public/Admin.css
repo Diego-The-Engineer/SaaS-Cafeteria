@@ -1,22 +1,26 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
-    --primary: #4a3319;       /* Café oscuro profundo para botones principales y títulos */
-    --primary-hover: #362410;
-    --accent: #a88631;        /* Tono dorado/café claro para detalles y bordes */
-    --accent-hover: #8e7025;
-    --bg-overlay: rgba(0, 0, 0, 0.45);
-    --card-bg: #fcf8f2;       /* Fondo crema texturizado de las imágenes */
-    --text-dark: #2c1a11;     /* Texto principal en marrón oscuro */
-    --text-muted: #705c53;    /* Texto secundario */
-    --danger: #962d2d;        /* Rojo quemado para errores y eliminaciones */
-    --success: #27ae60;       /* Verde para stock suficiente */
-    --warning: #df9b12;       /* Naranja/Amarillo para stock bajo */
-    --preparing: #df7482;
+    /* Paleta Oficial Séptima Manual 2026 */
+    --primary: #303030;       /* Gris Oscuro Oficial */
+    --primary-hover: #1a1a1a;
+    --accent: #525645;        /* Verde Oliva Oficial */
+    --accent-hover: #3e4234;
+    --bg-overlay: rgba(48, 48, 48, 0.65);
+    --card-bg: #ffffff;       /* Blanco puro */
+    --page-bg: #dad3c1;       /* Crema Oficial */
+    --text-dark: #303030;     /* Gris Oscuro Oficial */
+    --text-muted: #62737b;    /* Slate Oficial */
+    --danger: #962d2d;        /* Mantenido por semántica de alertas */
+    --success: #525645;       /* Verde Oliva Oficial */
+    --warning: #62737b;       /* Slate Oficial */
+    --preparing: #dad3c1;     /* Crema Oficial */
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('cafeteria-fondo.jpg');
+    font-family: 'Inter', system-ui, sans-serif;
+    /* Mantenemos tu imagen de fondo pero la adaptamos a la nueva paleta */
+    background-image: linear-gradient(rgba(218, 211, 193, 0.85), rgba(218, 211, 193, 0.95)), url('cafeteria-fondo.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -27,15 +31,14 @@ body {
 }
 
 /* --- CONTENEDORES PRINCIPALES --- */
-.container {
-    max-width: 1300px;
-}
+.container { max-width: 1300px; }
 
 .header-custom {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-bg);
     padding: 15px 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(48, 48, 48, 0.1);
 }
 
 .header h1 { 
@@ -43,223 +46,128 @@ body {
     font-size: 26px; 
     color: var(--primary);
     font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .card {
     background-color: var(--card-bg) !important; 
-    border-radius: 16px !important; 
+    border-radius: 8px !important; 
     padding: 30px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important; 
-    border: 1px solid rgba(168, 134, 49, 0.2) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important; 
+    border: 1px solid rgba(48, 48, 48, 0.1) !important;
     position: relative;
     overflow: hidden;
-}
-.card::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, rgba(168, 134, 49, 0.03) 1px, transparent 1px);
-    background-size: 20px 100%;
-    pointer-events: none;
 }
 
 h2 { 
     margin-top: 0; 
     font-size: 22px; 
     color: var(--primary);
-    border-bottom: 2px solid rgba(168, 134, 49, 0.15); 
+    border-bottom: 1px solid rgba(48, 48, 48, 0.1); 
     padding-bottom: 12px; 
     margin-bottom: 25px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 /* --- SECCIÓN FINANCIERA --- */
 .stat-box {
     text-align: center; 
     padding: 25px 15px; 
-    background: #fff; 
-    border-radius: 12px; 
-    border: 1px solid rgba(168, 134, 49, 0.15);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    background: var(--card-bg); 
+    border-radius: 8px; 
+    border: 1px solid rgba(48, 48, 48, 0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
 .stat-box h3 { 
     color: var(--text-muted); 
-    font-size: 15px; 
+    font-size: 13px; 
     margin: 0 0 10px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
-.stat-box h1 { 
-    color: var(--primary); 
-    font-size: 42px; 
-    margin: 0;
-    font-weight: 700;
-}
-
-.stat-box p { 
-    color: var(--success); 
-    font-weight: bold; 
-    font-size: 13px; 
-    margin: 10px 0 0 0;
-}
+.stat-box h1 { color: var(--primary); font-size: 42px; margin: 0; font-weight: 700; }
+.stat-box p { color: var(--success); font-weight: 600; font-size: 13px; margin: 10px 0 0 0; }
 
 .chart-container {
     width: 100%;
-    background: #fff;
+    background: var(--card-bg);
     padding: 15px;
-    border-radius: 12px;
-    border: 1px solid rgba(168, 134, 49, 0.15);
+    border-radius: 8px;
+    border: 1px solid rgba(48, 48, 48, 0.1);
     box-sizing: border-box;
 }
 
 .login-card {
     background-color: var(--card-bg);
-    border-radius: 16px;
+    border-radius: 8px;
     padding: 40px 35px 25px 35px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-    border: 1px solid rgba(168, 134, 49, 0.2);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    border: 1px solid rgba(48, 48, 48, 0.1);
     position: relative;
 }
 
-.login-card h2 {
-    text-align: center;
-    font-size: 26px;
-    margin-bottom: 30px;
-}
+.login-card h2 { text-align: center; font-size: 26px; margin-bottom: 30px; font-weight: 700; }
 
 .error-gradient-base {
     margin: 20px -35px -25px -35px;
     padding: 20px 35px;
     background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 25%, rgba(255,255,255,1) 100%);
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 8px 8px;
     text-align: center;
 }
 
-.error-text {
-    color: var(--danger);
-    font-size: 14px;
-    font-weight: bold;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1.4;
-}
+.error-text { color: var(--danger); font-size: 13px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* --- FORMULARIOS --- */
-.form-group label { 
-    display: block; 
-    margin-bottom: 8px; 
-    font-weight: 600; 
-    font-size: 14px;
-    color: var(--primary);
-}
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;}
 
 .form-group input, .form-control {
-    width: 100%; 
-    padding: 12px; 
-    border: 1px solid #ccbfb5; 
-    border-radius: 8px; 
-    box-sizing: border-box;
-    background-color: #fff;
-    color: var(--text-dark);
-    font-size: 15px;
-    transition: 0.3s;
+    width: 100%; padding: 12px; border: 1px solid var(--text-muted); border-radius: 4px; 
+    box-sizing: border-box; background-color: var(--card-bg); color: var(--text-dark); font-size: 15px; transition: 0.3s;
 }
 
-.form-group input:focus, .form-control:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(168, 134, 49, 0.15);
-}
+.form-group input:focus, .form-control:focus { outline: none; border-color: var(--primary); box-shadow: none; }
 
 .btn-primary {
-    background-color: var(--primary) !important; 
-    color: white !important; 
-    border: none !important; 
-    padding: 13px 25px;
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    font-size: 15px;
-    transition: 0.3s;
+    background-color: var(--primary) !important; color: white !important; border: none !important; 
+    padding: 12px 25px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.3s;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
-.btn-primary:hover { 
-    background-color: var(--primary-hover) !important; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-
+.btn-primary:hover { background-color: var(--primary-hover) !important; }
 
 .btn-outline {
-    background: none;
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: 0.3s;
+    background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px;
+    border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; text-transform: uppercase;
 }
-.btn-outline:hover {
-    background-color: rgba(74, 51, 25, 0.08);
-}
+.btn-outline:hover { background-color: var(--primary); color: white; }
 
 .btn-outline-danger {
-    background: none;
-    border: 1px solid var(--danger);
-    color: var(--danger);
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: 0.3s;
+    background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px;
+    border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; text-transform: uppercase;
 }
-.btn-outline-danger:hover {
-    background-color: rgba(150, 45, 45, 0.08);
-}
+.btn-outline-danger:hover { background-color: var(--danger); color: white; }
 
 /* --- TABLA --- */
-.tabla-contenedor { 
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid rgba(168, 134, 49, 0.15);
-}
+.tabla-contenedor { background: var(--card-bg); border-radius: 8px; border: 1px solid rgba(48, 48, 48, 0.1); overflow: hidden; }
 
-th, td { 
-    padding: 14px 18px !important; 
-    text-align: left; 
-    border-bottom: 1px solid #f0eae4; 
-}
+th, td { padding: 14px 18px !important; text-align: left; border-bottom: 1px solid rgba(48,48,48,0.05); }
 
 th { 
-    background-color: #fcfaf7 !important; 
+    background-color: rgba(218, 211, 193, 0.2) !important; 
     color: var(--text-dark) !important; 
-    font-weight: 600;
-    font-size: 14px;
-    border-bottom: 2px solid rgba(168, 134, 49, 0.15) !important;
+    font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(48, 48, 48, 0.1) !important;
 }
-
-tr:last-child td {
-    border-bottom: none;
-}
+tr:last-child td { border-bottom: none; }
 
 /* --- BOTONES DE ACCIÓN EN TABLA --- */
-.btn-accion {
-    padding: 6px 14px; 
-    border: none; 
-    border-radius: 6px; 
-    cursor: pointer;
-    font-size: 12px; 
-    font-weight: bold; 
-    margin-right: 8px; 
-    transition: 0.2s;
-}
-.btn-toggle { background: var(--card-bg); color: var(--primary); border: 1px solid var(--accent); }
-.btn-toggle:hover { background: var(--accent); color: white; }
-.btn-delete { background: var(--danger); color: white; }
-.btn-delete:hover { background: #7d2424; }
-.btn-editar { background: var(--warning); color: #fff; }
+.btn-accion { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; margin-right: 8px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+.btn-toggle { background: var(--card-bg); color: var(--primary); border: 1px solid var(--primary); }
+.btn-toggle:hover { background: var(--primary); color: white; }
+.btn-delete { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.btn-delete:hover { background: var(--danger); color: white; }
+.btn-editar { background: var(--accent); color: white; }
+.btn-editar:hover { background: var(--accent-hover); }
