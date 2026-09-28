@@ -1,5 +1,5 @@
-const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:3000" || window.location.hostname === "192.168.56.101");
-const API_URL = esLocal ? "http://localhost:3000" : "https://sep7ima-cafeteria-f7z2.onrender.com";
+const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
+const API_URL ="https://sep7ima-cafeteria-f7z2.onrender.com";
 const SUCURSAL_COORDENADAS = { lat: 17.078399006698426, lng: -96.72288414676025 };
 const DISTANCIA_MAXIMA_KM = 15;
 let totalG;
@@ -393,17 +393,17 @@ async function procesarPago() {
         const totalFinal = obtenerTotalConEnvio();
         let tokenSeguro = "N/A";
 
+        
+
         if (metodoPago === "Tarjeta") {
             btnPagar.innerText = "Encriptando tarjeta...";
-            const cardNum = document.getElementById("card-number").value.replace(/\s/g, ''); 
-            const cardMonth = document.getElementById("card-month").value;
-            const cardYear = document.getElementById("card-year").value;
+            
             const cardCvc = document.getElementById("card-cvc").value;       
             
             const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{ method: "POST" }); 
             if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
             const miToken = (await respuestaToken.json()).token;
-            
+            console.log("Llave que me dio el backend:", miToken); 
             const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
                 method: "POST",
                 headers: {
