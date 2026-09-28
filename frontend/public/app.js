@@ -393,17 +393,17 @@ async function procesarPago() {
         const totalFinal = obtenerTotalConEnvio();
         let tokenSeguro = "N/A";
 
-        
-
         if (metodoPago === "Tarjeta") {
             btnPagar.innerText = "Encriptando tarjeta...";
-            
+            const cardNum = document.getElementById("card-number").value.replace(/\D/g, ''); 
+            const cardMonth = document.getElementById("card-month").value;
+            const cardYear = document.getElementById("card-year").value;
             const cardCvc = document.getElementById("card-cvc").value;       
             
             const respuestaToken = await fetch(`${API_URL}/pedidos/api/obtener_token`,{ method: "POST" }); 
             if (!respuestaToken.ok) throw new Error("Fallo al obtener el pase del banco");
             const miToken = (await respuestaToken.json()).token;
-            console.log("Llave que me dio el backend:", miToken); 
+            
             const tokenResponse = await fetch("https://ecartpay.com/api/tokens", {
                 method: "POST",
                 headers: {
