@@ -837,3 +837,35 @@ function abrirModalDetalles(idPedido) {
     const modal = new bootstrap.Modal(document.getElementById('modalDetallesPedido'));
     modal.show();
 }
+
+function convertirImagenABase64(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+        Toastify({
+            text: "La imagen es muy pesada. Sube una menor a 2MB.",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: { background: "var(--danger)" }
+        }).showToast();
+        
+        event.target.value = ""; 
+        return;
+    }
+
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const base64String = e.target.result;
+        document.getElementById('prod-imagen').value = base64String;
+        const preview = document.getElementById('imagen-preview');
+        const container = document.getElementById('preview-container');
+        
+        if (preview && container) {
+            preview.src = base64String;
+            container.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+}
