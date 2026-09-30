@@ -903,6 +903,79 @@ const obtenerTotalConEnvio = () => {
     return totalG + constoEnvio
 }
 
+async function procesarPagoTransferencia() {
+    const btnPagar = document.getElementById("btn-pagar-transf"); 
+    const totalFinal = obtenerTotalConEnvio();
+    
+    const nombreInput = document.getElementById("nombre-transf");
+    const telefonoInput = document.getElementById("telefono-transf");
+    const nombre = nombreInput ? nombreInput.value.trim() : "Cliente";
+    const telefono = telefonoInput ? telefonoInput.value.trim() : "Sin teléfono";
+
+    if (!nombre || !telefono) {
+        Toastify({ text: "Por favor, ingresa tu nombre y teléfono.", duration: 3000, style: { background: "#D96C6C", borderRadius: "8px" }}).showToast();
+        return;
+    }
+
+    btnPagar.innerText = "Preparando envío...";
+    btnPagar.disabled = true;
+
+    const esDomicilio = datosPedido.tipoEntrega === 'domicilio';
+    const direccionPayload = esDomicilio ? {
+        calle: document.getElementById("input-calle").value,
+        colonia: document.getElementById("input-colonia").value,
+        cp: document.getElementById("input-cp").value,
+        referencias: document.getElementById("input-referencias").value
+    } : { calle: "", colonia: "", cp: "", referencias: "" }; 
+
+    const pedidoData = {
+        items: carrito, 
+        first_name: nombre,
+        last_name: "",
+        phone: telefono,
+        token_tarjeta: 'N/A',
+        metodo_pago: "Transferencia",
+        total: totalFinal,          
+        monto_recibido: totalFinal, 
+        monto: totalFinal,          
+        cambio: 0,                              
+        direccion: direccionPayload
+    };
+
+    try {
+        const backendResponse = await fetch(`${API_URL}/pedidos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pedidoData)
+        });
+
+        if (!backendResponse.ok) throw new Error("Error procesando el pedido en el servidor");
+
+        const numCafeteria = "529514087678"; 
+        const textoWP = `Hola, soy ${nombre}. Acabo de hacer un pedido por $${totalFinal.toFixed(2)} MXN mediante transferencia. Aquí te envío mi comprobante:`;
+        const linkWhatsApp = `https://wa.me/${numCafeteria}?text=${encodeURIComponent(textoWP)}`;
+        
+        Toastify({ text: "¡Pedido registrado! Abriendo WhatsApp...", duration: 3000, style: { background: "#a8d96c", color: "white", borderRadius: "8px" }}).showToast();
+        
+        setTimeout(() => {
+            window.open(linkWhatsApp, '_blank'); 
+            carrito = [];
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modal-transferencia'));
+            if (modal) modal.hide();
+            actualizarCarrito();
+            document.getElementById("nombre-transf").value = "";
+            document.getElementById("telefono-transf").value = "";
+        }, 1500);
+
+    } catch (error) {
+        Toastify({ text: "Aviso: " + error.message, duration: 3000, style: { background: "#D96C6C", color: "white", borderRadius: "8px" }}).showToast();
+    } finally {
+        btnPagar.innerText = "Enviar por WhatsApp";
+        btnPagar.disabled = false;
+    }
+}
+
+
 function abrirModalPago(metodo) {
     datosPedido.metodoPago = metodo;
     const modalResumenEl = document.getElementById('modal-resumen-pago');
@@ -920,21 +993,11 @@ function abrirModalPago(metodo) {
         const modalEfectivoEl = document.getElementById('modal-efectivo');
         bootstrap.Modal.getOrCreateInstance(modalEfectivoEl).show();   
         
-    } else if (metodo === 'tarjeta') {
-        bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
-        document.getElementById("staticBackdropLabel").innerHTML = `Pago con Tarjeta: ${textoTotal}`;
-        
-        const modalTarjetaEl = document.getElementById('staticBackdrop');
-        bootstrap.Modal.getOrCreateInstance(modalTarjetaEl).show();
-        
     } else if (metodo === 'transferencia') {
-        Toastify({
-            text: "Opción de transferencia en desarrollo",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            style: { background: "#D96C6C", color: "white", borderRadius: "8px" }
-        }).showToast();
+        bootstrap.Modal.getOrCreateInstance(modalResumenEl).hide();
+        document.getElementById("total-transferencia").innerHTML = textoTotal;
+        const modalTransfEl = document.getElementById('modal-transferencia');
+        bootstrap.Modal.getOrCreateInstance(modalTransfEl).show();
     }
 }
 

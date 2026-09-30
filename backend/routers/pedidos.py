@@ -1,56 +1,24 @@
 import os
 import sys
-import requests
-from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Annotated
 from fastapi import Depends, HTTPException, status, FastAPI, Body, APIRouter
-from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from models import Model_producto, Response_producto, Item_pedido, Create_pedido, Response_pedido, Response_msg, MetodoPago, Opcion, EstadoCliente
 from database import db
 from auth import User, get_current_active_user
+
 router = APIRouter(
     prefix="/pedidos",
     tags=["Pedidos"]
 )
-load_dotenv()
-token_secreto = os.getenv("TOKEN")
-
-def token_ecartpay():
-    url = "https://ecartpay.com/api/authorizations/token"
-  
-    headers = {
-        "accept": "application/json",
-        "authorization": f"Basic {token_secreto}" 
-    }
-    
-    try:
-        response = requests.post(url, headers=headers)
-        
-        if response.status_code != 200:
-            error_real = response.text
-            print(f"ERROR DE ECARTPAY: {error_real}") 
-            raise HTTPException(status_code=400, detail=f"Fallo de autorización: {error_real}")
-            
-        data = response.json()
-        return data.get("token")
-        
-    except requests.exceptions.RequestException as e:
-        print(f"ERROR DE CONEXIÓN: {str(e)}")
-        raise HTTPException(status_code=500, detail="No se pudo conectar con el banco.")
-    
-@router.post("/api/obtener_token")
-async def obtener_token_ecart():
-    token_generado = token_ecartpay()
-    return {"token": token_generado }
 
 @router.post("", response_model=Response_pedido)
 async def post_pedidos(pedidos: Create_pedido):
     total = 0.0
     items_detallados = []
-    items_ecart = []    
+       
     for item in pedidos.items:
         producto_db = await db["productos"].find_one({"_id": ObjectId(item.producto_id)})
         if not producto_db:
@@ -76,12 +44,6 @@ async def post_pedidos(pedidos: Create_pedido):
             "precio": float(item.precio),
             "subtotal": subtotal
         })
-        
-        items_ecart.append({
-            "name": item.nombre,
-            "quantity": item.cantidad,
-            "price": float(item.precio) 
-        })
 
     costo_envio = 0.0
     if pedidos.direccion and pedidos.direccion.calle:
@@ -90,50 +52,8 @@ async def post_pedidos(pedidos: Create_pedido):
             
     total_con_envio = round(total + costo_envio, 2)
 
-    if costo_envio > 0:
-        items_ecart.append({
-            "name": "Costo de Envío a Domicilio",
-            "quantity": 1,
-            "price": float(costo_envio)
-        })
-    transaccion_id = None
-    if pedidos.metodo_pago == "Tarjeta":
-        token_pasarela = token_ecartpay() 
-        
-        payload_ecart = {
-            "currency": "MXN",
-            "first_name": pedidos.first_name,
-            "last_name": pedidos.last_name,
-            "email": "correo@gmail.com",
-            "phone": pedidos.phone,
-            "items": items_ecart, 
-            "token": pedidos.token_tarjeta, 
-            "notify_url": "https://sep7ima-cafeteria-f7z2.onrender.com/pagos/webhook"
-        }
-        
-        headers_charges = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "authorization": f"Bearer {token_pasarela}"
-        }
-
-        try:
-            url_cobro_ecartpay = "https://ecartpay.com/api/orders"
-            response_charge = requests.post(url_cobro_ecartpay, json=payload_ecart, headers=headers_charges)
-            
-            if response_charge.status_code not in [200, 201]:
-                try:
-                    error_msg = response_charge.json().get('message', 'Tarjeta declinada')
-                except Exception:
-                    error_msg = response_charge.text
-                raise HTTPException(status_code=400, detail=f"Pago rechazado: {error_msg}")
-            
-            transaccion_id = response_charge.json().get("id", "sandbox_test_id")     
-        except requests.exceptions.RequestException:
-            raise HTTPException(status_code=500, detail="Error de conexión al procesar el pago")
-                
-    elif pedidos.metodo_pago not in ["Transferencia", "Efectivo"]:
-        raise HTTPException(status_code=400, detail=f"Metodo no encontrado")
+    if pedidos.metodo_pago not in ["Transferencia", "Efectivo"]:
+        raise HTTPException(status_code=400, detail="Método de pago no válido")
 
     for item in pedidos.items:
         producto_db = await db["productos"].find_one({"_id": ObjectId(item.producto_id)})
@@ -159,9 +79,6 @@ async def post_pedidos(pedidos: Create_pedido):
         "Estado": "Pendiente"
     }
     
-    if transaccion_id:
-        ticket["transaccion_id"] = transaccion_id
-
     resultado = await db["pedidos"].insert_one(ticket)
     ticket["id"] = str(resultado.inserted_id)
     

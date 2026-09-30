@@ -70,10 +70,10 @@
                 <h6 class="text-center text-muted mb-3">¿Cómo deseas pagar?</h6>
                 <div class="d-flex flex-column gap-2">
                     <button class="btn btn-outline-success" onclick="abrirModalPago('efectivo')">Efectivo</button>
-                    <button class="btn btn-outline-primary" onclick="abrirModalPago('tarjeta')">Tarjeta bancaria</button>
-                    <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')">Transferencia</button>
+                    <button class="btn btn-outline-info" onclick="abrirModalPago('transferencia')">Transferencia                Bancaria</button>
                 </div>
             </div>
+
             <div class="modal-footer d-flex justify-content-between w-100">
                 <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAEntrega()">
                     ⬅ Volver a Entrega
@@ -130,62 +130,39 @@
     </div>
 </div>
 
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+<div class="modal fade" id="modal-transferencia" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Completa tu Pedido</h1>
+                <h1 class="modal-title fs-5">Pago por Transferencia</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-  
             <div class="modal-body">
-                <form id="form-checkout">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="nombre-tarjeta" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="nombre-tarjeta" placeholder="Ej. Moises" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="apellido-tarjeta" class="form-label">Apellido</label>
-                            <input type="text" class="form-control" id="apellido-tarjeta" placeholder="Ej. Garcia" required>
-                        </div>
-                    </div>
-        
-                    <div class="mb-3">
-                        <label for="telefono-tarjeta" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="telefono-tarjeta" placeholder="9341024062" required>
-                    </div>
-        
-                    <hr class="my-3">
-                    <h6 class="mb-3 text-muted">Datos de tarjeta bancaria</h6>
-
-                    <div class="row g-2">
-                        <div class="col-12">
-                            <label class="form-label">Número de Tarjeta</label>
-                            <input type="text" id="card-number" class="form-control" placeholder="4242 4242 4242 4242" maxlength="19">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Mes (MM)</label>
-                            <input type="text" id="card-month" class="form-control" placeholder="12" maxlength="2">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Año (AA)</label>
-                            <input type="text" id="card-year" class="form-control" placeholder="28" maxlength="2">
-                        </div>
-                        <div class="col-12 mt-2">
-                            <label class="form-label">Código de Seguridad (CVC)</label>
-                            <input type="text" id="card-cvc" class="form-control" placeholder="123" maxlength="4">
-                        </div>
-                    </div>
-                </form>
+                <h4 class="text-center mb-3">Total a transferir: <span id="total-transferencia" class="text-primary fw-bold">0.00</span></h4>
+                
+                <div class="alert alert-secondary text-start" style="background-color: var(--primary-light); border-color: var(--primary-dark); color: var(--primary-dark);">
+                    <strong>Banco:</strong> STP<br>
+                    <strong>Beneficiario:</strong> Diego Aimar Gómez de la Rosa<br>
+                    <strong>CLABE:</strong> 123456789012345678<br>
+                </div>
+                <p class="text-muted small text-center">Realiza tu transferencia. Al confirmar, se abrirá WhatsApp para que envíes tu comprobante a la cafetería.</p>
+                
+                <hr class="my-3">
+                <h6 class="mb-3 text-muted">Datos del cliente</h6>
+                <div class="col-12 mb-3">
+                    <label for="nombre-transf" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre-transf" placeholder="Ej. Moises" required>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="telefono-transf" class="form-label">Teléfono (WhatsApp)</label>
+                    <input type="tel" class="form-control" id="telefono-transf" placeholder="951..." required maxlength="10">
+                </div>
             </div>
-  
             <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAResumenDesde('staticBackdrop')">
+                <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" onclick="volverAResumenDesde('modal-transferencia')">
                     ⬅ Volver a Métodos de Pago
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="procesarPago()" id="btn-pagar">Confirmar y Pagar</button>
+                <button type="button" class="btn btn-primary" onclick="procesarPagoTransferencia()" id="btn-pagar-transf">Enviar por WhatsApp</button>
             </div>
         </div>
     </div>

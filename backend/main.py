@@ -44,20 +44,3 @@ app.include_router(pedidos.router)
 app.include_router(authRouter.router)
 app.include_router(stats.router)
 app.include_router(categorias.router)
-
-from fastapi import Request
-
-@app.post("/pagos/webhook")
-async def recibir_webhook_ecartpay(request: Request, hash: str = None):
-    try:
-        payload = await request.json()
-        print("=======================================")
-        print(f"Hash de seguridad: {hash}")
-        print("Datos del pago:", payload)
-        print("=======================================")
-        
-        return {"status": "success", "message": "Webhook recibido correctamente"}
-        
-    except Exception as e:
-        print("Error leyendo el webhook:", e)
-        return {"status": "error", "message": str(e)}
