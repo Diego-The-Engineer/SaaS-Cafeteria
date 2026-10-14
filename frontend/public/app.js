@@ -1,3 +1,5 @@
+import connectDB from "./db.js";
+
 const esLocal = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1:5503" || window.location.hostname === "192.168.56.101");
 const API_URL ="https://sep7ima-cafeteria-f7z2.onrender.com";
 const SUCURSAL_COORDENADAS = { lat: 17.078399006698426, lng: -96.72288414676025 };
@@ -958,7 +960,7 @@ async function procesarPagoTransferencia() {
         Toastify({ text: "¡Pedido registrado! Abriendo WhatsApp...", duration: 3000, style: { background: "#a8d96c", color: "white", borderRadius: "8px" }}).showToast();
         
         setTimeout(() => {
-            window.open(linkWhatsApp, '_blank'); 
+            window.location.href = linkWhatsApp;
             carrito = [];
             const modal = bootstrap.Modal.getInstance(document.getElementById('modal-transferencia'));
             if (modal) modal.hide();
