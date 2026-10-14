@@ -951,7 +951,7 @@ async function procesarPagoTransferencia() {
 
         if (!backendResponse.ok) throw new Error("Error procesando el pedido en el servidor");
 
-        const numCafeteria = "529514087678"; 
+        const numCafeteria = "529515863093"; 
         const textoWP = `Hola, soy ${nombre}. Acabo de hacer un pedido por $${totalFinal.toFixed(2)} MXN mediante transferencia. Aquí te envío mi comprobante:`;
         const linkWhatsApp = `https://wa.me/${numCafeteria}?text=${encodeURIComponent(textoWP)}`;
         
