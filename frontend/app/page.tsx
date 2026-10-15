@@ -142,7 +142,7 @@ export default function Page() {
         <div className="menu-banner-content">
           <p className="eyebrow light">Todo lo que hacemos</p>
           <h2>Ven por el café.<br /><em>Quédate por todo.</em></h2>
-          <a className="button button-outline" href="/Menu septima.jpg">Ver menú <span>↓</span></a>
+          <a className="button button-outline" href="image.jpg">Ver menú <span>↓</span></a>
         </div>
       </section>
 
